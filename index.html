@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Il Viaggio Arcade</title>
+<meta name="theme-color" content="#1a1c2c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Il Viaggio">
+<meta name="description" content="Juego arcade para practicar italiano de A2 a B1 viajando por Italia.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* Un solo mundo visual (arcade de 16 colores): pantalla arriba, mando abajo, ventanas tipo RPG encima. */
+:root{
+  --bg:#1a1c2c; --panel:#f4f4e4; --ink:#1a1c2c; --mute:#566c86; --accent:#ffcd75; --blue:#3b5dc9;
+  --good:#38b764; --bad:#b13e53; --good-bg:#d3f0d6; --bad-bg:#f6d5d8;
+  --px:"Press Start 2P",ui-monospace,monospace; --tx:"VT323",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--panel)}
+body{font-family:var(--tx);font-size:22px;line-height:1.15}
+#app{position:relative;max-width:480px;margin:0 auto;padding:10px 16px 20px;display:flex;flex-direction:column;gap:8px;min-height:560px}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--px);font-size:11px}
+.hud .hearts{color:var(--bad);letter-spacing:2px;font-size:14px}.hud .off{color:#333c57}
+.goal{font-size:20px;color:var(--accent);min-height:24px}
+canvas{width:100%;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;border:4px solid #333c57;background:#000}
+.pad{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:6px}
+.dpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px)}
+.dpad button{background:#333c57;border:3px solid #566c86;color:var(--panel);font-family:var(--px);font-size:14px}
+.dpad button:active,.dpad button.on{background:var(--blue)}
+.side{display:flex;flex-direction:column;gap:10px;align-items:stretch;flex:1;max-width:190px}
+.pbtn{font-family:var(--px);font-size:10px;padding:12px 8px;background:var(--panel);color:var(--ink);border:3px solid var(--ink);box-shadow:0 4px 0 #000;line-height:1.3}
+.pbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #000}
+.pbtn.a{background:var(--accent);font-size:13px;padding:16px 8px}
+.pbtn.go{background:var(--accent);width:100%;margin-top:6px}
+.pbtn:disabled{opacity:.45}
+#ov{position:absolute;inset:0;background:rgba(10,12,22,.82);padding:14px 16px;display:none;overflow-y:auto;z-index:5}
+#ov.show{display:flex;flex-direction:column;justify-content:center}
+#ov.top{justify-content:flex-start}
+.win{background:var(--panel);color:var(--ink);border:4px solid var(--ink);outline:4px solid var(--panel);box-shadow:0 0 0 8px var(--ink);padding:16px 14px;display:flex;flex-direction:column;gap:12px;margin:8px}
+.win h2{font-family:var(--px);font-size:13px;line-height:1.5;margin:0;text-wrap:balance}
+.win p{margin:0}
+.eyebrow{font-family:var(--px);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.it{font-size:27px;line-height:1.15}
+.blank{display:inline-block;min-width:56px;border-bottom:3px solid var(--blue);text-align:center}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{background:#fff;border:3px solid var(--ink);padding:10px 12px;text-align:left;font-size:25px;color:var(--ink);width:100%;line-height:1.1}
+.opt.ok{background:var(--good-bg);border-color:var(--good)}.opt.no{background:var(--bad-bg);border-color:var(--bad)}
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tile{background:#fff;border:3px solid var(--ink);padding:6px 10px;font-size:25px;color:var(--ink)}
+.tile.ok{background:var(--good-bg);border-color:var(--good)}.tile.no{background:var(--bad-bg);border-color:var(--bad)}
+.answer{min-height:50px;border-bottom:3px dashed var(--mute);padding-bottom:6px}
+.word{background:none;border:0;border-bottom:3px solid transparent;padding:0 2px;font-size:27px;color:var(--ink)}
+.word.ok{background:var(--good-bg);border-color:var(--good)}.word.no{background:var(--bad-bg);border-color:var(--bad);text-decoration:line-through}
+.fb{border:3px solid;padding:10px;display:flex;flex-direction:column;gap:4px}
+.fb.ok{background:var(--good-bg);border-color:var(--good)}.fb.no{background:var(--bad-bg);border-color:var(--bad)}
+.fb b{font-family:var(--px);font-size:11px}
+table{border-collapse:collapse;width:100%;font-size:21px}
+td{border:2px solid var(--ink);padding:4px 6px;vertical-align:top;background:#fff}
+td:first-child{background:var(--accent);white-space:nowrap}
+.tip{background:#fff;border-left:6px solid var(--blue);padding:6px 8px}
+.gl{border-bottom:3px dotted var(--blue);cursor:pointer}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{font-family:var(--px);font-size:8px;padding:8px 6px;background:#fff;border:3px solid var(--ink);color:var(--ink)}
+.tab.on{background:var(--ink);color:var(--panel)}
+.hp{color:var(--bad);letter-spacing:2px}
+.star{color:#e08a00}.star.off{color:#b8b8a6}
+.mute{color:var(--mute)}
+.mapbtn{display:flex;justify-content:space-between;gap:8px;width:100%;background:#fff;border:3px solid var(--ink);padding:8px 10px;color:var(--ink);font-size:24px;text-align:left}
+.mapbtn:disabled{opacity:.4}
+.pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
+#italy{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
+.legend{font-size:19px;margin:0}
+.tile.sel{background:var(--accent)}
+.chat{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:88%;padding:6px 10px;border:3px solid var(--ink);background:#fff;font-size:25px;line-height:1.1;align-self:flex-start}
+.bub.me{align-self:flex-end;background:var(--accent)}
+.bar{height:14px;border:3px solid var(--ink);background:#fff}
+.bar i{display:block;height:100%;background:var(--blue);animation:shrink 4s linear forwards}
+@keyframes shrink{from{width:100%}to{width:0}}
+.big{font-size:36px;text-align:center;min-height:44px;line-height:1.1}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.duo .opt{text-align:center;font-family:var(--px);font-size:10px;padding:18px 6px;line-height:1.4}
+</style>
+</head>
+<body>
+<main id="app">
+  <div class="hud"><span id="hCity"></span><span id="hStamps"></span><span class="hearts" id="hHearts"></span></div>
+  <div class="goal" id="goal"></div>
+  <canvas id="cv" width="240" height="208" aria-label="Mapa de la ciudad"></canvas>
+  <div class="pad">
+    <div class="dpad" id="dpad">
+      <span></span><button data-d="up" aria-label="Arriba">▲</button><span></span>
+      <button data-d="left" aria-label="Izquierda">◀</button><span></span><button data-d="right" aria-label="Derecha">▶</button>
+      <span></span><button data-d="down" aria-label="Abajo">▼</button><span></span>
+    </div>
+    <div class="side">
+      <button class="pbtn a" id="bA">A · HABLAR</button>
+      <button class="pbtn" id="bNote">QUADERNO</button>
+      <button class="pbtn" id="bMap">MAPA</button>
+    </div>
+  </div>
+  <div id="ov"></div>
+</main>
+<script>
+const LEVELS=[
+{city:"Torino",tema:"Passato prossimo",roof:"#b13e53",
+ lesson:{intro:"El passato prossimo cuenta hechos terminados. Se forma con el presente de AVERE o ESSERE + participio.",
+  tabs:[{h:"Participio regular",r:[["-are → -ato","parlare → parlato"],["-ere → -uto","credere → creduto"],["-ire → -ito","dormire → dormito"]]},
+   {h:"¿Avere o essere?",r:[["AVERE","la mayoría: ho mangiato, ho visto"],["ESSERE","movimiento y cambio: andare, venire, uscire, arrivare, rimanere, nascere"],["ESSERE","reflexivos: mi sono alzato"]]},
+   {h:"Irregulares frecuentes",r:[["fare","fatto"],["prendere","preso"],["vedere","visto"],["dire","detto"],["bere","bevuto"],["rimanere","rimasto"],["essere","stato"],["venire","venuto"]]}],
+  tip:"Con ESSERE el participio concuerda con el sujeto: Marta è andata, i ragazzi sono andati."},
+ pairs:[["fare","fatto"],["prendere","preso"],["vedere","visto"],["dire","detto"],["bere","bevuto"],["rimanere","rimasto"]],
+ text:"Sono arrivato a Torino ieri sera, con il treno delle otto. Ho lasciato la {valigia|maleta} in {albergo|hotel} e sono uscito subito a {fare due passi|dar un paseo}. In piazza ho incontrato Marta, una ragazza torinese, che mi ha consigliato un bar storico. Abbiamo bevuto un bicerin, la {bevanda|bebida} tipica della città, e siamo rimasti a parlare fino a tardi.",
+ q:[
+ {t:"mc",q:"Che cosa ha fatto il protagonista appena arrivato?",o:["Ha lasciato la valigia in albergo","È andato subito a dormire","Ha cenato con Marta"],e:"El texto dice: «Ho lasciato la valigia in albergo e sono uscito subito»."},
+ {t:"gap",s:"Ieri Marta ___ al mercato.",o:["è andata","ha andato","è andato"],e:"Andare usa essere, y el participio concuerda con el sujeto femenino: andata."},
+ {t:"gap",s:"Noi ___ un caffè in piazza.",o:["abbiamo preso","siamo presi","abbiamo prenduto"],e:"Prendere usa avere y tiene participio irregular: preso."},
+ {t:"gap",s:"Le ragazze ___ presto stamattina.",o:["si sono alzate","si hanno alzato","si sono alzati"],e:"Los verbos reflexivos usan essere; el participio concuerda: alzate (femenino plural)."},
+ {t:"order",es:"Nos quedamos hablando hasta tarde.",a:["siamo rimasti a parlare fino a tardi","fino a tardi siamo rimasti a parlare"],e:"Rimanere usa essere: siamo rimasti. «Fino a tardi» = hasta tarde."}
+ ]},
+{city:"Milano",tema:"Imperfetto o passato prossimo",roof:"#566c86",
+ lesson:{intro:"El imperfetto describe el fondo: cómo eran las cosas, hábitos y acciones en curso. El passato prossimo cuenta el hecho puntual.",
+  tabs:[{h:"Terminaciones",r:[["parlare","parlavo, parlavi, parlava, parlavamo, parlavate, parlavano"],["credere","credevo, credevi, credeva, credevamo, credevate, credevano"],["dormire","dormivo, dormivi, dormiva, dormivamo, dormivate, dormivano"]]},
+   {h:"Irregulares",r:[["essere","ero, eri, era, eravamo, eravate, erano"],["fare","facevo"],["dire","dicevo"],["bere","bevevo"]]},
+   {h:"¿Cuál uso?",r:[["Imperfetto","mentre…, da bambino…, ogni estate, sempre, faceva freddo"],["Passato pr.","ieri, una volta, all'improvviso, due anni fa"]]}],
+  tip:"Mentre + imperfetto, y lo que interrumpe va en passato prossimo: Mentre dormivo, è squillato il telefono."},
+ pairs:[["io · parlare","parlavo"],["noi · essere","eravamo"],["lui · fare","faceva"],["tu · dire","dicevi"],["loro · avere","avevano"],["voi · bere","bevevate"]],
+ text:"A Milano pioveva e faceva freddo. Mentre camminavo verso il Duomo, ho sentito qualcuno chiamare il mio nome: era Luca, un vecchio amico dell'università. Da studenti andavamo sempre insieme allo {stadio|estadio}. Mi ha invitato a {pranzo|almuerzo} e, mentre mangiavamo il risotto, mi ha raccontato del suo nuovo lavoro.",
+ q:[
+ {t:"mc",q:"Chi è Luca?",o:["Un vecchio amico dell'università","Un collega di lavoro","Il cameriere del ristorante"],e:"«Era Luca, un vecchio amico dell'università»."},
+ {t:"gap",s:"Mentre ___, è squillato il telefono.",o:["dormivo","ho dormito","dormirò"],e:"Acción en curso interrumpida por otra: mentre + imperfetto."},
+ {t:"gap",s:"Da bambino ___ ogni estate al mare.",o:["andavo","sono andato","vado"],e:"Hábito en el pasado (ogni estate) → imperfetto."},
+ {t:"gap",s:"Ieri sera ___ un film bellissimo.",o:["ho visto","vedevo","vedrei"],e:"Acción puntual y terminada (ieri sera) → passato prossimo."},
+ {t:"order",es:"Mientras comíamos, me habló de su trabajo.",a:["mentre mangiavamo mi ha raccontato del suo lavoro","mi ha raccontato del suo lavoro mentre mangiavamo"],e:"Fondo en imperfetto (mangiavamo) + hecho puntual en passato prossimo (ha raccontato)."}
+ ]},
+{city:"Venezia",tema:"Pronomi diretti e indiretti",roof:"#ef7d57",
+ lesson:{intro:"Los pronombres sustituyen a algo ya nombrado. El directo responde a «¿qué?» o «¿a quién?»; el indirecto lleva la preposición a.",
+  tabs:[{h:"Formas",r:[["","Directo","Indirecto"],["io","mi","mi"],["tu","ti","ti"],["lui","lo","gli"],["lei","la","le"],["noi","ci","ci"],["voi","vi","vi"],["loro","li / le","gli"]]},
+   {h:"Verbos típicos",r:[["Directo","conoscere, vedere, chiamare, ringraziare, aspettare"],["Indirecto","telefonare a, dire a, offrire a, scrivere a, piacere a"]]}],
+  tip:"Con lo, la, li, le el participio concuerda: Le chiavi? Le ho lasciate sul tavolo."},
+ pairs:[["Vedo Paolo","lo"],["Vedo Maria","la"],["Leggo i libri","li"],["Scrivo a Paolo","gli"],["Parla a noi","ci"],["Parla a voi","vi"]],
+ text:"A Venezia mi sono perso tra i canali, ma non mi è dispiaciuto. Ho chiesto la strada a una signora e lei mi ha accompagnato fino al {ponte|puente} di Rialto. Le ho offerto un caffè per {ringraziarla|darle las gracias}. Poi ho comprato una {maschera|máscara} per mia sorella: gliela darò a Natale. La adorerà!",
+ q:[
+ {t:"mc",q:"Per chi è la maschera?",o:["Per sua sorella","Per la signora","Per sé stesso"],e:"«Ho comprato una maschera per mia sorella»."},
+ {t:"gap",s:"Conosci Paolo? Sì, ___ conosco bene.",o:["lo","gli","le"],e:"Conoscere qualcuno: objeto directo masculino → lo."},
+ {t:"gap",s:"Ho telefonato a Maria e ___ ho detto tutto.",o:["le","la","lo"],e:"Dire a qualcuno: objeto indirecto femenino → le."},
+ {t:"gap",s:"Le chiavi? ___ ho lasciate sul tavolo.",o:["Le","Li","Gli"],e:"Chiavi es femenino plural → le. Por eso el participio es lasciate."},
+ {t:"order",es:"Le invité a un café para darle las gracias.",a:["le ho offerto un caffè per ringraziarla","per ringraziarla le ho offerto un caffè"],e:"Offrire a qualcuno → le (indirecto); ringraziare qualcuno → la (directo)."}
+ ]},
+{city:"Bologna",tema:"Ci e ne",roof:"#c0392b",
+ lesson:{intro:"Ci y ne evitan repetir. Ci suele sustituir un lugar o «a + algo»; ne, una cantidad o «di + algo».",
+  tabs:[{h:"CI",r:[["Lugar","Vai a Roma? Sì, ci vado."],["a + cosa","Pensi al lavoro? Ci penso."],["credere a","Non ci credo."],["Existencia","c'è, ci sono"]]},
+   {h:"NE",r:[["Cantidad","Quanti ne vuoi? Ne voglio due."],["di + cosa","Parli del film? Ne parlo."],["Una parte","Vuoi del pane? Ne vorrei un po'."]]}],
+  tip:"Si hay un número o una cantidad (due, molti, un po'), casi siempre necesitas ne."},
+ pairs:[["Vado a Roma","Ci vado"],["Ho due gatti","Ne ho due"],["Penso al viaggio","Ci penso"],["Parlo del film","Ne parlo"],["Credo alla storia","Ci credo"],["Voglio del pane","Ne voglio"]],
+ text:"Bologna è la città del buon cibo e ci sono rimasto tre giorni. Al mercato ho visto dei tortellini freschi e ne ho comprati tanti. La signora del {banco|puesto} mi ha detto: «Di {ricette|recetas} ne conosco tante, ma quella della nonna è la migliore». Ci penso ancora: a Bologna ci tornerò di sicuro.",
+ q:[
+ {t:"mc",q:"Quanto tempo è rimasto a Bologna?",o:["Tre giorni","Una settimana","Un pomeriggio"],e:"«Ci sono rimasto tre giorni»."},
+ {t:"gap",s:"Vai spesso in palestra? Sì, ___ vado ogni lunedì.",o:["ci","ne","la"],e:"Ci sustituye a un lugar (in palestra)."},
+ {t:"gap",s:"Quanti fratelli hai? ___ ho due.",o:["Ne","Ci","Li"],e:"Ne se usa con cantidades: ne ho due = tengo dos (de ellos)."},
+ {t:"gap",s:"Credi all'oroscopo? No, non ___ credo.",o:["ci","ne","lo"],e:"Credere a qualcosa → ci."},
+ {t:"spot",s:"Di caffè ci bevo tre al giorno.",w:2,fix:"ne",e:"Con una cantidad (tre) hace falta ne: «ne bevo tre»."}
+ ]},
+{city:"Firenze",tema:"Futuro e condizionale",roof:"#a7663a",
+ lesson:{intro:"El futuro habla de planes y previsiones. El condizionale sirve para pedir con cortesía, aconsejar y expresar deseos.",
+  tabs:[{h:"Terminaciones",r:[["","Futuro","Condizionale"],["io","parlerò","parlerei"],["tu","parlerai","parleresti"],["lui / lei","parlerà","parlerebbe"],["noi","parleremo","parleremmo"],["voi","parlerete","parlereste"],["loro","parleranno","parlerebbero"]]},
+   {h:"Raíces irregulares (valen para los dos)",r:[["essere","sar-"],["avere","avr-"],["andare","andr-"],["fare","far-"],["potere","potr-"],["volere","vorr-"],["venire","verr-"],["vedere","vedr-"]]}],
+  tip:"Quando + futuro: «Quando arriverò, ti chiamerò». En español sería subjuntivo; en italiano no."},
+ pairs:[["essere · futuro","sarò"],["avere · futuro","avrò"],["andare · futuro","andrò"],["volere · cond.","vorrei"],["potere · cond.","potrei"],["venire · cond.","verrei"]],
+ text:"Domani visiterò gli Uffizi: ho prenotato il {biglietto|entrada} una settimana fa. Mi piacerebbe vedere anche il David, ma non so se avrò tempo. La proprietaria dell'albergo mi ha detto: «Al posto suo, salirei a Piazzale Michelangelo al {tramonto|atardecer}. Vedrà che panorama!». Seguirò il suo consiglio.",
+ q:[
+ {t:"mc",q:"Che cosa consiglia la proprietaria?",o:["Salire a Piazzale Michelangelo al tramonto","Visitare gli Uffizi di mattina","Prenotare un altro albergo"],e:"«Al posto suo, salirei a Piazzale Michelangelo al tramonto»."},
+ {t:"gap",s:"L'anno prossimo ___ in Sicilia.",o:["andremo","andavamo","siamo andati"],e:"L'anno prossimo → futuro: andremo."},
+ {t:"gap",s:"___ un caffè, per favore.",o:["Vorrei","Vorrò","Voglia"],e:"Para pedir con cortesía se usa el condizionale: vorrei."},
+ {t:"gap",s:"Al posto tuo, io non ___ niente.",o:["direi","dirò","dicevo"],e:"Consejo hipotético (al posto tuo) → condizionale: direi."},
+ {t:"gap",s:"Quando ___ grande, farò il medico.",o:["sarò","sarei","ero"],e:"En italiano, quando + futuro (no subjuntivo como en español): quando sarò grande."}
+ ]},
+{city:"Roma",tema:"Congiuntivo presente",roof:"#d9a441",
+ lesson:{intro:"El congiuntivo aparece tras verbos de opinión, deseo, duda o necesidad + che.",
+  tabs:[{h:"Presente",r:[["parlare","parli, parli, parli, parliamo, parliate, parlino"],["prendere","prenda, prenda, prenda, prendiamo, prendiate, prendano"],["dormire","dorma, dorma, dorma, dormiamo, dormiate, dormano"]]},
+   {h:"Irregulares (io)",r:[["essere","sia"],["avere","abbia"],["andare","vada"],["fare","faccia"],["stare","stia"],["potere","possa"],["venire","venga"]]},
+   {h:"Lo activan",r:[["Opinión","penso che, credo che, mi sembra che"],["Deseo","spero che, voglio che"],["Necesidad","bisogna che, è importante che"],["Conjunciones","benché, affinché, prima che"]]}],
+  tip:"Las tres personas del singular son iguales; por eso a menudo se dice el sujeto: che io sia, che tu sia."},
+ pairs:[["essere","sia"],["avere","abbia"],["andare","vada"],["fare","faccia"],["potere","possa"],["venire","venga"]],
+ text:"Roma è caotica, ma credo che sia la città più bella del mondo. Il {tassista|taxista} pensa che i turisti camminino troppo poco: «Bisogna che Lei veda Trastevere a piedi!». Spero che domani non piova, perché voglio che questa giornata sia perfetta. {Benché|Aunque} sia stanco, stasera uscirò di nuovo.",
+ q:[
+ {t:"mc",q:"Che cosa pensa il tassista?",o:["Che i turisti camminino troppo poco","Che Roma sia troppo cara","Che domani piova"],e:"«Pensa che i turisti camminino troppo poco»."},
+ {t:"gap",s:"Penso che Marco ___ ragione.",o:["abbia","ha","avrà"],e:"Pensare che + congiuntivo: abbia."},
+ {t:"gap",s:"Spero che voi ___ bene.",o:["stiate","state","starete"],e:"Sperare che + congiuntivo: stiate."},
+ {t:"gap",s:"È importante che tu ___ in orario.",o:["arrivi","arriverai","arrivavi"],e:"È importante che + congiuntivo: arrivi."},
+ {t:"spot",s:"Credo che lei è molto simpatica.",w:3,fix:"sia",e:"Credere che pide congiuntivo: «credo che lei sia»."}
+ ]},
+{city:"Napoli",tema:"Imperativo e pronomi combinati",roof:"#3b7dd8",
+ lesson:{intro:"El imperativo da órdenes y consejos. Los pronombres se pegan al final con tu, noi y voi; con Lei van delante.",
+  tabs:[{h:"Formas",r:[["","tu","Lei"],["parlare","parla!","parli!"],["prendere","prendi!","prenda!"],["dormire","dormi!","dorma!"],["negativo","non parlare!","non parli!"]]},
+   {h:"Irregulares (tu)",r:[["andare","va' → vacci"],["fare","fa' → fallo"],["dare","da' → dammi"],["dire","di' → dimmi"],["stare","sta'"]]},
+   {h:"Pronombres combinados",r:[["mi + lo","me lo"],["ti + lo","te lo"],["gli / le + lo","glielo"],["ci + lo","ce lo"],["vi + lo","ve lo"]]}],
+  tip:"Negativo de tu = non + infinitivo: Non prendere il taxi!"},
+ pairs:[["mi + lo","me lo"],["ti + la","te la"],["gli + lo","glielo"],["le + le","gliele"],["ci + li","ce li"],["vi + ne","ve ne"]],
+ text:"A Napoli tutti ti danno consigli. «{Assaggia|Prueba} la pizza da Michele, ma vacci presto!» mi ha detto un ragazzo. «Non prendere il taxi, vai a piedi» ha aggiunto sua madre. Ho chiesto il {conto|cuenta} al cameriere e me l'ha portato con un limoncello: «Glielo offre la casa!». Dimmi tu se non è un posto speciale.",
+ q:[
+ {t:"mc",q:"Che cosa offre la casa?",o:["Un limoncello","Una pizza","Il taxi"],e:"El camarero trae la cuenta con un limoncello: «Glielo offre la casa!»."},
+ {t:"gap",s:"(tu) Non ___ tardi stasera!",o:["tornare","torna","torni"],e:"Imperativo negativo de tu = non + infinitivo: non tornare."},
+ {t:"gap",s:"Il libro? ___ porto domani.",o:["Te lo","Ti lo","Lo ti"],e:"Ti + lo → te lo. El indirecto va primero y cambia la i por e."},
+ {t:"gap",s:"Hai dato le chiavi a Luca? Sì, ___ ho date.",o:["gliele","le gli","glielo"],e:"Gli + le → gliele (una sola palabra)."},
+ {t:"gap",s:"Signora, ___ pure!",o:["si accomodi","accomodati","accomodarsi"],e:"Imperativo formal (Lei): si accomodi."}
+ ]},
+{city:"Palermo",tema:"Periodo ipotetico e comparativi",roof:"#e07a1f",
+ lesson:{intro:"El periodo ipotetico une una condición (se…) con su consecuencia. Según lo probable que sea, cambian los tiempos.",
+  tabs:[{h:"Tres tipos",r:[["Real","se + presente o futuro → presente o futuro","Se potrò, tornerò."],["Posible","se + congiuntivo imperfetto → condizionale","Se avessi tempo, resterei."],["Irreal","se + congiuntivo trapassato → condizionale passato","Se avessi studiato, avrei passato l'esame."]]},
+   {h:"Congiuntivo imperfetto",r:[["parlare","parlassi, parlassi, parlasse, parlassimo, parlaste, parlassero"],["essere","fossi"],["avere","avessi"],["fare","facessi"],["dire","dicessi"]]},
+   {h:"Comparativos",r:[["più … di","dos cosas distintas: Roma è più grande di Firenze"],["più … che","dos verbos o adjetivos: più leggere che scrivere"]]}],
+  tip:"Después de se nunca va condizionale: «se avessi», no «se avrei»."},
+ pairs:[["essere","fossi"],["avere","avessi"],["fare","facessi"],["potere","potessi"],["andare","andassi"],["dire","dicessi"]],
+ text:"Ultima {tappa|etapa}: Palermo. Il mercato di Ballarò è più {rumoroso|ruidoso} di quello di Bologna, ma altrettanto buono. Se avessi più tempo, resterei un'altra settimana. Se non avessi fatto questo viaggio, non avrei conosciuto tanta gente. Una cosa è certa: se potrò, tornerò in Italia l'anno prossimo. È stato il viaggio più bello della mia vita.",
+ q:[
+ {t:"mc",q:"Che cosa farebbe con più tempo?",o:["Resterebbe un'altra settimana","Tornerebbe a Bologna","Comprerebbe una casa"],e:"«Se avessi più tempo, resterei un'altra settimana»."},
+ {t:"gap",s:"Se ___ ricco, comprerei una barca.",o:["fossi","sarei","sono"],e:"Hipótesis improbable: se + congiuntivo imperfetto (fossi) + condizionale."},
+ {t:"gap",s:"Se piove, ___ a casa.",o:["restiamo","resteremmo","restassimo"],e:"Hipótesis real: se + presente, presente."},
+ {t:"gap",s:"Roma è più grande ___ Firenze.",o:["di","che","come"],e:"Comparar dos cosas distintas con un adjetivo → di."},
+ {t:"gap",s:"Mi piace più leggere ___ scrivere.",o:["che","di","come"],e:"Comparar dos verbos → che."},
+ {t:"spot",s:"Se avrei tempo, verrei con te.",w:1,fix:"avessi",e:"Después de se nunca va condizionale: «se avessi tempo»."}
+ ]}
+];
+
+/* ---------- datos por ciudad: mapa, diálogo, misión, sfida, baúl ---------- */
+const EXTRA=[
+{g:"grass",tree:"tree",
+ sp:{L:[9,1,3,4],h:[[2,2,4],[15,2,4],[3,9,3],[5,13,7,1]],p:[[2,6,17,1],[7,6,1,7],[4,12,12,1],[15,12,1,5],[8,16,8,1],[4,5,1,1],[17,5,1,1]],w:[[13,8,4,3]],t:[[19,8],[18,13],[1,10]],f:[[12,2],[10,10],[17,11],[2,13],[19,6]]},
+ at:{start:[7,8],prof:[4,5],arc:[17,5],board:[9,7],capo:[8,16],talk:[11,10],quest:[18,10],chest:[19,2],q:[[5,7],[12,5],[18,7],[4,12],[17,13]],items:[[13,14],[2,15],[19,12]]},
+ dial:{who:"Barista",end:"Allora vai a vederla! Ecco il tuo timbro.",turns:[
+  ["Buongiorno! Che cosa hai fatto ieri sera?",["Sono andato in centro e ho bevuto un bicerin.","Ho andato in centro e sono bevuto un bicerin.","Vado in centro e bevo un bicerin."],"Andare → essere (sono andato); bere → avere (ho bevuto). Y pregunta por ayer: pasado."],
+  ["Ah, bene! E ti è piaciuto?",["Sì, mi è piaciuto molto!","Sì, mi ha piaciuto molto!","Sì, mi piaccio molto!"],"Piacere usa essere: mi è piaciuto."],
+  ["Hai già visitato la Mole?",["No, non l'ho ancora vista.","No, non la ho ancora visto.","No, non sono ancora vista."],"L'ho vista: el pronombre la se apostrofa y el participio concuerda."]]},
+ quest:{ask:"Sono uscito dall'albergo e ho perso l'oggetto che apre la porta della camera. L'hai visto?",want:"chiave",items:["chiave","ombrello","mela"]},
+ sf:{a:"ESSERE",b:"AVERE",q:"¿Con qué auxiliar va?",items:[["andare",0],["mangiare",1],["venire",0],["vedere",1],["uscire",0],["bere",1],["rimanere",0],["dire",1],["nascere",0],["prendere",1],["alzarsi",0],["comprare",1]]},
+ chest:{w:"RIMASTO",clue:"Participio de rimanere"},card:"Il bicerin è una bevanda calda di caffè, cioccolato e crema di latte, nata a Torino."},
+{g:"stone",tree:"tree",
+ sp:{L:[8,1,6,4],h:[[2,3,4],[16,3,4],[2,10,3],[17,10,3],[7,12,7,1]],p:[[7,5,8,4],[2,7,18,1],[10,9,1,3],[5,11,11,1],[5,11,1,5],[5,15,5,1]],o:[[10,6]],t:[[15,14],[16,15],[19,8],[1,9]],f:[]},
+ at:{start:[10,9],prof:[4,6],arc:[18,6],board:[12,6],capo:[10,15],talk:[8,8],quest:[14,10],chest:[19,15],q:[[6,6],[13,8],[3,13],[18,13],[15,7]],items:[[1,15],[19,2],[15,16]]},
+ dial:{who:"Tranviere",end:"Che tempo! Ecco il tuo timbro.",turns:[
+  ["Conosci già Milano?",["Sì, da bambino venivo qui ogni estate.","Sì, da bambino sono venuto qui ogni estate.","Sì, da bambino verrò qui ogni estate."],"Hábito en el pasado (ogni estate) → imperfetto."],
+  ["E ieri, che cosa è successo?",["Mentre camminavo, ho incontrato un amico.","Mentre ho camminato, incontravo un amico.","Mentre cammino, incontrerò un amico."],"Mentre + imperfetto; el hecho puntual, en passato prossimo."],
+  ["Com'era il tempo?",["Pioveva e faceva freddo.","È piovuto e fa freddo.","Pioverà e farebbe freddo."],"Describir el tiempo en el pasado → imperfetto."]]},
+ quest:{ask:"Mentre aspettavo il tram, pioveva forte. Avevo una cosa per non bagnarmi, ma l'ho dimenticata!",want:"ombrello",items:["ombrello","cappello","libro"]},
+ sf:{a:"IMPERFETTO",b:"PASS. PROSSIMO",q:"¿Qué tiempo pide esta expresión?",items:[["ogni estate…",0],["ieri sera…",1],["mentre…",0],["all'improvviso…",1],["da bambino…",0],["due anni fa…",1],["di solito…",0],["stamattina…",1],["sempre…",0],["una volta sola…",1]]},
+ chest:{w:"ERAVAMO",clue:"Noi, imperfetto de essere"},card:"La costruzione del Duomo di Milano è durata quasi sei secoli."},
+{g:"stone",tree:"tree",
+ sp:{L:[13,1,2,4],h:[[2,2,4],[15,2,4],[2,12,3],[13,12,6,1]],w:[[10,1,2,16],[1,9,20,2]],b:[[10,5,2,1],[5,9,1,2],[16,9,1,2],[10,13,2,1]],t:[[1,8],[20,16]],f:[]},
+ at:{start:[7,7],prof:[4,5],arc:[17,5],board:[7,5],capo:[16,15],talk:[8,12],quest:[14,7],chest:[2,16],q:[[3,7],[18,7],[6,15],[19,11],[12,16]],items:[[1,1],[20,8],[8,16]]},
+ dial:{who:"Gondoliere",end:"Sali pure! E prendi il tuo timbro.",turns:[
+  ["Hai visto mia moglie, Anna?",["Sì, l'ho vista sul ponte.","Sì, le ho vista sul ponte.","Sì, gli ho visto sul ponte."],"Vedere qualcuno → directo: la (l') + vista."],
+  ["Le hai parlato?",["Sì, le ho detto che la cercavi.","Sì, la ho detto che le cercavi.","Sì, lo ho detto che gli cercavi."],"Dire a lei → le; cercare lei → la."],
+  ["Grazie! Vuoi un giro in gondola?",["Volentieri! Quanto ti devo?","Volentieri! Quanto lo devo?","Volentieri! Quanto la devi?"],"Dovere qualcosa a qualcuno → ti (indirecto)."]]},
+ quest:{ask:"Mia sorella mi ha scritto, ma non trovo quello che mi ha mandato. Me lo porti?",want:"lettera",items:["lettera","bottiglia","chiave"]},
+ sf:{a:"DIRETTO lo/la",b:"INDIRETTO gli/le",q:"¿Qué pronombre pide el verbo?",items:[["chiamare",0],["telefonare",1],["vedere",0],["rispondere",1],["conoscere",0],["piacere",1],["aspettare",0],["mancare",1],["ringraziare",0],["sembrare",1],["invitare",0],["parlare",1]]},
+ chest:{w:"MASCHERA",clue:"Se lleva en Carnaval (está en el texto del tablón)"},card:"Venezia è costruita su più di cento piccole isole, unite da circa quattrocento ponti."},
+{g:"grass",tree:"tree",
+ sp:{L:[10,2,2,4],h:[[2,2,5],[14,2,5],[2,9,4],[8,9,4],[15,9,4],[7,13,7,1]],p:[[1,6,20,2],[1,12,20,1],[6,8,2,4],[12,8,3,4],[3,12,1,5],[3,16,7,1]],t:[[20,1],[1,8],[19,14]],f:[[8,2],[12,3],[20,9],[16,14],[2,14]]},
+ at:{start:[7,7],prof:[4,5],arc:[16,5],board:[9,6],capo:[10,16],talk:[13,7],quest:[19,10],chest:[1,15],q:[[5,5],[18,7],[4,12],[17,12],[15,14]],items:[[1,1],[20,15],[8,5]]},
+ dial:{who:"Salumiere",end:"Bravo, hai buon gusto! Ecco il timbro.",turns:[
+  ["Sei mai stato al mercato di Bologna?",["Sì, ci sono stato ieri.","Sì, ne sono stato ieri.","Sì, lo sono stato ieri."],"Un lugar → ci."],
+  ["Vuoi dei tortellini?",["Sì, ne prendo mezzo chilo.","Sì, ci prendo mezzo chilo.","Sì, li prendo mezzo chilo."],"Cantidad (mezzo chilo) → ne."],
+  ["E della mortadella, che ne pensi?",["Ne penso bene: è buonissima!","Ci penso bene: è buonissima!","La penso bene: è buonissima!"],"Pensare di (opinión) → ne; pensare a (tener en mente) → ci."]]},
+ quest:{ask:"Mi serve dell'olio per la ricetta. Ce n'è ancora in un contenitore di vetro: me lo porti?",want:"bottiglia",items:["bottiglia","mela","valigia"]},
+ sf:{a:"CI",b:"NE",q:"¿Qué falta en el hueco?",items:[["___ vado domani",0],["___ ho tre",1],["Non ___ credo",0],["___ compro un chilo",1],["___ penso io!",0],["Non ___ ho voglia",1],["___ sono stato ieri",0],["___ vorrei un po'",1],["___ abito da un anno",0],["Che ___ dici?",1]]},
+ chest:{w:"RICETTA",clue:"Las instrucciones para cocinar un plato"},card:"I portici di Bologna sono lunghi più di sessanta chilometri e sono patrimonio UNESCO."},
+{g:"grass",tree:"cypress",
+ sp:{L:[8,1,5,4],h:[[2,3,4],[16,3,4],[6,13,7,1],[15,13,3]],w:[[1,10,20,2]],p:[[2,7,18,1],[10,5,1,8],[4,12,13,1],[4,12,1,5],[4,16,5,1]],b:[[9,10,3,2]],t:[[1,1],[20,1],[1,13],[19,13],[20,15]],f:[[6,2],[14,2],[2,9],[17,9],[13,14]]},
+ at:{start:[10,8],prof:[4,6],arc:[18,6],board:[12,6],capo:[9,16],talk:[7,8],quest:[18,12],chest:[20,9],q:[[6,6],[13,5],[3,9],[14,12],[18,15]],items:[[1,9],[20,16],[2,14]]},
+ dial:{who:"Guida",end:"Ottima scelta! Ecco il tuo timbro.",turns:[
+  ["Che cosa farai domani?",["Visiterò gli Uffizi.","Visitavo gli Uffizi.","Ho visitato gli Uffizi."],"Domani → futuro."],
+  ["Posso aiutarti?",["Sì, vorrei un biglietto, per favore.","Sì, vorrò un biglietto ieri.","Sì, volevo che un biglietto."],"Pedir con cortesía → condizionale: vorrei."],
+  ["Non so dove cenare stasera…",["Al posto tuo, andrei in Oltrarno.","Al posto tuo, andrò in Oltrarno.","Al posto tuo, sono andato in Oltrarno."],"Dar un consejo → condizionale."]]},
+ quest:{ask:"Stasera vorrei leggere al tramonto. Mi porteresti qualcosa con tante pagine?",want:"libro",items:["libro","lettera","cappello"]},
+ sf:{a:"FUTURO",b:"CONDIZIONALE",q:"¿Qué tiempo es?",items:[["andrò",0],["andrei",1],["sarà",0],["sarebbe",1],["vorremmo",1],["potrete",0],["verrebbero",1],["farai",0],["avresti",1],["vedremo",0]]},
+ chest:{w:"POTREBBE",clue:"Lui, condizionale de potere"},card:"Sul Ponte Vecchio, a Firenze, ci sono botteghe di orafi da più di quattrocento anni."},
+{g:"sand",tree:"cypress",
+ sp:{L:[7,1,8,4],h:[[1,4,4],[17,4,4],[2,11,3],[16,11,3],[8,12,6,1]],p:[[1,8,20,1],[10,5,2,3],[6,8,1,8],[6,15,5,1],[15,8,1,3]],o:[[10,8],[11,8]],t:[[5,2],[16,2],[1,9],[20,9]],f:[]},
+ at:{start:[9,9],prof:[3,7],arc:[19,7],board:[13,6],capo:[11,15],talk:[8,10],quest:[19,10],chest:[1,16],q:[[5,7],[16,7],[3,14],[17,14],[14,16]],items:[[1,1],[20,1],[20,16]]},
+ dial:{who:"Tassista",end:"Così si parla! Ecco il timbro.",turns:[
+  ["Secondo te, com'è Roma?",["Penso che sia bellissima.","Penso che è bellissima.","Penso di sia bellissima."],"Penso che + congiuntivo: sia."],
+  ["Domani vai al Colosseo?",["Sì, spero che non piova.","Sì, spero che non piove.","Sì, spero che non pioveva."],"Sperare che + congiuntivo: piova."],
+  ["Vuoi un consiglio?",["Sì, voglio che tu mi dica tutto!","Sì, voglio che tu mi dici tutto!","Sì, voglio che tu mi dirai tutto!"],"Volere che + congiuntivo: dica."]]},
+ quest:{ask:"Con questo sole, bisogna che io trovi qualcosa da mettere in testa!",want:"cappello",items:["cappello","ombrello","bottiglia"]},
+ sf:{a:"INDICATIVO",b:"CONGIUNTIVO",q:"¿Qué modo viene después?",items:[["So che…",0],["Penso che…",1],["Sono sicuro che…",0],["Spero che…",1],["Secondo me…",0],["Bisogna che…",1],["Anche se…",0],["Benché…",1],["Dopo che…",0],["Prima che…",1]]},
+ chest:{w:"FACCIA",clue:"Congiuntivo presente de fare (io)"},card:"Il Colosseo poteva ospitare circa cinquantamila spettatori."},
+{g:"sand",tree:"palm",
+ sp:{L:[13,1,7,3],h:[[2,2,4],[8,2,4],[15,6,3],[2,9,4],[8,9,7,1]],w:[[1,14,20,3]],p:[[1,6,14,1],[6,6,1,8],[1,13,20,1],[11,12,1,1]],b:[[15,14,1,3]],t:[[7,12],[17,12],[20,4],[1,9]],f:[]},
+ at:{start:[6,7],prof:[4,5],arc:[10,5],board:[8,7],capo:[11,12],talk:[4,12],quest:[18,10],chest:[15,16],q:[[12,5],[18,5],[2,7],[13,13],[19,12]],items:[[1,1],[20,8],[1,12]]},
+ dial:{who:"Pizzaiolo",end:"Sei quasi napoletano! Ecco il timbro.",turns:[
+  ["Che pizza faccio per il tuo amico?",["Fagli una margherita!","Lo fai una margherita!","Fare lui una margherita!"],"Fa' + gli → fagli."],
+  ["Arriva una signora anziana. Che cosa le dici?",["Prego, signora, si accomodi!","Prego, signora, accomodati!","Prego, signora, accomodarsi!"],"Con una señora mayor, imperativo formal (Lei): si accomodi."],
+  ["Il conto lo porto a te?",["Sì, portamelo, per favore.","Sì, mi lo porta, per favore.","Sì, portalomi, per favore."],"Porta + mi + lo → portamelo."]]},
+ quest:{ask:"Ho fame! Portami un frutto rosso, ma non mangiarlo tu!",want:"mela",items:["mela","chiave","libro"]},
+ sf:{a:"TU",b:"LEI",q:"¿A quién le hablas?",items:[["Parla!",0],["Parli!",1],["Prendi!",0],["Prenda!",1],["Vieni!",0],["Venga!",1],["Scusa!",0],["Scusi!",1],["Dimmi!",0],["Mi dica!",1],["Senti!",0],["Senta!",1]]},
+ chest:{w:"GLIELO",clue:"gli + lo, en una sola palabra"},card:"La pizza margherita ha i colori della bandiera italiana: pomodoro, mozzarella e basilico."},
+{g:"sand",tree:"palm",
+ sp:{L:[6,1,7,4],h:[[1,5,4],[13,5,4],[6,10,3],[10,10,3],[3,13,6,1]],w:[[18,1,3,16]],p:[[1,9,17,1],[9,5,1,4],[14,9,1,8],[7,16,8,1]],b:[[18,8,2,1]],t:[[17,10],[1,16],[13,2]],f:[]},
+ at:{start:[9,8],prof:[3,8],arc:[15,8],board:[11,6],capo:[6,16],talk:[10,13],quest:[16,12],chest:[19,8],q:[[5,8],[17,3],[1,11],[12,14],[16,15],[2,2]],items:[[1,1],[17,16],[5,12]]},
+ dial:{who:"Pescatore",end:"Parli come un siciliano! Ecco l'ultimo timbro.",turns:[
+  ["Se avessi una barca, che cosa faresti?",["Andrei a pescare ogni mattina.","Andrò a pescare ogni mattina.","Andassi a pescare ogni mattina."],"Se + congiuntivo imperfetto → condizionale: andrei."],
+  ["E se domani fa bel tempo?",["Se fa bel tempo, vado al mare.","Se farebbe bel tempo, vado al mare.","Se facesse bel tempo, vado al mare."],"Hipótesis real: se + presente, presente."],
+  ["Palermo o Milano?",["Palermo è più calda di Milano.","Palermo è più calda che Milano.","Palermo è più calda come Milano."],"Comparar dos ciudades con un adjetivo → di."]]},
+ quest:{ask:"Se avessi la cosa dove metto i vestiti, partirei subito. La vedi?",want:"valigia",items:["valigia","cappello","lettera"]},
+ sf:{a:"DI",b:"CHE",q:"¿Qué falta en el hueco?",items:[["Luca è più alto ___ Marco",0],["È più facile dire ___ fare",1],["Ho più libri ___ te",0],["Mangio più pasta ___ riso",1],["È più simpatico ___ bello",1],["Milano è meno cara ___ Londra",0],["Costa più ___ dieci euro",0],["Meglio tardi ___ mai",1]]},
+ chest:{w:"FOSSIMO",clue:"Noi, congiuntivo imperfetto de essere"},card:"A Palermo si mangiano le arancine: palle di riso fritte, ripiene di ragù."}
+];
+LEVELS.forEach((L,i)=>Object.assign(L,EXTRA[i]));
+const TOUR=[
+{at:{guide:[9,9],stops:[[12,4],[1,7],[19,16]]},facts:[
+ ["La Mole Antonelliana è il simbolo di Torino. È alta 167 metri e oggi ospita il Museo Nazionale del Cinema.","La Mole Antonelliana es el símbolo de Turín. Mide 167 metros y hoy alberga el Museo Nacional del Cine."],
+ ["Torino è stata la prima capitale d'Italia, dal 1861 al 1865.","Turín fue la primera capital de Italia, de 1861 a 1865."],
+ ["Qui è nato il gianduiotto, un cioccolatino a base di nocciole del Piemonte.","Aquí nació el gianduiotto, un bombón hecho con avellanas del Piamonte."]],
+ quiz:["Che cosa ospita oggi la Mole?",["Il Museo del Cinema","Il Parlamento","Una fabbrica di cioccolato"]]},
+{at:{guide:[11,10],stops:[[7,4],[1,7],[18,16]]},facts:[
+ ["Il Duomo è una delle chiese più grandi del mondo. Sul punto più alto c'è la Madonnina, una statua dorata.","El Duomo es una de las iglesias más grandes del mundo. En el punto más alto está la Madonnina, una estatua dorada."],
+ ["Nel Teatro alla Scala, aperto nel 1778, si ascolta l'opera.","En el Teatro alla Scala, abierto en 1778, se escucha ópera."],
+ ["Il piatto tipico è il risotto alla milanese, giallo perché si prepara con lo zafferano.","El plato típico es el risotto a la milanesa, amarillo porque se prepara con azafrán."]],
+ quiz:["Perché il risotto alla milanese è giallo?",["Perché ha lo zafferano","Perché ha il formaggio","Perché ha il limone"]]},
+{at:{guide:[8,7],stops:[[12,3],[1,15],[19,16]]},facts:[
+ ["Il campanile di San Marco è alto quasi 99 metri. Nel 1902 è crollato ed è stato ricostruito «com'era e dov'era».","El campanario de San Marcos mide casi 99 metros. En 1902 se derrumbó y fue reconstruido «como era y donde estaba»."],
+ ["A Venezia non ci sono automobili: ci si muove a piedi o in barca, per esempio con il vaporetto.","En Venecia no hay coches: uno se mueve a pie o en barco, por ejemplo en vaporetto."],
+ ["Il Carnevale di Venezia è famoso in tutto il mondo per le sue maschere.","El Carnaval de Venecia es famoso en todo el mundo por sus máscaras."]],
+ quiz:["Che cosa è successo al campanile nel 1902?",["È crollato","È stato dipinto","È stato venduto"]]},
+{at:{guide:[8,8],stops:[[12,5],[20,3],[5,14]]},facts:[
+ ["Le Due Torri si chiamano Asinelli e Garisenda. La Garisenda è più bassa e molto inclinata.","Las Dos Torres se llaman Asinelli y Garisenda. La Garisenda es más baja y está muy inclinada."],
+ ["L'Università di Bologna, fondata nel 1088, è considerata la più antica d'Europa.","La Universidad de Bolonia, fundada en 1088, se considera la más antigua de Europa."],
+ ["Qui non chiedere «spaghetti alla bolognese»: il ragù si mangia con le tagliatelle.","Aquí no pidas «espaguetis a la boloñesa»: el ragú se come con tagliatelle."]],
+ quiz:["Con quale pasta si mangia il ragù a Bologna?",["Con le tagliatelle","Con gli spaghetti","Con il riso"]]},
+{at:{guide:[11,8],stops:[[7,5],[12,9],[1,16]]},facts:[
+ ["La cupola del Duomo è stata progettata da Filippo Brunelleschi ed è stata finita nel 1436.","La cúpula del Duomo fue diseñada por Filippo Brunelleschi y se terminó en 1436."],
+ ["Il Ponte Vecchio è l'unico ponte di Firenze che non è stato distrutto durante la Seconda guerra mondiale.","El Ponte Vecchio es el único puente de Florencia que no fue destruido durante la Segunda Guerra Mundial."],
+ ["Firenze è considerata la culla del Rinascimento. Qui hanno lavorato Leonardo e Michelangelo.","Florencia se considera la cuna del Renacimiento. Aquí trabajaron Leonardo y Miguel Ángel."]],
+ quiz:["Chi ha progettato la cupola del Duomo?",["Brunelleschi","Michelangelo","Leonardo"]]},
+{at:{guide:[11,9],stops:[[6,5],[12,9],[20,13]]},facts:[
+ ["Il Colosseo è stato inaugurato nell'anno 80 dopo Cristo. Qui combattevano i gladiatori.","El Coliseo se inauguró en el año 80 después de Cristo. Aquí luchaban los gladiadores."],
+ ["Secondo la tradizione, chi lancia una moneta nella Fontana di Trevi tornerà a Roma.","Según la tradición, quien lanza una moneda a la Fontana di Trevi volverá a Roma."],
+ ["Dentro Roma c'è un altro Stato: la Città del Vaticano, il più piccolo del mondo.","Dentro de Roma hay otro Estado: la Ciudad del Vaticano, el más pequeño del mundo."]],
+ quiz:["Secondo la tradizione, che cosa succede se lanci una moneta nella Fontana di Trevi?",["Tornerai a Roma","Diventerai ricco","Non pioverà più"]]},
+{at:{guide:[7,7],stops:[[20,5],[16,9],[9,12]]},facts:[
+ ["Il Vesuvio è un vulcano ancora attivo. Nel 79 dopo Cristo la sua eruzione ha distrutto Pompei.","El Vesubio es un volcán todavía activo. En el 79 después de Cristo su erupción destruyó Pompeya."],
+ ["La pizza margherita è nata qui. Secondo la tradizione, il suo nome è un omaggio alla regina Margherita.","La pizza margarita nació aquí. Según la tradición, su nombre es un homenaje a la reina Margarita."],
+ ["A Napoli il caffè è un rito. Esiste il «caffè sospeso»: paghi un caffè in più per chi non può permetterselo.","En Nápoles el café es un rito. Existe el «café pendiente»: pagas un café de más para quien no puede permitírselo."]],
+ quiz:["Che cos'è un caffè sospeso?",["Un caffè pagato per un'altra persona","Un caffè freddo","Un caffè senza zucchero"]]},
+{at:{guide:[10,8],stops:[[13,3],[9,13],[17,14]]},facts:[
+ ["La cattedrale di Palermo mescola stili diversi: normanno, arabo, gotico e barocco.","La catedral de Palermo mezcla estilos distintos: normando, árabe, gótico y barroco."],
+ ["La Sicilia è stata governata da greci, romani, arabi, normanni e spagnoli. Per questo la sua cultura è così ricca.","Sicilia fue gobernada por griegos, romanos, árabes, normandos y españoles. Por eso su cultura es tan rica."],
+ ["Nei mercati storici, come Ballarò, i venditori chiamano i clienti a voce alta: questa tradizione si chiama «abbanniata».","En los mercados históricos, como Ballarò, los vendedores llaman a los clientes a voces: esta tradición se llama «abbanniata»."]],
+ quiz:["Che cos'è l'abbanniata?",["Il grido dei venditori al mercato","Un dolce siciliano","Una danza tradizionale"]]}
+];
+LEVELS.forEach((L,i)=>L.tour=TOUR[i]);
+const EASY=[
+{city:"Aosta",tema:"Presente indicativo",roof:"#566c86",g:"grass",tree:"cypress",
+ lesson:{intro:"El presente se forma quitando -are, -ere, -ire y añadiendo las terminaciones. Essere y avere son irregulares.",
+  tabs:[{h:"Verbos regulares",r:[["parlare","parlo, parli, parla, parliamo, parlate, parlano"],["prendere","prendo, prendi, prende, prendiamo, prendete, prendono"],["dormire","dormo, dormi, dorme, dormiamo, dormite, dormono"],["capire (-isc-)","capisco, capisci, capisce, capiamo, capite, capiscono"]]},
+   {h:"Irregulares básicos",r:[["essere","sono, sei, è, siamo, siete, sono"],["avere","ho, hai, ha, abbiamo, avete, hanno"],["andare","vado, vai, va, andiamo, andate, vanno"],["fare","faccio, fai, fa, facciamo, fate, fanno"]]}],
+  tip:"La edad, el hambre y el frío van con avere: ho trent'anni, ho fame, ho freddo."},
+ pairs:[["io · essere","sono"],["tu · avere","hai"],["noi · andare","andiamo"],["loro · fare","fanno"],["lui · capire","capisce"],["voi · prendere","prendete"]],
+ text:"Sono in viaggio in Italia. Oggi sono ad Aosta, una piccola città tra le {montagne|montañas}. Fa freddo, ma c'è il sole. La mattina prendo un cappuccino al bar e parlo con la gente. Gli abitanti sono gentili e parlano italiano e francese. Ho una {cartina|mapa} e cammino molto: Aosta è piccola ma bellissima.",
+ q:[
+ {t:"mc",q:"Com'è il tempo ad Aosta?",o:["Fa freddo, ma c'è il sole","Piove molto","Fa molto caldo"],e:"«Fa freddo, ma c'è il sole»."},
+ {t:"gap",s:"Io ___ italiano e spagnolo.",o:["parlo","parla","parli"],e:"Io → -o: parlo."},
+ {t:"gap",s:"Noi ___ un caffè al bar.",o:["prendiamo","prendete","prendono"],e:"Noi → -iamo: prendiamo."},
+ {t:"gap",s:"Marta ___ trent'anni.",o:["ha","è","fa"],e:"La edad va con avere: ha trent'anni."},
+ {t:"order",es:"Los habitantes son amables.",a:["gli abitanti sono gentili","sono gentili gli abitanti"],e:"Loro → sono. El adjetivo concuerda en plural: gentili."}
+ ],
+ sp:{L:[12,1,8,3],h:[[2,2,4],[7,2,4],[15,6,3],[2,9,3],[9,11,7,1]],p:[[1,6,13,1],[6,6,1,9],[6,14,6,1]],w:[[17,11,3,3]],t:[[1,1],[20,5],[1,13],[19,15],[11,8],[5,16]],f:[[3,7],[12,9],[18,9]]},
+ at:{start:[6,7],prof:[4,5],arc:[9,5],board:[8,7],capo:[12,14],talk:[11,5],quest:[18,5],chest:[1,15],q:[[2,7],[13,7],[3,12],[16,9],[15,15]],items:[[20,9],[9,16],[1,3]]},
+ dial:{who:"Guida alpina",end:"Ottimo! Ecco il tuo timbro.",turns:[
+  ["Ciao! Sei qui in vacanza?",["Sì, sono in vacanza.","Sì, ho in vacanza.","Sì, sei in vacanza."],"Io + essere → sono."],
+  ["Hai freddo?",["Sì, ho molto freddo!","Sì, sono molto freddo!","Sì, faccio molto freddo!"],"Tener frío → avere freddo."],
+  ["Che cosa prendi al bar?",["Prendo una cioccolata calda.","Prende una cioccolata calda.","Prendere una cioccolata calda."],"Io → prendo."]]},
+ quest:{ask:"Ho molta fame! Cerco un frutto rosso e rotondo. Me lo porti?",want:"mela",items:["mela","libro","chiave"]},
+ sf:{a:"ESSERE",b:"AVERE",q:"¿Con qué verbo se dice?",items:[["___ fame",1],["___ stanco",0],["___ vent'anni",1],["___ italiano",0],["___ freddo",1],["___ a casa",0],["___ sonno",1],["___ felice",0],["___ un cane",1],["___ in ritardo",0]]},
+ chest:{w:"ABBIAMO",clue:"Noi, presente de avere"},card:"La Valle d'Aosta è la regione più piccola d'Italia e ha due lingue ufficiali: l'italiano e il francese.",
+ tour:{at:{guide:[7,8],stops:[[11,4],[20,15],[4,14]]},facts:[
+  ["Aosta è stata fondata dai Romani nel 25 avanti Cristo. Il suo nome antico era Augusta Praetoria.","Aosta fue fundada por los romanos en el 25 antes de Cristo. Su nombre antiguo era Augusta Praetoria."],
+  ["Vicino ad Aosta c'è il Monte Bianco, la montagna più alta delle Alpi.","Cerca de Aosta está el Mont Blanc, la montaña más alta de los Alpes."],
+  ["Il formaggio tipico è la fontina. Si usa per preparare la fonduta.","El queso típico es la fontina. Se usa para preparar la fondue."]],
+  quiz:["Qual è il formaggio tipico della Valle d'Aosta?",["La fontina","La mozzarella","Il parmigiano"]]}},
+{city:"Genova",tema:"Articoli",roof:"#ef7d57",g:"stone",tree:"palm",
+ lesson:{intro:"El artículo depende del género, del número y de cómo empieza la palabra.",
+  tabs:[{h:"Determinados",r:[["","Singular","Plural"],["masc.","il libro","i libri"],["masc. (s+cons., z)","lo studente","gli studenti"],["masc. (vocal)","l'amico","gli amici"],["fem.","la casa","le case"],["fem. (vocal)","l'amica","le amiche"]]},
+   {h:"Indeterminados",r:[["masc.","un libro, un amico"],["masc. (s+cons., z)","uno studente, uno zaino"],["fem.","una casa"],["fem. (vocal)","un'amica"]]}],
+  tip:"Plurales: -o → -i (libro, libri), -a → -e (casa, case), -e → -i (mare, mari)."},
+ pairs:[["libro","il"],["studente","lo"],["amico","l'"],["casa","la"],["amici","gli"],["case","le"]],
+ text:"Genova è una città di mare. Il {porto|puerto} è molto grande e le navi partono ogni giorno. Nel centro ci sono i «caruggi», le strade strette della città vecchia. Compro un panino e una bottiglia d'acqua, poi visito l'Acquario. Gli {squali|tiburones} sono enormi! La sera mangio la pasta con il pesto: è il piatto tipico.",
+ q:[
+ {t:"mc",q:"Che cosa sono i «caruggi»?",o:["Le strade strette della città vecchia","Le navi del porto","I pesci dell'Acquario"],e:"«I caruggi, le strade strette della città vecchia»."},
+ {t:"gap",s:"___ studente è in biblioteca.",o:["Lo","Il","La"],e:"Masculino con s + consonante → lo."},
+ {t:"gap",s:"Ho ___ amica a Genova.",o:["un'","una","uno"],e:"Femenino que empieza por vocal → un'amica."},
+ {t:"gap",s:"___ amici di Paolo sono simpatici.",o:["Gli","I","Le"],e:"Masculino plural que empieza por vocal → gli."},
+ {t:"spot",s:"Il navi partono ogni giorno.",w:0,fix:"Le",e:"Navi es femenino plural → le navi."}
+ ],
+ sp:{L:[2,9,2,4],h:[[2,2,4],[15,2,4],[8,2,3],[6,7,3],[11,7,3],[14,8,6,1]],w:[[1,13,20,4]],b:[[10,13,1,4]],p:[[1,5,20,1],[1,12,20,1],[9,5,2,7]],t:[[20,1],[1,7],[5,11]],f:[]},
+ at:{start:[9,6],prof:[4,5],arc:[17,5],board:[12,6],capo:[17,11],talk:[5,6],quest:[20,7],chest:[10,16],q:[[12,4],[2,7],[7,10],[12,10],[19,12]],items:[[1,1],[20,11],[14,6]]},
+ dial:{who:"Cameriera",end:"Buon appetito! Ecco il timbro.",turns:[
+  ["Buonasera! Che cosa desidera?",["Vorrei la pasta con il pesto.","Vorrei lo pasta con il pesto.","Vorrei il pasta con lo pesto."],"Pasta es femenino → la pasta; pesto → il pesto."],
+  ["E da bere?",["Un'acqua naturale, per favore.","Uno acqua naturale, per favore.","Un acqua naturale, per favore."],"Femenino que empieza por vocal → un'acqua."],
+  ["Le piace Genova?",["Sì, mi piacciono i caruggi e il porto.","Sì, mi piacciono le caruggi e lo porto.","Sì, mi piacciono gli caruggi e la porto."],"Caruggi es masculino plural → i; porto → il."]]},
+ quest:{ask:"Piove! Cerco un oggetto per non bagnarmi. Lo vedi?",want:"ombrello",items:["ombrello","bottiglia","lettera"]},
+ sf:{a:"IL",b:"LO",q:"¿Qué artículo lleva?",items:[["libro",0],["studente",1],["zaino",1],["treno",0],["sport",1],["mare",0],["zucchero",1],["porto",0],["spagnolo",1],["biglietto",0],["yogurt",1],["pesce",0]]},
+ chest:{w:"AMICHE",clue:"Plural de amica"},card:"Cristoforo Colombo è nato a Genova nel 1451.",
+ tour:{at:{guide:[10,7],stops:[[4,11],[13,3],[20,3]]},facts:[
+  ["La Lanterna è il faro di Genova e il simbolo della città. È alta 77 metri.","La Lanterna es el faro de Génova y el símbolo de la ciudad. Mide 77 metros."],
+  ["Il pesto genovese si prepara con basilico, pinoli, aglio, formaggio e olio d'oliva.","El pesto genovés se prepara con albahaca, piñones, ajo, queso y aceite de oliva."],
+  ["L'Acquario di Genova è uno dei più grandi d'Europa.","El Acuario de Génova es uno de los más grandes de Europa."]],
+  quiz:["Che cos'è la Lanterna?",["Il faro di Genova","Un ristorante famoso","Una nave antica"]]}},
+{city:"Trento",tema:"Preposizioni",roof:"#7a4a2a",g:"grass",tree:"cypress",
+ lesson:{intro:"Las preposiciones a, in, di, da, su se unen al artículo: a + il = al.",
+  tabs:[{h:"¿A, in o da?",r:[["a + ciudad","Vivo a Trento. Vado a Roma."],["in + país o región","Vivo in Italia. Vado in Toscana."],["in + lugares y medios","in banca, in ufficio, in treno, in macchina"],["a + casa, scuola","a casa, a scuola, a letto, a piedi"],["da + persona","Vado da Maria, dal medico."]]},
+   {h:"Con artículo",r:[["","il","la","i","le"],["a","al","alla","ai","alle"],["di","del","della","dei","delle"],["da","dal","dalla","dai","dalle"],["in","nel","nella","nei","nelle"],["su","sul","sulla","sui","sulle"]]}],
+  tip:"Di indica origen o posesión: sono di Madrid, il libro di Anna. Da indica procedencia o desde cuándo: vengo da Milano, studio da un anno."},
+ pairs:[["a + il","al"],["di + la","della"],["in + il","nel"],["da + i","dai"],["su + la","sulla"],["a + le","alle"]],
+ text:"Sono a Trento, in Trentino, nel nord d'Italia. Vado in centro a piedi e arrivo al castello alle dieci. Dal castello si vedono le montagne. A mezzogiorno mangio in una {trattoria|casa de comidas} vicino alla piazza del Duomo. Nel pomeriggio prendo il treno per un {lago|lago}: torno a casa di sera, stanco ma felice.",
+ q:[
+ {t:"mc",q:"A che ora arriva al castello?",o:["Alle dieci","A mezzogiorno","Di sera"],e:"«Arrivo al castello alle dieci»."},
+ {t:"gap",s:"Abito ___ Trento.",o:["a","in","di"],e:"Ciudad → a."},
+ {t:"gap",s:"Domani vado ___ Italia.",o:["in","a","da"],e:"País → in."},
+ {t:"gap",s:"Stasera vado ___ medico.",o:["dal","al","nel"],e:"Ir a ver a una persona → da: dal medico."},
+ {t:"order",es:"Voy al centro a pie.",a:["vado in centro a piedi","a piedi vado in centro"],e:"In centro, a piedi: dos expresiones fijas."}
+ ],
+ sp:{L:[8,1,6,4],h:[[2,3,4],[16,3,4],[2,9,3],[7,8,3],[8,12,6,1]],w:[[16,12,4,4]],p:[[1,7,20,1],[10,5,2,2],[11,7,1,5],[5,11,7,1],[5,11,1,5],[5,15,6,1]],t:[[1,1],[20,1],[6,2],[15,2],[14,9],[1,14],[20,10],[14,16]],f:[[13,9],[3,13],[18,9]]},
+ at:{start:[10,7],prof:[4,6],arc:[18,6],board:[13,6],capo:[11,15],talk:[14,11],quest:[6,5],chest:[20,16],q:[[6,8],[15,6],[3,12],[8,11],[15,13]],items:[[1,9],[20,7],[2,16]]},
+ dial:{who:"Bigliettaio",end:"Buon viaggio! Ecco il timbro.",turns:[
+  ["Buongiorno! Dove va?",["Vado a Bolzano.","Vado in Bolzano.","Vado da Bolzano."],"Ciudad → a."],
+  ["Come viaggia?",["In treno, grazie.","A treno, grazie.","Di treno, grazie."],"Medios de transporte → in: in treno."],
+  ["A che ora parte?",["Parto alle nove.","Parto a le nove.","Parto nelle nove."],"a + le = alle."]]},
+ quest:{ask:"Vado in vacanza, ma non trovo l'oggetto dove metto i vestiti!",want:"valigia",items:["valigia","cappello","mela"]},
+ sf:{a:"A",b:"IN",q:"¿Vado a… o vado in…?",items:[["Roma",0],["Italia",1],["casa",0],["banca",1],["scuola",0],["ufficio",1],["Milano",0],["Francia",1],["letto",0],["montagna",1],["piedi",0],["treno",1]]},
+ chest:{w:"SULLA",clue:"su + la"},card:"A Trento, nel sedicesimo secolo, si è tenuto il famoso Concilio di Trento.",
+ tour:{at:{guide:[9,6],stops:[[7,4],[19,8],[1,12]]},facts:[
+  ["Il Castello del Buonconsiglio è stato per secoli la casa dei principi vescovi di Trento.","El Castillo del Buonconsiglio fue durante siglos la casa de los príncipes obispos de Trento."],
+  ["Vicino a Trento ci sono le Dolomiti, montagne che sono patrimonio UNESCO.","Cerca de Trento están los Dolomitas, montañas que son patrimonio de la UNESCO."],
+  ["In Trentino si mangiano i canederli: palle di pane con speck o formaggio.","En Trentino se comen los canederli: bolas de pan con speck o queso."]],
+  quiz:["Che cosa sono i canederli?",["Palle di pane con speck o formaggio","Dolci di cioccolato","Montagne del Trentino"]]}},
+{city:"Trieste",tema:"C'è, ci sono e aggettivi",roof:"#3b7dd8",g:"stone",tree:"tree",
+ lesson:{intro:"C'è (singular) y ci sono (plural) dicen qué hay en un lugar. Los adjetivos concuerdan con el nombre.",
+  tabs:[{h:"C'è / ci sono",r:[["c'è + singular","C'è un bar. C'è una piazza."],["ci sono + plural","Ci sono due bar. Ci sono molte piazze."],["negación","Non c'è tempo. Non ci sono treni."],["pregunta","C'è un bancomat qui vicino?"]]},
+   {h:"Adjetivos",r:[["","Singular","Plural"],["-o / -a","piccolo, piccola","piccoli, piccole"],["-e","grande","grandi"]]},
+   {h:"Molto",r:[["molto + adjetivo","no cambia: molto bella, molto belli"],["molto + nombre","concuerda: molti bar, molte piazze"]]}],
+  tip:"No confundas c'è (hay) con è (es): C'è un caffè in piazza. Il caffè è buono."},
+ pairs:[["grande","piccolo"],["vecchio","nuovo"],["caldo","freddo"],["caro","economico"],["vicino","lontano"],["aperto","chiuso"]],
+ text:"Trieste è una città elegante, vicino alla Slovenia. In centro c'è una piazza enorme davanti al mare: Piazza Unità d'Italia. Ci sono molti caffè storici, con tavoli di {legno|madera} e {specchi|espejos} antichi. Oggi c'è la bora, un vento molto forte, e le strade sono quasi vuote. Io però sono contento: in un caffè c'è sempre un posto caldo.",
+ q:[
+ {t:"mc",q:"Che cos'è la bora?",o:["Un vento molto forte","Un caffè storico","Una piazza di Trieste"],e:"«La bora, un vento molto forte»."},
+ {t:"gap",s:"In piazza ___ una fontana.",o:["c'è","ci sono","è"],e:"Una fontana (singular) → c'è."},
+ {t:"gap",s:"A Trieste ___ molti caffè storici.",o:["ci sono","c'è","sono"],e:"Molti caffè (plural) → ci sono."},
+ {t:"gap",s:"Le strade sono ___.",o:["vuote","vuota","vuoti"],e:"Strade es femenino plural → vuote."},
+ {t:"gap",s:"Ci sono ___ turisti oggi.",o:["molti","molto","molte"],e:"Molto + nombre concuerda: molti turisti."}
+ ],
+ sp:{L:[6,1,4,4],h:[[12,2,4],[17,2,3],[13,8,3],[17,8,3],[8,12,7,1]],w:[[1,1,4,16]],b:[[3,9,2,1]],p:[[5,6,6,5],[11,6,10,1],[16,7,1,9],[12,15,5,1]],o:[[7,8]],t:[[20,1],[20,16],[5,13],[6,15]],f:[]},
+ at:{start:[10,7],prof:[14,5],arc:[18,5],board:[9,5],capo:[11,15],talk:[6,9],quest:[19,12],chest:[3,9],q:[[11,3],[20,6],[14,11],[18,11],[6,12]],items:[[5,16],[20,9],[10,1]]},
+ dial:{who:"Cameriere",end:"Buona giornata! Ecco il timbro.",turns:[
+  ["Buongiorno! Cerca qualcosa?",["Sì, c'è un tavolo libero?","Sì, ci sono un tavolo libero?","Sì, è un tavolo libero?"],"Un tavolo (singular) → c'è."],
+  ["Certo. Com'è il nostro caffè?",["È molto buono!","È molta buono!","È molti buono!"],"Molto + adjetivo no cambia."],
+  ["Che cosa c'è da vedere a Trieste?",["Ci sono molte piazze bellissime.","C'è molte piazze bellissime.","Ci sono molto piazze bellissimo."],"Plural → ci sono; molte piazze bellissime concuerdan."]]},
+ quest:{ask:"C'è molto vento! Cerco una cosa da mettere in testa.",want:"cappello",items:["cappello","chiave","libro"]},
+ sf:{a:"C'È",b:"CI SONO",q:"¿Cómo empieza la frase?",items:[["… un bar",0],["… due bar",1],["… una piazza",0],["… molti turisti",1],["… il mare",0],["… tre caffè",1],["… un problema",0],["… le montagne",1],["… molto vento",0],["… tante navi",1]]},
+ chest:{w:"PICCOLE",clue:"Femenino plural de piccolo"},card:"A Trieste il caffè ha nomi speciali: un espresso si chiama «nero».",
+ tour:{at:{guide:[11,8],stops:[[5,5],[8,10],[19,15]]},facts:[
+  ["Piazza Unità d'Italia è una delle piazze più grandi d'Europa aperte sul mare.","La Piazza Unità d'Italia es una de las plazas más grandes de Europa abiertas al mar."],
+  ["Trieste è stata per secoli il porto principale dell'Impero austriaco.","Trieste fue durante siglos el puerto principal del Imperio austríaco."],
+  ["Lo scrittore irlandese James Joyce ha vissuto a Trieste per molti anni.","El escritor irlandés James Joyce vivió en Trieste durante muchos años."]],
+  quiz:["Quale scrittore ha vissuto a Trieste?",["James Joyce","William Shakespeare","Miguel de Cervantes"]]}},
+{city:"Perugia",tema:"Verbi riflessivi e orari",roof:"#c0392b",g:"grass",tree:"cypress",
+ lesson:{intro:"Los verbos reflexivos llevan el pronombre delante: mi, ti, si, ci, vi, si. Sirven para hablar de la rutina.",
+  tabs:[{h:"Alzarsi",r:[["io","mi alzo"],["tu","ti alzi"],["lui / lei","si alza"],["noi","ci alziamo"],["voi","vi alzate"],["loro","si alzano"]]},
+   {h:"Rutina",r:[["svegliarsi","despertarse"],["alzarsi","levantarse"],["lavarsi","lavarse"],["vestirsi","vestirse"],["riposarsi","descansar"],["addormentarsi","dormirse"]]},
+   {h:"La hora",r:[["Che ore sono?","Sono le otto. È l'una."],["A che ora?","Alle otto. All'una. A mezzogiorno."],["media / cuarto","le otto e mezza, le otto e un quarto"]]}],
+  tip:"Con un infinitivo el pronombre se pega al final: devo alzarmi presto."},
+ pairs:[["io","mi alzo"],["tu","ti alzi"],["lei","si alza"],["noi","ci alziamo"],["voi","vi alzate"],["loro","si alzano"]],
+ text:"A Perugia mi sveglio presto, alle sette. Mi alzo, mi lavo e mi vesto in fretta. Alle otto faccio colazione in un bar del centro. Gli studenti dell'università si incontrano in piazza e si siedono sulle {scale|escaleras} del Duomo. Il pomeriggio mi riposo un po'. La sera ci divertiamo: a Perugia c'è sempre musica e non ci si {annoia|aburre} mai.",
+ q:[
+ {t:"mc",q:"Dove si siedono gli studenti?",o:["Sulle scale del Duomo","In un bar del centro","In biblioteca"],e:"«Si siedono sulle scale del Duomo»."},
+ {t:"gap",s:"Io ___ alle sette.",o:["mi sveglio","si sveglia","ti svegli"],e:"Io → mi sveglio."},
+ {t:"gap",s:"I ragazzi ___ in piazza.",o:["si incontrano","ci incontriamo","si incontra"],e:"Loro → si incontrano."},
+ {t:"gap",s:"A che ora ___ tu?",o:["ti alzi","mi alzo","si alza"],e:"Tu → ti alzi."},
+ {t:"spot",s:"Noi si divertiamo molto a Perugia.",w:1,fix:"ci",e:"Noi → ci divertiamo."}
+ ],
+ sp:{L:[8,1,6,4],h:[[2,2,4],[16,2,4],[1,9,3],[17,9,3],[9,12,6,1]],p:[[8,5,6,4],[1,7,20,1],[10,9,2,2],[6,10,10,1],[6,10,1,6],[6,15,6,1]],o:[[10,6],[11,6]],t:[[1,1],[20,1],[6,3],[15,6],[20,14],[1,15],[15,16]],f:[[4,13],[16,13],[13,11]]},
+ at:{start:[9,8],prof:[4,5],arc:[18,5],board:[13,5],capo:[12,15],talk:[7,6],quest:[15,9],chest:[20,16],q:[[5,7],[16,7],[2,12],[18,12],[3,15]],items:[[1,5],[20,8],[8,13]]},
+ dial:{who:"Studentessa",end:"A stasera! Ecco il timbro.",turns:[
+  ["Ciao! A che ora ti svegli di solito?",["Mi sveglio alle sette.","Ti svegli alle sette.","Si sveglio alle sette."],"Io → mi sveglio."],
+  ["E come ti chiami?",["Mi chiamo Alex.","Si chiama Alex.","Mi chiami Alex."],"Io → mi chiamo."],
+  ["Stasera c'è un concerto. Venite?",["Sì, ci divertiamo sempre ai concerti!","Sì, si divertiamo sempre ai concerti!","Sì, vi divertiamo sempre ai concerti!"],"Noi → ci divertiamo."]]},
+ quest:{ask:"Cerco un foglio di carta con un messaggio di mia madre. Lo vedi?",want:"lettera",items:["lettera","ombrello","mela"]},
+ sf:{a:"IO",b:"LUI / LEI",q:"¿Quién lo hace?",items:[["mi alzo",0],["si alza",1],["mi lavo",0],["si veste",1],["mi sveglio",0],["si riposa",1],["mi chiamo",0],["si chiama",1],["mi diverto",0],["si addormenta",1]]},
+ chest:{w:"SVEGLIA",clue:"El reloj que te despierta por la mañana"},card:"A Perugia si producono i Baci, famosi cioccolatini con una nocciola e un messaggio d'amore.",
+ tour:{at:{guide:[12,9],stops:[[9,6],[7,4],[19,15]]},facts:[
+  ["La Fontana Maggiore, del tredicesimo secolo, è il simbolo di Perugia.","La Fontana Maggiore, del siglo XIII, es el símbolo de Perugia."],
+  ["Perugia ha un'Università per Stranieri: qui arrivano studenti da tutto il mondo per imparare l'italiano.","Perugia tiene una Universidad para Extranjeros: aquí llegan estudiantes de todo el mundo para aprender italiano."],
+  ["A Perugia si organizza Eurochocolate, una grande festa del cioccolato.","En Perugia se organiza Eurochocolate, una gran fiesta del chocolate."]],
+  quiz:["Che cosa si impara all'Università per Stranieri?",["L'italiano","La cucina","La musica"]]}},
+{city:"Ancona",tema:"Piacere e possessivi",roof:"#e07a1f",g:"sand",tree:"palm",
+ lesson:{intro:"Piacere funciona como «gustar»: mi piace + singular o verbo, mi piacciono + plural. Los posesivos llevan artículo.",
+  tabs:[{h:"Piacere",r:[["mi piace","il mare, viaggiare"],["mi piacciono","i gatti, le città"],["¿a quién?","mi, ti, gli (a lui), le (a lei), ci, vi, gli (a loro)"],["negación","Non mi piace il caffè."]]},
+   {h:"Posesivos",r:[["","masc.","fem."],["io","il mio","la mia"],["tu","il tuo","la tua"],["lui / lei","il suo","la sua"],["noi","il nostro","la nostra"],["voi","il vostro","la vostra"],["loro","il loro","la loro"]]}],
+  tip:"Con un familiar en singular no hay artículo: mia madre, tuo fratello. Pero sí en plural y con loro: i miei genitori, la loro madre."},
+ pairs:[["io · libro","il mio"],["tu · casa","la tua"],["lei · libro","il suo"],["noi · casa","la nostra"],["voi · libro","il vostro"],["loro · casa","la loro"]],
+ text:"Ancona è una città sul mare Adriatico. Mi piace molto il suo porto, pieno di {traghetti|ferris} per la Grecia e la Croazia. La mia amica Giulia abita qui con suo fratello. Il loro appartamento è piccolo, ma ha una vista bellissima. A Giulia piacciono le {spiagge|playas} del Conero; a me piace soprattutto il pesce fresco. Stasera ceniamo insieme: cucina sua madre!",
+ q:[
+ {t:"mc",q:"Con chi abita Giulia?",o:["Con suo fratello","Con sua madre","Da sola"],e:"«Giulia abita qui con suo fratello»."},
+ {t:"gap",s:"Mi ___ le spiagge del Conero.",o:["piacciono","piace","piaccio"],e:"Le spiagge (plural) → piacciono."},
+ {t:"gap",s:"Ti ___ viaggiare in treno?",o:["piace","piacciono","piaci"],e:"Con un verbo → piace."},
+ {t:"gap",s:"___ madre cucina molto bene.",o:["Mia","La mia","Il mio"],e:"Familiar en singular: sin artículo → mia madre."},
+ {t:"gap",s:"Questi sono ___ genitori.",o:["i miei","miei","le mie"],e:"En plural sí lleva artículo: i miei genitori."}
+ ],
+ sp:{L:[12,1,3,4],h:[[1,2,4],[6,2,4],[1,8,3],[10,7,3],[5,12,7,1]],w:[[16,1,5,16]],b:[[16,10,3,1]],p:[[1,6,15,1],[14,6,1,10],[9,15,6,1],[5,6,1,5],[1,11,14,1]],t:[[15,2],[15,13],[1,13],[3,16],[13,13]],f:[]},
+ at:{start:[6,7],prof:[3,5],arc:[8,5],board:[8,7],capo:[8,15],talk:[11,10],quest:[13,8],chest:[18,10],q:[[10,5],[2,7],[2,11],[15,5],[12,16]],items:[[1,15],[15,16],[11,1]]},
+ dial:{who:"Giulia",end:"Allora a cena da noi! Ecco il timbro.",turns:[
+  ["Ciao! Ti piace Ancona?",["Sì, mi piace molto!","Sì, mi piacciono molto!","Sì, ti piace molto!"],"Ancona (singular) → mi piace."],
+  ["E ti piacciono i frutti di mare?",["Sì, mi piacciono tantissimo.","Sì, mi piace tantissimo.","Sì, mi piaccio tantissimo."],"Plural → mi piacciono."],
+  ["Questo è Marco. Sai chi è?",["Certo, è tuo fratello!","Certo, è il tuo fratello!","Certo, è tua fratello!"],"Familiar en singular: sin artículo, y masculino → tuo fratello."]]},
+ quest:{ask:"Ho molta sete e mi piace l'acqua fresca. Cerco un contenitore di vetro.",want:"bottiglia",items:["bottiglia","valigia","cappello"]},
+ sf:{a:"MI PIACE",b:"MI PIACCIONO",q:"¿Cómo empieza la frase?",items:[["… il mare",0],["… i gatti",1],["… viaggiare",0],["… le spiagge",1],["… la pizza",0],["… gli spaghetti",1],["… leggere",0],["… i film italiani",1],["… il gelato",0],["… le città d'arte",1]]},
+ chest:{w:"NOSTRA",clue:"Posesivo de noi, femenino singular"},card:"Dal monte Conero, vicino ad Ancona, si vede il mare Adriatico da molto in alto.",
+ tour:{at:{guide:[7,8],stops:[[11,4],[15,9],[4,16]]},facts:[
+  ["L'Arco di Traiano è stato costruito dai Romani quasi duemila anni fa.","El Arco de Trajano fue construido por los romanos hace casi dos mil años."],
+  ["Il nome Ancona viene dal greco «ankón», che significa «gomito», per la forma della costa.","El nombre Ancona viene del griego «ankón», que significa «codo», por la forma de la costa."],
+  ["Il piatto tipico è lo stoccafisso all'anconetana, un pesce cucinato con patate e pomodoro.","El plato típico es el stoccafisso all'anconetana, un pescado cocinado con patatas y tomate."]],
+  quiz:["Che cosa significa «ankón» in greco?",["Gomito","Porto","Mare"]]}}
+];
+LEVELS.push(...EASY);
+const ROUTES=[{n:"Ruta fácil · A2",ids:[8,9,10,11,12,13]},{n:"Ruta B1",ids:[0,1,2,3,4,5,6,7]}];
+const routeOf=c=>ROUTES.find(r=>r.ids.includes(c));
+const nextOf=c=>{const r=routeOf(c).ids;return r[r.indexOf(c)+1]};
+const isOpen=i=>i===0||i===8||!!save.open[i];
+const TQ=[
+[["Che cosa ospita oggi la Mole?",["Il Museo del Cinema","Il Parlamento","Una fabbrica di cioccolato"],"land"],["Quando Torino è stata capitale d'Italia?",["Dal 1861 al 1865","Dal 1900 al 1920","Mai"],"book"],["Con che cosa si fa il gianduiotto?",["Con le nocciole","Con le mandorle","Con il caffè"],"choc"]],
+[["Come si chiama la statua dorata sul Duomo?",["La Madonnina","La Gioconda","La Venere"],"land"],["Che cosa si ascolta al Teatro alla Scala?",["L'opera","Il jazz","La radio"],"mask"],["Perché il risotto alla milanese è giallo?",["Per lo zafferano","Per il limone","Per il formaggio"],"plate"]],
+[["Che cosa è successo al campanile nel 1902?",["È crollato","È stato venduto","È stato dipinto"],"land"],["Come ci si muove a Venezia?",["A piedi o in barca","In macchina","In metropolitana"],"sea"],["Per che cosa è famoso il Carnevale di Venezia?",["Per le maschere","Per i fuochi d'artificio","Per le corse di cavalli"],"mask"]],
+[["Come si chiamano le Due Torri?",["Asinelli e Garisenda","Mole e Lanterna","Pisa e Lucca"],"land"],["Quando è stata fondata l'Università di Bologna?",["Nel 1088","Nel 1888","Nel 1500"],"book"],["Con quale pasta si mangia il ragù a Bologna?",["Con le tagliatelle","Con gli spaghetti","Con le lasagne fredde"],"plate"]],
+[["Chi ha progettato la cupola del Duomo?",["Brunelleschi","Michelangelo","Leonardo"],"land"],["Che cosa ha di speciale il Ponte Vecchio?",["Non è stato distrutto nella guerra","È il ponte più lungo d'Italia","È fatto di legno"],"sea"],["Firenze è la culla di quale periodo?",["Il Rinascimento","Il Barocco","L'Impero romano"],"book"]],
+[["Chi combatteva nel Colosseo?",["I gladiatori","I cavalieri","I marinai"],"land"],["Che cosa succede se lanci una moneta nella Fontana di Trevi?",["Tornerai a Roma","Diventerai ricco","Non pioverà più"],"fount"],["Qual è lo Stato più piccolo del mondo?",["La Città del Vaticano","San Marino","Monaco"],"book"]],
+[["Quale città ha distrutto il Vesuvio nel 79?",["Pompei","Napoli","Roma"],"land"],["A chi è dedicata la pizza margherita?",["Alla regina Margherita","A una pizzaiola","A una santa"],"plate"],["Che cos'è un caffè sospeso?",["Un caffè pagato per un'altra persona","Un caffè freddo","Un caffè senza zucchero"],"cup"]],
+[["Com'è lo stile della cattedrale di Palermo?",["Un misto di stili diversi","Solo gotico","Moderno"],"land"],["Perché la cultura siciliana è così ricca?",["Per i tanti popoli che l'hanno governata","Per il clima caldo","Perché è un'isola"],"sea"],["Che cos'è l'abbanniata?",["Il grido dei venditori al mercato","Un dolce siciliano","Una danza tradizionale"],"plate"]],
+[["Chi ha fondato Aosta?",["I Romani","I Greci","I Francesi"],"book"],["Qual è la montagna più alta delle Alpi?",["Il Monte Bianco","Il Vesuvio","Il Monte Rosa"],"land"],["Qual è il formaggio tipico della Valle d'Aosta?",["La fontina","La mozzarella","Il parmigiano"],"plate"]],
+[["Che cos'è la Lanterna?",["Il faro di Genova","Un ristorante famoso","Una nave antica"],"land"],["Quale ingrediente NON c'è nel pesto genovese?",["Il pomodoro","Il basilico","I pinoli"],"plate"],["Com'è l'Acquario di Genova?",["Uno dei più grandi d'Europa","Il più piccolo d'Italia","Chiuso da anni"],"sea"]],
+[["Chi abitava nel Castello del Buonconsiglio?",["I principi vescovi","I re d'Italia","I soldati austriaci"],"land"],["Quali montagne ci sono vicino a Trento?",["Le Dolomiti","Gli Appennini","Le Ande"],"mount"],["Che cosa sono i canederli?",["Palle di pane con speck o formaggio","Dolci al cioccolato","Montagne del Trentino"],"plate"]],
+[["Dove si trova Piazza Unità d'Italia?",["Davanti al mare","In montagna","Vicino a un lago"],"land"],["Di quale impero Trieste era il porto principale?",["L'Impero austriaco","L'Impero romano","L'Impero ottomano"],"sea"],["Quale scrittore ha vissuto a Trieste?",["James Joyce","William Shakespeare","Miguel de Cervantes"],"book"]],
+[["Qual è il simbolo di Perugia?",["La Fontana Maggiore","La Lanterna","Il Colosseo"],"fount"],["Che cosa si impara all'Università per Stranieri?",["L'italiano","La cucina","La musica"],"book"],["Che cos'è Eurochocolate?",["Una festa del cioccolato","Un museo","Un treno"],"choc"]],
+[["Chi ha costruito l'Arco di Traiano?",["I Romani","I Greci","I Veneziani"],"land"],["Che cosa significa «ankón» in greco?",["Gomito","Porto","Mare"],"sea"],["Con che cosa si cucina lo stoccafisso all'anconetana?",["Patate e pomodoro","Riso e zafferano","Panna e funghi"],"plate"]]
+];
+LEVELS.forEach((L,i)=>L.tour.qs=TQ[i]);
+
+/* ---------- ilustraciones ---------- */
+function drawPic(x,key,c){
+  const L=LEVELS[c],G=GROUND[L.g];
+  R(x,0,0,132,72,"#73eff7");R(x,108,6,10,10,"#ffcd75");R(x,12,10,18,4,"#f4f4e4");R(x,16,7,10,3,"#f4f4e4");R(x,0,64,132,8,G[0]);
+  if(key==="land"){const w=L.sp.L[2]*16,h=L.sp.L[3]*16;LAND[c](x,Math.round((132-w)/2),64-h,G[0]);return}
+  if(key==="plate"||key==="cup"){R(x,0,52,132,20,"#a7663a");R(x,0,52,132,2,"#5d3a1a")}
+  if(key==="plate"){R(x,36,42,60,12,"#f4f4e4");R(x,30,46,72,6,"#f4f4e4");R(x,46,36,40,10,"#ffcd75");R(x,52,32,28,6,"#ffcd75");R(x,56,34,18,6,"#b13e53");R(x,64,31,4,3,"#38b764");R(x,104,30,3,22,"#94b0c2");R(x,102,28,7,4,"#94b0c2")}
+  else if(key==="cup"){R(x,40,50,52,4,"#f4f4e4");R(x,48,32,36,18,"#f4f4e4");R(x,84,36,8,10,"#f4f4e4");R(x,84,39,4,4,"#73eff7");R(x,50,32,32,3,"#5d3a1a");R(x,58,20,2,8,"#f4f4e4");R(x,66,16,2,10,"#f4f4e4");R(x,74,20,2,8,"#f4f4e4")}
+  else if(key==="mount"){pyr(x,8,64,72,50,10,"#566c86");pyr(x,34,26,20,12,4,"#f4f4e4");pyr(x,58,64,66,40,8,"#7a93a8");pyr(x,82,32,18,8,3,"#f4f4e4")}
+  else if(key==="sea"){R(x,42,64,132,8,"#41a6f6");R(x,0,44,132,20,"#41a6f6");for(let i=0;i<6;i++)R(x,6+i*22,50+(i%2)*7,10,1,"#f4f4e4");R(x,46,38,40,6,"#a7663a");R(x,50,44,32,3,"#5d3a1a");R(x,64,12,2,26,"#5d3a1a");for(let i=0;i<22;i++)R(x,66,14+i,1+Math.floor(i*0.8),1,"#f4f4e4");R(x,58,12,6,3,"#b13e53")}
+  else if(key==="fount"){R(x,28,50,76,14,"#c5d3dc");R(x,32,52,68,5,"#41a6f6");R(x,62,28,8,22,"#c5d3dc");R(x,50,26,32,4,"#c5d3dc");R(x,65,12,2,14,"#3b5dc9");R(x,58,16,2,10,"#3b5dc9");R(x,72,16,2,10,"#3b5dc9");R(x,50,30,2,20,"#3b5dc9");R(x,80,30,2,20,"#3b5dc9")}
+  else if(key==="mask"){R(x,36,20,60,4,"#b13e53");R(x,36,24,60,22,"#ffcd75");R(x,42,46,48,6,"#ffcd75");R(x,46,30,14,8,"#1a1c2c");R(x,72,30,14,8,"#1a1c2c");R(x,40,6,4,14,"#b13e53");R(x,48,10,4,10,"#38b764");R(x,88,6,4,14,"#3b5dc9");R(x,62,40,8,2,"#e0a100");R(x,96,40,3,24,"#5d3a1a")}
+  else if(key==="book"){R(x,26,24,40,32,"#f4f4e4");R(x,66,24,40,32,"#f4f4e4");R(x,64,22,4,36,"#5d3a1a");R(x,24,54,84,4,"#b13e53");for(let i=0;i<4;i++){R(x,30,30+i*6,30,1,"#566c86");R(x,72,30+i*6,30,1,"#566c86")}}
+  else if(key==="choc"){R(x,30,28,72,28,"#5d3a1a");for(let i=1;i<4;i++)R(x,30+i*18,28,1,28,"#3a2210");R(x,30,42,72,1,"#3a2210");R(x,30,50,72,12,"#c5d3dc");R(x,30,50,72,2,"#94b0c2");R(x,104,52,9,9,"#a7663a");R(x,106,53,3,2,"#c9a468")}
+}
+
+/* ---------- mapa de Italia ---------- */
+const CITYLL=[[7.69,45.07],[9.19,45.46],[12.33,45.44],[11.34,44.49],[11.25,43.77],[12.5,41.9],[14.27,40.85],[13.36,38.12],[7.32,45.74],[8.93,44.41],[11.12,46.07],[13.78,45.65],[12.39,43.11],[13.52,43.62]];
+const B2LL=[[13.4,42.35],[14.66,41.56],[16.87,41.12],[16.6,40.67],[15.65,38.11],[9.11,39.22]];
+const ITALY=[[7.05,45.9],[7.9,45.95],[8.45,46.45],[9.05,46.0],[9.3,46.5],[10.1,46.6],[10.45,46.85],[11.0,46.75],[12.15,47.08],[12.7,46.65],[13.7,46.52],[13.4,46.2],[13.65,45.95],[13.9,45.58],[13.5,45.78],[13.1,45.75],[12.4,45.45],[12.2,45.2],[12.55,44.85],[12.25,44.4],[12.6,44.1],[13.75,43.62],[14.0,42.7],[14.7,42.1],[15.15,41.95],[16.1,41.95],[15.9,41.55],[16.9,41.15],[18.0,40.6],[18.5,40.15],[18.35,39.8],[17.9,40.3],[17.2,40.4],[16.6,40.1],[16.5,39.6],[17.15,39.4],[17.1,38.9],[16.55,38.75],[16.1,38.0],[15.55,38.0],[15.85,38.65],[16.2,38.9],[15.75,39.8],[15.25,40.1],[14.95,40.25],[14.45,40.6],[14.0,40.8],[13.75,41.25],[13.0,41.25],[12.2,41.7],[11.6,42.3],[11.1,42.45],[10.5,42.95],[10.25,43.85],[9.8,44.1],[8.95,44.4],[8.2,43.9],[7.5,43.8],[6.9,44.4],[7.0,45.0],[6.8,45.15],[7.15,45.4]];
+const SICILY=[[12.4,37.8],[13.0,38.15],[13.4,38.2],[14.2,38.0],[15.2,38.25],[15.65,38.25],[15.1,37.4],[15.3,37.0],[15.1,36.65],[14.5,36.8],[13.0,37.5],[12.6,37.6]];
+const SARD=[[8.4,41.1],[9.2,41.25],[9.8,40.9],[9.7,40.1],[9.6,39.15],[9.0,39.2],[8.4,38.9],[8.4,39.8],[8.5,40.6]];
+const proj=([lo,la])=>[Math.round((lo-6.4)*9.6),Math.round((47.3-la)*12.5)];
+function pline(x,a,b,col,dot){let [x0,y0]=a;const [x1,y1]=b,dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx+dy,n=0;
+  for(;;){if(!dot||n%4<2)R(x,x0,y0,2,2,col);n++;if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx}if(e2<=dx){e+=dx;y0+=sy}}}
+function drawItaly(x){
+  R(x,0,0,120,140,"#41a6f6");
+  for(const poly of [ITALY,SICILY,SARD]){x.fillStyle="#38b764";x.beginPath();poly.forEach((p,k)=>{const [a,b]=proj(p);k?x.lineTo(a,b):x.moveTo(a,b)});x.closePath();x.fill()}
+  for(let k=0;k<B2LL.length-1;k++)pline(x,proj(B2LL[k]),proj(B2LL[k+1]),"#94b0c2",true);
+  for(const r of ROUTES)for(let k=0;k<r.ids.length-1;k++){const a=r.ids[k],b=r.ids[k+1],done=(save.stars[a]||0)>0;pline(x,proj(CITYLL[a]),proj(CITYLL[b]),done?"#ffcd75":"#f4f4e4",!done)}
+  B2LL.forEach(p=>{const [a,b]=proj(p);R(x,a-1,b-1,4,4,"#566c86")});
+  CITYLL.forEach((p,i)=>{const [a,b]=proj(p),cur=i===save.city,col=cur?"#b13e53":(save.stars[i]||0)>0?"#ffcd75":isOpen(i)?"#f4f4e4":"#566c86";
+    if(cur){R(x,a-3,b-3,8,8,"#1a1c2c");R(x,a-2,b-2,6,6,col)}else{R(x,a-2,b-2,6,6,"#1a1c2c");R(x,a-1,b-1,4,4,col)}});
+}
+function postRender(c){
+  if(!ov.querySelector)return;const L=LEVELS[c];
+  const pc=(S.ov==="stop"||S.ov==="rip")&&ov.querySelector("#pic");if(pc){const i=S.ov==="stop"?S.i:S.list[S.n].i;drawPic(pc.getContext("2d"),L.tour.qs[i][2],c)}
+  const it=S.ov==="map"&&ov.querySelector("#italy");if(it)drawItaly(it.getContext("2d"));
+}
+
+/* ---------- tour guiado ---------- */
+let W=null;
+const dirOf=(dx,dy)=>dx>0?"right":dx<0?"left":dy<0?"up":"down";
+const guideEnt=()=>ents.find(e=>e.k==="guide");
+function bfs(sx,sy,goal){
+  const key=(x,y)=>x+","+y,prev={},q=[[sx,sy]];prev[key(sx,sy)]=null;
+  while(q.length){const [x,y]=q.shift();
+    if(goal(x,y)){const p=[];let k=key(x,y);while(k){p.unshift(k.split(",").map(Number));k=prev[k]}return p}
+    for(const d in DIRS){const nx=x+DIRS[d][0],ny=y+DIRS[d][1],k=key(nx,ny);
+      if(k in prev||nx<0||ny<0||nx>=MW||ny>=MH||SOLID.includes(MAP[ny][nx]))continue;
+      const e=entAt(nx,ny);if(e&&e.k!=="guide")continue;prev[k]=key(x,y);q.push([nx,ny])}}
+  return null;
+}
+function guideTo(i){
+  const f=LEVELS[save.city].tour.at.stops[i],gd=guideEnt();
+  const p=bfs(P.x,P.y,(x,y)=>Math.abs(x-f[0])+Math.abs(y-f[1])===1);
+  if(!p||p.length<2){W=null;return show("stop",{i,tr:false,guided:true})}
+  W={p,s:1,t:0,g0:[gd.x,gd.y],i};P.moving=false;for(const k in held)held[k]=false;hud();
+}
+function stepWalk(dt){
+  const gd=guideEnt(),p=W.p,s=W.s;W.t=Math.min(1,W.t+dt/170);
+  const A=s===1?W.g0:p[s-1],B=p[s];
+  gd.fx=A[0]+(B[0]-A[0])*W.t;gd.fy=A[1]+(B[1]-A[1])*W.t;gd.dir=dirOf(B[0]-A[0],B[1]-A[1]);gd.wk=W.t>.5?1:0;
+  if(s>=2){const a=p[s-2],b=p[s-1];P.fx=a[0]+(b[0]-a[0])*W.t;P.fy=a[1]+(b[1]-a[1])*W.t;P.dir=dirOf(b[0]-a[0],b[1]-a[1]);P.moving=true;P.t=W.t}
+  if(W.t>=1){gd.x=B[0];gd.y=B[1];delete gd.fx;delete gd.fy;gd.wk=0;
+    if(s>=2){P.x=p[s-1][0];P.y=p[s-1][1];P.fx=P.x;P.fy=P.y;P.step^=1}P.moving=false;
+    W.s++;W.t=0;if(W.s>=p.length)arrive()}
+}
+function arrive(){
+  const i=W.i,f=LEVELS[save.city].tour.at.stops[i],gd=guideEnt();
+  if(Math.abs(gd.x-P.x)+Math.abs(gd.y-P.y)===1)P.dir=dirOf(gd.x-P.x,gd.y-P.y);
+  gd.dir=dirOf(f[0]-gd.x,f[1]-gd.y);W=null;show("stop",{i,tr:false,guided:true});
+}
+function finishTour(){
+  const c=save.city,t=tourOf(c),gd=guideEnt(),h=LEVELS[c].tour.at.guide;
+  t.done=true;save.hearts=3;gd.x=h[0];gd.y=h[1];gd.dir="down";persist();hud();
+  say("Guida","<span class='it'>Il tour è finito. Grazie a tutti!</span><br>Recuperas tus 3 vidas y los apuntes quedan en el Quaderno. Antes de subir al tren, el Capotreno te hará 3 preguntas sobre el tour: si aciertas todas, viajas en VIP.");
+}
+function board(c,vip){
+  const L=LEVELS[c],st=Math.max(save.stars[c]||0,Math.max(1,3-(save.miss[c]||0)));save.stars[c]=st;if(vip)save.vip[c]=1;
+  const cls=vip?"<b>Biglietto VIP · prima classe!</b>":"<b>Biglietto turista · seconda classe.</b>",sr="<span style='font-size:28px'>"+stars(st)+"</span>",nx=nextOf(c);
+  if(nx!==undefined){save.open[nx]=1;persist();
+    say("Capotreno",cls+"<br>"+L.city+" superada: "+sr+"<br>Próxima parada: <b>"+LEVELS[nx].city+"</b> ("+esc(LEVELS[nx].tema)+").",btn("SUBIR AL TREN →","data-go="+nx)+btn("QUEDARME AQUÍ","data-close",""))}
+  else{persist();say("Capotreno",cls+"<br>Complimenti! Has completado la "+routeOf(c).n+": "+sr+"<br>Desde el Mapa puedes volver a cualquier ciudad para mejorar tus estrellas o empezar otra ruta.")}
+}
+
+
+const tourOf=c=>save.tour[c]||(save.tour[c]={on:false,seen:[],done:false});
+const tourNotes=c=>tourOf(c).done?`<div class="eyebrow">Appunti del tour · ${esc(LEVELS[c].city)}</div>`+LEVELS[c].tour.facts.map(f=>`<p class="tip">${esc(f[0])}</p>`).join(""):"";
+function drawFlag(c,x,y,seen){R(c,x+4,y+14,8,2,"rgba(0,0,0,.25)");R(c,x+5,y+1,2,14,"#1a1c2c");R(c,x+7,y+2,7,5,seen?"#38b764":"#ffcd75");R(c,x+7,y+7,4,1,seen?"#257179":"#e0a100")}
+
+const ITEMS={chiave:["la chiave","la llave"],valigia:["la valigia","la maleta"],libro:["il libro","el libro"],ombrello:["l'ombrello","el paraguas"],mela:["la mela","la manzana"],lettera:["la lettera","la carta"],cappello:["il cappello","el sombrero"],bottiglia:["la bottiglia","la botella"]};
+
+/* ---------- mundo ---------- */
+const T=16,VW=15,VH=13,MW=22,MH=18,SOLID="#~rRhHdDLo";
+const GROUND={grass:["#38b764","#257179","#a7f070","#e8c98a","#c9a468"],stone:["#94b0c2","#7a93a8","#b4c6d4","#c5d3dc","#a9bccb"],sand:["#e8c98a","#c9a468","#f4e0b0","#f4f4e4","#c5c5b0"]};
+const SHIRTS=["#3b5dc9","#38b764","#ef7d57","#b13e53","#73eff7","#a7f070"];
+const HAIRS=["#5d275d","#333c57","#a7663a","#1a1c2c","#ffcd75","#94b0c2"];
+const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+
+const K="il-viaggio-arcade-v1";
+let save={city:0,max:0,done:{},lesson:{},stars:{},miss:{},hearts:3,seen:{},cards:{},best:{},carry:null,tour:{},open:{},vip:{}};
+try{const s=JSON.parse(localStorage.getItem(K));if(s&&typeof s.city==="number")save=Object.assign(save,s)}catch(e){}
+for(let i=1;i<=Math.min(save.max||0,7);i++)save.open[i]=1;
+const persist=()=>{try{localStorage.setItem(K,JSON.stringify(save))}catch(e){}};
+
+const $=id=>document.getElementById(id);
+const cv=$("cv"),g=cv.getContext("2d"),ov=$("ov");
+const bg=document.createElement("canvas");bg.width=MW*T;bg.height=MH*T;const bgx=bg.getContext("2d");
+let ents=[],MAP=[],tm=0;
+const P={x:7,y:8,fx:7,fy:8,dir:"down",moving:false,t:0,tx:7,ty:8,step:0};
+const held={};let S={ov:null};
+
+function buildMap(sp){
+  const m=[];for(let y=0;y<MH;y++){m.push([]);for(let x=0;x<MW;x++)m[y].push(x===0||y===0||x===MW-1||y===MH-1?"#":".")}
+  const fill=(r,ch)=>{for(let y=r[1];y<r[1]+r[3];y++)for(let x=r[0];x<r[0]+r[2];x++)m[y][x]=ch};
+  (sp.w||[]).forEach(r=>fill(r,"~"));(sp.p||[]).forEach(r=>fill(r,","));(sp.b||[]).forEach(r=>fill(r,"="));
+  (sp.h||[]).forEach(([x,y,w,s])=>{fill([x,y,w,2],s?"R":"r");fill([x,y+2,w,1],s?"H":"h");m[y+2][x+(w>>1)]=s?"D":"d"});
+  (sp.t||[]).forEach(([x,y])=>m[y][x]="#");(sp.f||[]).forEach(([x,y])=>m[y][x]="f");(sp.o||[]).forEach(([x,y])=>m[y][x]="o");
+  if(sp.L)fill(sp.L,"L");
+  return m;
+}
+const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
+const pyr=(c,x,yb,w,h,n,col)=>{for(let i=0;i<n;i++)R(c,x+i*w/2/n,yb-(i+1)*h/n,w-i*w/n,h/n,col)};
+function drawTile(c,ch,tx,ty,L){
+  const x=tx*T,y=ty*T,n=(tx*7+ty*13)%5,G=GROUND[L.g];
+  if(ch===","){R(c,x,y,T,T,G[3]);R(c,x+3+n,y+4,2,1,G[4]);R(c,x+9-n,y+11,2,1,G[4]);return}
+  if(ch==="~"){R(c,x,y,T,T,"#41a6f6");R(c,x+2+n,y+4,5,1,"#73eff7");R(c,x+8-n,y+11,5,1,"#73eff7");return}
+  if(ch==="="){R(c,x,y,T,T,"#a7663a");R(c,x,y+4,T,1,"#5d3a1a");R(c,x,y+10,T,1,"#5d3a1a");R(c,x,y+15,T,1,"#5d3a1a");return}
+  if(ch==="r"||ch==="R"){const col=ch==="R"?"#566c86":L.roof;R(c,x,y,T,T,col);R(c,x,y+7,T,1,"rgba(0,0,0,.25)");R(c,x,y+15,T,1,"rgba(0,0,0,.25)");R(c,x+(ty%2?4:12),y,1,7,"rgba(0,0,0,.2)");R(c,x+(ty%2?12:4),y+8,1,7,"rgba(0,0,0,.2)");return}
+  if("hHdD".includes(ch)){R(c,x,y,T,T,"#f4f4e4");R(c,x,y+14,T,2,"#94b0c2");
+    if(ch==="d"||ch==="D"){R(c,x+3,y+3,10,13,"#5d3a1a");R(c,x+4,y+4,8,12,"#a7663a");R(c,x+10,y+10,1,2,"#ffcd75")}
+    else{R(c,x+4,y+4,8,7,"#333c57");R(c,x+5,y+5,6,5,"#73eff7");R(c,x+7,y+5,1,5,"#333c57")}
+    return}
+  R(c,x,y,T,T,G[0]);
+  if(L.g==="stone"){R(c,x,y+15,T,1,G[1]);R(c,x+(ty%2?7:15),y,1,T,G[1])}
+  else{R(c,x+2+n*2,y+3,1,2,G[1]);R(c,x+11-n,y+10,1,2,G[1]);R(c,x+6,y+13-n,1,2,G[2])}
+  if(ch==="#"){
+    if(L.tree==="palm"){R(c,x+7,y+6,2,10,"#a7663a");R(c,x+2,y+3,12,2,"#38b764");R(c,x+4,y+1,8,2,"#257179");R(c,x+1,y+5,3,2,"#257179");R(c,x+12,y+5,3,2,"#257179")}
+    else if(L.tree==="cypress"){R(c,x+7,y+13,2,3,"#5d3a1a");R(c,x+5,y+3,6,11,"#257179");R(c,x+6,y+1,4,2,"#257179");R(c,x+6,y+4,2,6,"#38b764")}
+    else{R(c,x+6,y+10,4,6,"#5d3a1a");R(c,x+2,y+1,12,10,"#257179");R(c,x+1,y+3,14,6,"#257179");R(c,x+4,y+2,5,3,"#38b764");R(c,x+3,y+5,2,2,"#38b764")}}
+  if(ch==="f"){R(c,x+3,y+4,2,2,"#b13e53");R(c,x+10,y+6,2,2,"#ffcd75");R(c,x+6,y+11,2,2,"#f4f4e4");R(c,x+4,y+6,1,2,"#257179");R(c,x+11,y+8,1,2,"#257179")}
+  if(ch==="o"){R(c,x+1,y+3,14,12,"#c5d3dc");R(c,x+3,y+5,10,8,"#41a6f6");R(c,x+7,y+1,2,7,"#73eff7")}
+}
+const LAND=[
+ (c,X,Y)=>{R(c,X+6,Y+40,36,24,"#c5d3dc");R(c,X+6,Y+47,36,2,"#94b0c2");R(c,X+20,Y+52,8,12,"#333c57");pyr(c,X+8,Y+40,32,24,6,"#566c86");R(c,X+22,Y+3,4,14,"#94b0c2");R(c,X+23,Y,2,4,"#ffcd75")},
+ (c,X,Y)=>{R(c,X+4,Y+34,88,30,"#f4f4e4");pyr(c,X+4,Y+34,88,18,6,"#f4f4e4");for(let i=0;i<7;i++){const h=Math.abs(3-i)*6;R(c,X+5+i*14,Y+4+h,3,34,"#f4f4e4");R(c,X+5+i*14,Y+2+h,3,2,"#ffcd75")}R(c,X+42,Y+46,12,18,"#5d3a1a");R(c,X+20,Y+48,8,16,"#566c86");R(c,X+68,Y+48,8,16,"#566c86");R(c,X+4,Y+62,88,2,"#94b0c2")},
+ (c,X,Y)=>{R(c,X+8,Y+20,16,44,"#c0392b");R(c,X+6,Y+14,20,7,"#f4f4e4");R(c,X+9,Y+16,3,4,"#333c57");R(c,X+14,Y+16,3,4,"#333c57");R(c,X+19,Y+16,3,4,"#333c57");pyr(c,X+8,Y+14,16,12,4,"#38b764");R(c,X+14,Y+52,4,12,"#333c57")},
+ (c,X,Y)=>{R(c,X+3,Y+4,10,60,"#a7663a");R(c,X+2,Y+1,12,4,"#5d3a1a");R(c,X+7,Y+14,2,4,"#333c57");R(c,X+7,Y+34,2,4,"#333c57");R(c,X+17,Y+26,10,13,"#c0392b");R(c,X+18,Y+39,10,13,"#c0392b");R(c,X+19,Y+51,10,13,"#c0392b");R(c,X+16,Y+23,12,4,"#5d3a1a");R(c,X+22,Y+44,2,4,"#333c57")},
+ (c,X,Y)=>{R(c,X+4,Y+36,72,28,"#f4f4e4");R(c,X+4,Y+44,72,2,"#38b764");R(c,X+4,Y+54,72,2,"#38b764");pyr(c,X+16,Y+36,48,24,6,"#c0392b");R(c,X+38,Y+5,4,8,"#f4f4e4");R(c,X+36,Y+48,8,16,"#5d3a1a")},
+ (c,X,Y,gc)=>{R(c,X+2,Y+14,124,50,"#d9a441");R(c,X+72,Y+14,54,14,gc);R(c,X+62,Y+14,10,6,gc);for(let r=0;r<3;r++)for(let i=0;i<10;i++){if(r===0&&i>4)continue;R(c,X+6+i*12,Y+19+r*16,6,10,"#5d3a1a")}R(c,X+2,Y+30,124,2,"#a7663a");R(c,X+2,Y+46,124,2,"#a7663a")},
+ (c,X,Y)=>{pyr(c,X,Y+48,112,40,8,"#5d275d");pyr(c,X+16,Y+48,80,12,3,"#38b764");R(c,X+46,Y+7,20,3,"#b13e53");R(c,X+52,Y+2,8,5,"#c5d3dc");R(c,X+58,Y,8,4,"#c5d3dc")},
+ (c,X,Y)=>{R(c,X+4,Y+30,104,34,"#d9a441");R(c,X+4,Y+8,12,56,"#d9a441");R(c,X+96,Y+8,12,56,"#d9a441");R(c,X+7,Y+2,6,6,"#ef7d57");R(c,X+99,Y+2,6,6,"#ef7d57");pyr(c,X+44,Y+30,24,14,4,"#ef7d57");for(let i=0;i<6;i++)R(c,X+22+i*12,Y+40,6,12,"#5d3a1a");R(c,X+50,Y+50,12,14,"#5d3a1a");for(let i=0;i<9;i++)R(c,X+18+i*9,Y+27,5,3,"#d9a441")}
+];
+LAND.push(
+ (c,X,Y)=>{pyr(c,X,Y+48,80,44,8,"#566c86");pyr(c,X+48,Y+48,80,36,7,"#7a93a8");R(c,X+30,Y+9,20,6,"#f4f4e4");R(c,X+35,Y+4,10,6,"#f4f4e4");R(c,X+82,Y+12,12,6,"#f4f4e4");R(c,X+77,Y+17,23,5,"#f4f4e4")},
+ (c,X,Y)=>{R(c,X+9,Y+30,14,34,"#c5d3dc");R(c,X+7,Y+28,18,3,"#566c86");R(c,X+12,Y+10,8,18,"#c5d3dc");R(c,X+10,Y+8,12,3,"#566c86");R(c,X+13,Y+3,6,5,"#ffcd75");R(c,X+14,Y,4,3,"#566c86");R(c,X+14,Y+54,4,10,"#333c57");R(c,X+15,Y+38,2,4,"#333c57")},
+ (c,X,Y)=>{R(c,X+4,Y+26,88,38,"#d8c7a0");for(let i=0;i<11;i++)R(c,X+4+i*8,Y+22,5,4,"#d8c7a0");R(c,X+66,Y+6,20,58,"#c9b68a");R(c,X+64,Y+3,24,5,"#a7663a");for(let i=0;i<5;i++)R(c,X+12+i*10,Y+36,5,8,"#333c57");R(c,X+73,Y+16,5,8,"#333c57");R(c,X+36,Y+50,12,14,"#5d3a1a")},
+ (c,X,Y)=>{R(c,X+4,Y+30,56,34,"#f4f4e4");R(c,X+40,Y+8,16,56,"#f4f4e4");for(let i=0;i<7;i++)R(c,X+4+i*8,Y+26,5,4,"#f4f4e4");R(c,X+40,Y+4,6,4,"#f4f4e4");R(c,X+50,Y+4,6,4,"#f4f4e4");for(let i=0;i<4;i++)R(c,X+9+i*8,Y+38,4,7,"#566c86");R(c,X+46,Y+16,4,7,"#566c86");R(c,X+20,Y+52,8,12,"#5d3a1a");R(c,X+4,Y+62,56,2,"#94b0c2")},
+ (c,X,Y)=>{R(c,X+4,Y+16,88,48,"#e0d2b4");for(let i=0;i<11;i++)R(c,X+4+i*8,Y+12,5,4,"#e0d2b4");for(let r=0;r<2;r++)for(let i=0;i<7;i++)R(c,X+10+i*12,Y+22+r*14,6,9,"#333c57");R(c,X+41,Y+50,14,14,"#5d3a1a");R(c,X+4,Y+62,88,2,"#a7663a")},
+ (c,X,Y,gc)=>{R(c,X+6,Y+8,36,56,"#f4f4e4");R(c,X+16,Y+28,16,36,gc);R(c,X+18,Y+26,12,2,gc);R(c,X+4,Y+6,40,6,"#c5d3dc");R(c,X+6,Y+20,36,2,"#c5d3dc");R(c,X+6,Y+62,10,2,"#94b0c2");R(c,X+32,Y+62,10,2,"#94b0c2")}
+);
+function drawChar(c,x,y,o,dir,step){
+  R(c,x+3,y+14,10,2,"rgba(0,0,0,.25)");
+  const l=step?1:0;
+  R(c,x+5,y+12,2,3-l,"#1a1c2c");R(c,x+9,y+12,2,2+l,"#1a1c2c");
+  R(c,x+4,y+8,8,5,o.shirt);R(c,x+3,y+9,1,3,o.shirt);R(c,x+12,y+9,1,3,o.shirt);
+  R(c,x+4,y+2,8,6,"#f2c9a0");R(c,x+4,y+1,8,2,o.hair);R(c,x+3,y+2,1,3,o.hair);R(c,x+12,y+2,1,3,o.hair);
+  if(dir==="up")R(c,x+4,y+2,8,5,o.hair);
+  else if(dir==="left")R(c,x+5,y+4,1,2,"#1a1c2c");
+  else if(dir==="right")R(c,x+10,y+4,1,2,"#1a1c2c");
+  else{R(c,x+6,y+4,1,2,"#1a1c2c");R(c,x+9,y+4,1,2,"#1a1c2c")}
+  if(o.hat){R(c,x+3,y,10,3,o.hat);R(c,x+3,y+3,11,1,"#1a1c2c")}
+}
+function drawBoard(c,x,y){R(c,x+7,y+9,2,7,"#5d3a1a");R(c,x+1,y+1,14,10,"#5d3a1a");R(c,x+2,y+2,12,8,"#f4f4e4");R(c,x+4,y+4,8,1,"#566c86");R(c,x+4,y+6,6,1,"#566c86")}
+function drawChest(c,x,y,opened){R(c,x+2,y+14,12,2,"rgba(0,0,0,.25)");R(c,x+2,y+6,12,9,"#a7663a");R(c,x+2,y+6,12,1,"#5d3a1a");R(c,x+2,y+14,12,1,"#5d3a1a");
+  if(opened){R(c,x+2,y+2,12,4,"#5d3a1a");R(c,x+4,y+7,8,3,"#ffcd75")}else{R(c,x+2,y+3,12,4,"#c0392b");R(c,x+7,y+8,2,3,"#ffcd75")}}
+function drawItem(c,id,x,y){
+  R(c,x+3,y+14,10,1,"rgba(0,0,0,.25)");
+  if(id==="chiave"){R(c,x+3,y+6,5,5,"#ffcd75");R(c,x+5,y+8,1,1,"#1a1c2c");R(c,x+8,y+8,6,2,"#ffcd75");R(c,x+11,y+10,1,2,"#ffcd75");R(c,x+13,y+10,1,2,"#ffcd75")}
+  else if(id==="valigia"){R(c,x+6,y+4,4,1,"#1a1c2c");R(c,x+6,y+4,1,2,"#1a1c2c");R(c,x+9,y+4,1,2,"#1a1c2c");R(c,x+3,y+6,10,8,"#a7663a");R(c,x+5,y+6,1,8,"#5d3a1a");R(c,x+10,y+6,1,8,"#5d3a1a")}
+  else if(id==="libro"){R(c,x+4,y+4,9,10,"#3b5dc9");R(c,x+5,y+12,8,1,"#f4f4e4");R(c,x+6,y+6,5,2,"#ffcd75")}
+  else if(id==="ombrello"){R(c,x+5,y+3,6,2,"#b13e53");R(c,x+3,y+5,10,3,"#b13e53");R(c,x+8,y+8,1,6,"#1a1c2c");R(c,x+6,y+13,2,1,"#1a1c2c")}
+  else if(id==="mela"){R(c,x+5,y+6,7,7,"#b13e53");R(c,x+4,y+8,9,3,"#b13e53");R(c,x+8,y+4,1,2,"#5d3a1a");R(c,x+9,y+4,2,1,"#38b764");R(c,x+6,y+7,1,2,"#f4f4e4")}
+  else if(id==="lettera"){R(c,x+3,y+6,10,7,"#f4f4e4");R(c,x+3,y+6,10,1,"#566c86");R(c,x+3,y+12,10,1,"#566c86");R(c,x+7,y+8,2,2,"#b13e53")}
+  else if(id==="cappello"){R(c,x+5,y+6,6,4,"#e0a100");R(c,x+5,y+9,6,1,"#5d3a1a");R(c,x+2,y+10,12,2,"#e0a100")}
+  else{R(c,x+7,y+3,2,4,"#257179");R(c,x+6,y+7,4,7,"#257179");R(c,x+6,y+10,4,2,"#f4f4e4")}
+}
+function mark(c,x,y,ok){
+  if(ok){R(c,x+5,y-5,2,2,"#38b764");R(c,x+7,y-3,2,2,"#38b764");R(c,x+9,y-5,2,2,"#38b764");R(c,x+11,y-7,2,2,"#38b764")}
+  else{R(c,x+6,y-9,4,7,"#1a1c2c");R(c,x+7,y-8,2,4,"#ffcd75");R(c,x+7,y-3,2,1,"#ffcd75")}
+}
+
+const doneOf=c=>save.done[c]||(save.done[c]=[]);
+const need=c=>LEVELS[c].q.length+2;
+function buildCity(){
+  const c=save.city,L=LEVELS[c],A=L.at;
+  MAP=buildMap(L.sp);
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)drawTile(bgx,MAP[y][x],x,y,L);
+  if(L.sp.L)LAND[c](bgx,L.sp.L[0]*T,L.sp.L[1]*T,GROUND[L.g][0]);
+  const at=(k,p,o)=>({k,x:p[0],y:p[1],o});
+  ents=[at("prof",A.prof,{shirt:"#5d275d",hair:"#94b0c2"}),at("arc",A.arc,{shirt:"#ffcd75",hair:"#b13e53"}),at("board",A.board),
+        at("capo",A.capo,{shirt:"#29366f",hair:"#333c57",hat:"#29366f"}),at("talk",A.talk,{shirt:"#f4f4e4",hair:"#1a1c2c",hat:"#f4f4e4"}),
+        at("quest",A.quest,{shirt:"#257179",hair:"#ffcd75"}),at("chest",A.chest)];
+  L.q.forEach((_,i)=>ents.push(Object.assign(at("q",A.q[i],{shirt:SHIRTS[(i+c)%6],hair:HAIRS[(i*2+c)%6]}),{i})));
+  L.quest.items.forEach((id,i)=>ents.push(Object.assign(at("item",A.items[i]),{id})));
+  ents.push(at("guide",L.tour.at.guide,{shirt:"#ef7d57",hair:"#333c57"}));L.tour.at.stops.forEach((p,i)=>ents.push(Object.assign(at("flag",p),{i})));
+  Object.assign(P,{x:A.start[0],y:A.start[1],fx:A.start[0],fy:A.start[1],dir:"down",moving:false});
+  hud();
+}
+function hud(){
+  const c=save.city,L=LEVELS[c],d=doneOf(c).length,n=need(c);
+  const rt=routeOf(c).ids;$("hCity").textContent=(rt.indexOf(c)+1)+"/"+rt.length+" "+L.city.toUpperCase();
+  $("hStamps").textContent="SELLOS "+d+"/"+n;
+  $("hHearts").innerHTML=[0,1,2].map(i=>`<span class="${i<save.hearts?"":"off"}">♥</span>`).join("");
+  $("goal").textContent=W?"▶ Sigue a la guía…":save.carry?"▶ Llevas "+ITEMS[save.carry][0]+". ¿A quién se lo das?":!save.lesson[c]?"▶ Busca a la Prof, frente a la escuela.":d<n?"▶ Consigue sellos: habla con todos los que tienen «!».":!tourOf(c).done?"▶ Haz el free walking tour con la guía del paraguas amarillo.":"▶ Ve a la estación: el Capotreno te preguntará sobre el tour.";
+}
+const hidden=e=>e.k==="item"&&(save.carry===e.id||doneOf(save.city).includes("F"))||e.k==="flag"&&!tourOf(save.city).on;
+const entAt=(x,y)=>ents.find(e=>e.x===x&&e.y===y&&!hidden(e));
+const walk=(x,y)=>x>=0&&y>=0&&x<MW&&y<MH&&!SOLID.includes(MAP[y][x])&&!entAt(x,y);
+
+let last=0;
+function frame(t){
+  const dt=Math.min(50,t-last);last=t;
+  if(W&&!S.ov)stepWalk(dt);
+  else if(!S.ov){
+    if(P.moving){P.t+=dt/150;
+      if(P.t>=1){P.x=P.tx;P.y=P.ty;P.fx=P.x;P.fy=P.y;P.moving=false;P.step^=1}
+      else{P.fx=P.x+(P.tx-P.x)*P.t;P.fy=P.y+(P.ty-P.y)*P.t}}
+    if(!P.moving){const d=["up","down","left","right"].find(k=>held[k]);
+      if(d){P.dir=d;const nx=P.x+DIRS[d][0],ny=P.y+DIRS[d][1];if(walk(nx,ny)){P.tx=nx;P.ty=ny;P.t=0;P.moving=true}}}
+  }
+  const cx=Math.round(Math.max(0,Math.min(MW*T-VW*T,P.fx*T-VW*T/2+8))),cy=Math.round(Math.max(0,Math.min(MH*T-VH*T,P.fy*T-VH*T/2+8)));
+  g.drawImage(bg,-cx,-cy);
+  const c=save.city,d=doneOf(c);
+  const list=ents.filter(e=>!hidden(e)).concat([{k:"me",x:P.fx,y:P.fy}]).sort((a,b)=>a.y-b.y);
+  for(const e of list){const x=Math.round((e.fx??e.x)*T)-cx,y=Math.round((e.fy??e.y)*T)-cy;
+    if(e.k==="me"){drawChar(g,x,y,{shirt:"#b13e53",hair:"#5d3a1a",hat:"#b13e53"},P.dir,P.moving&&P.t>.5?1:P.step);if(save.carry)drawItem(g,save.carry,x,y-13)}
+    else if(e.k==="board")drawBoard(g,x,y);
+    else if(e.k==="chest")drawChest(g,x,y,save.cards[c]);
+    else if(e.k==="item")drawItem(g,e.id,x,y);
+    else if(e.k==="flag")drawFlag(g,x,y,tourOf(c).seen.includes(e.i));
+    else{drawChar(g,x,y,e.o,e.dir||"down",e.wk||0);
+      if(e.k==="q")mark(g,x,y,d.includes(e.i));
+      else if(e.k==="talk")mark(g,x,y,d.includes("D"));
+      else if(e.k==="quest")mark(g,x,y,d.includes("F"));
+      else if(e.k==="prof"&&!save.lesson[c])mark(g,x,y,false);
+      else if(e.k==="capo"&&d.length>=need(c)&&tourOf(c).done)mark(g,x,y,false);
+      else if(e.k==="guide"){R(g,x+13,y-3,1,13,"#1a1c2c");R(g,x+9,y-6,9,3,"#ffcd75");R(g,x+11,y-8,5,2,"#ffcd75")}}}
+  requestAnimationFrame(frame);
+}
+
+/* ---------- ventanas ---------- */
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const stars=n=>[0,1,2].map(i=>`<span class="star${i<n?"":" off"}">★</span>`).join("");
+const passage=t=>esc(t).replace(/\{([^|]+)\|([^}]+)\}/g,(m,w,tr)=>`<span class="gl" data-w="${w}" data-tr="${tr}">${w}</span>`);
+const btn=(label,attr,cls)=>`<button class="pbtn ${cls===undefined?"go":cls}" ${attr}>${label}</button>`;
+function show(v,o){clearTimeout(tm);S=Object.assign({ov:v},o||{});for(const k in held)held[k]=false;render()}
+function hide(){clearTimeout(tm);S={ov:null};render();hud()}
+function say(who,txt,extra){show("say",{who,txt,extra})}
+function lose(){const c=save.city;save.hearts--;save.miss[c]=(save.miss[c]||0)+1;persist();hud()}
+function dead(){
+  if(save.hearts>0)return false;
+  const c=save.city,A=LEVELS[c].at;save.done[c]=[];save.miss[c]=0;save.hearts=3;save.carry=null;persist();
+  Object.assign(P,{x:A.start[0],y:A.start[1],fx:A.start[0],fy:A.start[1],dir:"down",moving:false});
+  say("Sin vidas","Te has quedado sin vidas y pierdes los sellos de "+LEVELS[c].city+". Repasa el Quaderno y vuelve a intentarlo. Consejo: en la sala giochi recuperas vidas.");
+  return true;
+}
+function allDone(){const c=save.city;if(doneOf(c).length>=need(c)){say("Sellos completos","Hai tutti i timbri! Ve a la estación y habla con el Capotreno.");return true}return false}
+
+function lessonHtml(c){
+  const L=LEVELS[c],l=L.lesson;
+  return `<p>${esc(l.intro)}</p>`+l.tabs.map(t=>`<div><div class="eyebrow" style="margin-bottom:4px">${esc(t.h)}</div><table>${t.r.map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join("")}</tr>`).join("")}</table></div>`).join("")+`<p class="tip">${esc(l.tip)}</p>`;
+}
+const hp=()=>`<span class="hp">${"♥".repeat(Math.max(0,save.hearts))}</span>`;
+function qHtml(){
+  const L=LEVELS[save.city],q=L.q[S.i],d=S.res;let b="";
+  if(q.t==="mc"||q.t==="gap"){
+    b=(q.t==="mc"?`<p class="mute">Sobre el texto del tablón:</p><p class="it">${esc(q.q)}</p>`
+      :`<p class="mute">Completa la frase:</p><p class="it">${esc(q.s).replace("___",`<span class="blank">${d?esc(q.o[0]):"&nbsp;"}</span>`)}</p>`)
+     +`<div class="opts">${S.opts.map(i=>`<button class="opt${d?(i===0?" ok":i===S.pick?" no":""):""}" data-opt="${i}" ${d?"disabled":""}>${esc(q.o[i])}</button>`).join("")}</div>`;
+  }else if(q.t==="order"){
+    b=`<p class="mute">Ordena las palabras para decir:</p><p class="it">${esc(q.es)}</p>
+    <div class="answer tiles">${S.ans.map((t,k)=>`<button class="tile" data-back="${k}" ${d?"disabled":""}>${esc(t)}</button>`).join("")}</div>
+    <div class="tiles">${S.bank.map((t,k)=>`<button class="tile" data-take="${k}" ${d?"disabled":""}>${esc(t)}</button>`).join("")}</div>
+    ${d?"":btn("COMPROBAR","data-check "+(S.bank.length?"disabled":""))}`;
+  }else b=`<p class="mute">Hay una palabra equivocada. Tócala.</p><p class="it">${q.s.split(" ").map((w,i)=>`<button class="word${d?(i===q.w?" ok":i===S.pick?" no":""):""}" data-word="${i}" ${d?"disabled":""}>${esc(w)}</button>`).join(" ")}</p>`;
+  const fb=d?`<div class="fb ${d.ok?"ok":"no"}"><b>${d.ok?"GIUSTO! +1 SELLO":"SBAGLIATO · -1 ♥"}</b>${d.sol?`<span class="it">${esc(d.sol)}</span>`:""}<span>${esc(q.e)}</span></div>${btn("CONTINUAR","data-qnext")}`
+    :`<div class="row">${btn("QUADERNO","data-note","")}${btn("VER TEXTO","data-text","")}${btn("SALIR","data-close","")}</div>`;
+  return `<div class="row"><span class="eyebrow">Reto · ${esc(L.tema)}</span>${hp()}</div>${b}${fb}`;
+}
+function render(){
+  if(!S.ov){ov.className="";ov.innerHTML="";return}
+  const c=save.city,L=LEVELS[c];let h="",top=true;
+  if(S.ov==="say"){top=false;h=`<div class="eyebrow">${esc(S.who)}</div><p>${S.txt}</p>${S.extra||btn("OK","data-close")}`}
+  else if(S.ov==="lesson")h=`<div class="eyebrow">La Prof · ${esc(L.city)}</div><h2>${esc(L.tema)}</h2>${lessonHtml(c)}<p class="mute">Esta página queda guardada en tu Quaderno: puedes abrirla en cualquier momento, también durante un reto.</p>${btn("ENTENDIDO","data-close")}`;
+  else if(S.ov==="q")h=qHtml();
+  else if(S.ov==="note"){
+    const got=LEVELS.map((_,i)=>i).filter(i=>save.lesson[i]);
+    const sel=got.includes(S.sel)?S.sel:got[got.length-1];
+    h=`<h2>Quaderno</h2>`+(got.length?`<div class="tabs">${got.map(i=>`<button class="tab${i===sel?" on":""}" data-sel="${i}">${esc(LEVELS[i].city)}</button>`).join("")}</div><div class="eyebrow">${esc(LEVELS[sel].tema)}</div>${lessonHtml(sel)}${tourNotes(sel)}`:`<p>Todavía está vacío. Habla con la Prof de ${esc(L.city)} para apuntar tu primera lección.</p>`)+btn("CERRAR","data-back2");
+  }
+  else if(S.ov==="text")h=`<div class="eyebrow">Tablón de ${esc(L.city)}</div><p class="it">${passage(L.text)}</p><p class="mute" id="gloss">Toca una palabra subrayada para traducirla.</p>${btn("CERRAR","data-back2")}`;
+  else if(S.ov==="map"){
+    const cards=LEVELS.filter((_,i)=>save.cards[i]);
+    h=`<h2>Mapa del viaje</h2><canvas id="italy" width="120" height="140"></canvas><p class="legend mute"><span style="color:#e0a100">━</span> hecho · ┅ pendiente · <span style="color:#b13e53">■</span> estás aquí · gris: ruta B2, próximamente</p>${ROUTES.map(r=>`<div class="eyebrow">${r.n}</div>`+r.ids.map((i,k)=>{const x=LEVELS[i];return `<button class="mapbtn" data-go="${i}" ${isOpen(i)?"":"disabled"}><span>${k+1}. ${esc(x.city)}${i===c?" ◀":""}${save.cards[i]?" ✉":""}${tourOf(i).done?" ⚑":""}${save.vip[i]?" VIP":""}</span><span>${isOpen(i)?stars(save.stars[i]||0):"cerrada"}</span></button>`}).join("")).join("")}<div class="eyebrow">Ruta avanzada · B2</div><p class="mute">Próximamente.</p>
+    <div class="eyebrow">Cartoline · ${cards.length}/${LEVELS.length}</div>${cards.length?cards.map(x=>`<p class="tip"><b>${esc(x.city)}.</b> ${esc(x.card)}</p>`).join(""):`<p class="mute">Abre el baúl de cada ciudad para coleccionar sus postales.</p>`}${btn("CERRAR","data-close")}`;
+  }
+  else if(S.ov==="arc"){top=false;h=`<div class="eyebrow">Sala giochi</div><p>Scegli un gioco! Si completas uno, recuperas tus 3 vidas.</p>${btn("COPPIE · UNIR PAREJAS","data-game='pairs'")}${btn("SFIDA VELOCE · CONTRARRELOJ"+(save.best[c]?" ("+save.best[c]+"/10)":""),"data-game='sfida'")}${btn("SALIR","data-close","")}`}
+  else if(S.ov==="pairs"){
+    const left=S.items.filter(x=>!S.ok.includes(x.id)).length;
+    h=`<div class="eyebrow">Sala giochi · Coppie</div><p>${left?"Une cada casilla con su pareja.":"Tutte le coppie! Recuperas tus 3 vidas."}</p>
+    <div class="tiles">${S.items.map((x,k)=>`<button class="tile${S.ok.includes(x.id)?" ok":S.bad.includes(k)?" no":k===S.sel?" sel":""}" data-pair="${k}" ${S.ok.includes(x.id)?"disabled":""}>${esc(x.t)}</button>`).join("")}</div>
+    <div class="row">${left?btn("QUADERNO","data-note",""):""}${btn(left?"SALIR":"CERRAR","data-close",left?"":"go")}</div>`;
+  }
+  else if(S.ov==="sfida"){
+    const f=L.sf;
+    if(S.end)h=`<div class="eyebrow">Sfida veloce</div><h2>${S.score} / ${S.list.length}</h2><p>${S.score>=S.list.length*.8?"Bravissimo! Recuperas tus 3 vidas.":"Necesitas un 80 % de aciertos para recuperar vidas. Riprova!"}</p>${btn("OTRA VEZ","data-game='sfida'")}${btn("CERRAR","data-close","")}`;
+    else{const it=S.list[S.n],fl=S.flash;
+      h=`<div class="row"><span class="eyebrow">Sfida veloce · ${S.n+1}/${S.list.length}</span><span class="eyebrow">Aciertos ${S.score}</span></div><p class="mute">${esc(f.q)}</p>
+      <div class="bar">${fl?"":"<i></i>"}</div><p class="big">${esc(it[0])}</p>
+      <div class="duo">${[f.a,f.b].map((t,k)=>`<button class="opt${fl?(k===it[1]?" ok":fl.k===k?" no":""):""}" data-sf="${k}" ${fl?"disabled":""}>${esc(t)}</button>`).join("")}</div>${btn("SALIR","data-close","")}`}
+  }
+  else if(S.ov==="dial"){
+    const D=L.dial,turn=D.turns[S.t];
+    h=`<div class="row"><span class="eyebrow">Dialogo · ${esc(D.who)}</span>${hp()}</div>
+    <div class="chat">${S.log.map(m=>`<div class="bub${m.n?"":" me"}">${esc(m.x)}</div>`).join("")}</div>
+    ${S.end?`<div class="fb ok"><b>GIUSTO! +1 SELLO</b></div>${btn("CONTINUAR","data-dend")}`
+     :`<p class="mute">¿Qué respondes?</p><div class="opts">${S.opts.map(i=>`<button class="opt${S.bad.includes(i)?" no":""}" data-say="${i}" ${S.bad.includes(i)?"disabled":""}>${esc(turn[1][i])}</button>`).join("")}</div>
+       ${S.fb?`<div class="fb no"><b>COME, SCUSI? · -1 ♥</b><span>${esc(turn[2])}</span></div>`:""}<div class="row">${btn("QUADERNO","data-note","")}${btn("SALIR","data-close","")}</div>`}`;
+  }
+  else if(S.ov==="stop"){const f=L.tour.facts[S.i],more=[0,1,2].some(k=>k!==S.i&&!tourOf(c).seen.includes(k));
+    h=`<div class="eyebrow">Free walking tour · tappa ${S.i+1}/3</div><canvas id="pic" class="pic" width="132" height="72"></canvas><div class="eyebrow">La guida racconta:</div><p class="it">${esc(f[0])}</p>${S.tr?`<p class="tip">${esc(f[1])}</p>`:btn("VER TRADUCCIÓN","data-tr","")}${btn(S.guided&&more?"SIGUIENTE PARADA →":"CONTINUAR","data-stopok")}`}
+  else if(S.ov==="exam"){const Q=L.tour.qs[S.k],ans=S.pick>=0;
+    h=`<div class="row"><span class="eyebrow">Capotreno · domanda ${S.k+1}/3</span><span class="eyebrow">Sul free tour</span></div><p class="it">${esc(Q[0])}</p><div class="opts">${S.opts.map(i=>`<button class="opt${ans?(i===0?" ok":i===S.pick?" no":""):""}" data-ex="${i}" ${ans?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>`+(ans?`<div class="fb ${S.pick===0?"ok":"no"}"><b>${S.pick===0?"GIUSTO!":"SBAGLIATO"}</b>${S.pick===0?"":`<span>${esc(L.tour.facts[S.k][0])}</span>`}</div>${btn("CONTINUAR","data-exnext")}`:"")}
+  else if(S.ov==="rip"){const it=S.list[S.n],Q=L.tour.qs[it.i];
+    h=`<div class="row"><span class="eyebrow">Ripasso · vero o falso</span><span class="eyebrow">${S.n+1}/${S.list.length}</span></div><canvas id="pic" class="pic" width="132" height="72"></canvas><p class="mute">${esc(Q[0])}</p><p class="big">${esc(it.a)}</p>`+(S.res?`<div class="fb ${S.res.ok?"ok":"no"}"><b>${S.res.ok?"GIUSTO!":"SBAGLIATO · volverá a salir"}</b>${S.res.ok?"":`<span class="it">${esc(L.tour.facts[it.i][0])}</span>`}</div>${btn("CONTINUAR","data-rnext")}`:`<div class="duo"><button class="opt" data-rv="1">VERO</button><button class="opt" data-rv="0">FALSO</button></div>`)}
+  else if(S.ov==="tourq"){const Q=L.tour.quiz;h=`<div class="eyebrow">La guida · domanda finale</div><p class="it">${esc(Q[0])}</p>`+(S.won?`<div class="fb ok"><b>GIUSTO!</b><span class="it">${esc(Q[1][0])}.</span><span>Tour completado: recuperas tus 3 vidas y los apuntes quedan en tu Quaderno.</span></div>${btn("CERRAR","data-close")}`:`<div class="opts">${S.opts.map(i=>`<button class="opt${S.bad.includes(i)?" no":""}" data-tq="${i}" ${S.bad.includes(i)?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>${S.bad.length?`<p class="mute">No es eso. Puedes volver a leer las banderas: en un free tour no se pierden vidas.</p>`:""}${btn("SALIR","data-close","")}`)}
+  else if(S.ov==="chest"){
+    const C=L.chest;
+    h=S.won?`<div class="eyebrow">Baule aperto!</div><h2>Cartolina da ${esc(L.city)}</h2><p class="it">${esc(L.card)}</p><p class="mute">Guardada en el Mapa, con tus postales.</p>${btn("CERRAR","data-close")}`
+     :`<div class="eyebrow">Baule · candado de letras</div><p>Ordena las letras para abrirlo.<br><span class="mute">Pista: ${esc(C.clue)}</span></p>
+      <div class="answer tiles">${S.ans.map((t,k)=>`<button class="tile${S.err?" no":""}" data-lback="${k}">${t}</button>`).join("")}</div>
+      <div class="tiles">${S.bank.map((t,k)=>`<button class="tile" data-ltake="${k}">${t}</button>`).join("")}</div>
+      ${S.err?`<p class="mute">No es esa palabra. Toca las letras para devolverlas.</p>`:""}<div class="row">${btn("QUADERNO","data-note","")}${btn("SALIR","data-close","")}</div>`;
+  }
+  ov.className="show"+(top?" top":"");ov.innerHTML=`<div class="win">${h}</div>`;postRender(c);
+  if(S.ov==="dial"){const w=ov.firstChild;if(w&&w.scrollIntoView)ov.scrollTop=ov.scrollHeight}else ov.scrollTop=0;
+}
+
+function startQ(i){const q=LEVELS[save.city].q[i];
+  show("q",{i,res:null,pick:-1,opts:q.o?shuffle(q.o.map((_,k)=>k)):[],bank:q.a?shuffle(q.a[0].split(" ")):[],ans:[]})}
+function answer(ok,sol){
+  const c=save.city;
+  if(ok){if(!doneOf(c).includes(S.i))doneOf(c).push(S.i);persist()}else lose();
+  S.res={ok,sol};render();hud();
+}
+function startDial(){const D=LEVELS[save.city].dial;show("dial",{t:0,log:[{n:1,x:D.turns[0][0]}],opts:shuffle([0,1,2]),bad:[],fb:false,end:false})}
+function dialPick(k){
+  const c=save.city,D=LEVELS[c].dial,turn=D.turns[S.t];
+  if(k!==0){S.bad.push(k);S.fb=true;lose();if(!dead())render();return}
+  S.log.push({x:turn[1][0]});S.t++;S.bad=[];S.fb=false;S.opts=shuffle([0,1,2]);
+  if(S.t<D.turns.length)S.log.push({n:1,x:D.turns[S.t][0]});
+  else{S.log.push({n:1,x:D.end});S.end=true;if(!doneOf(c).includes("D"))doneOf(c).push("D");persist()}
+  render();hud();
+}
+function startSfida(){const f=LEVELS[save.city].sf;show("sfida",{list:shuffle(f.items).slice(0,10),n:0,score:0,flash:null,end:false});arm()}
+function arm(){clearTimeout(tm);tm=setTimeout(()=>sfAns(-1),4000)}
+function sfAns(k){
+  if(S.ov!=="sfida"||S.flash||S.end)return;clearTimeout(tm);
+  const ok=k===S.list[S.n][1];if(ok)S.score++;S.flash={k};render();
+  tm=setTimeout(()=>{if(S.ov!=="sfida")return;S.flash=null;S.n++;
+    if(S.n>=S.list.length){S.end=true;const c=save.city;save.best[c]=Math.max(save.best[c]||0,Math.round(S.score*10/S.list.length));if(S.score>=S.list.length*.8)save.hearts=3;persist();hud()}
+    else arm();render()},ok?350:1100);
+}
+function startChest(){const c=save.city,w=LEVELS[c].chest.w;
+  if(save.cards[c])return say("Baule","Ya has abierto este baúl. Tu postal de "+LEVELS[c].city+" está en el Mapa.");
+  let b=shuffle(w.split(""));if(b.join("")===w)b.reverse();show("chest",{bank:b,ans:[],err:false,won:false})}
+function travel(i){save.city=i;save.open[i]=1;save.hearts=3;save.carry=null;persist();buildCity();welcome()}
+function welcome(){const c=save.city,L=LEVELS[c];
+  if(save.seen[c]===4)return hide();save.seen[c]=4;persist();
+  say("Benvenuto a "+L.city+"!","Tema: <b>"+esc(L.tema)+"</b>.<br>· La Prof explica el tema; sus tablas van a tu Quaderno.<br>· Cada persona con «!» da un sello: retos, un diálogo y alguien que ha perdido un objeto.<br>· El baúl esconde una postal y la sala giochi devuelve vidas.<br>· La guía del paraguas amarillo te lleva de paseo por la historia local. Presta atención: antes de subir al tren, el Capotreno te preguntará sobre el tour (todo bien = billete VIP).<br>· Con todos los sellos, el Capotreno te deja subir al tren.")}
+function interact(){
+  if(S.ov||P.moving||W)return;
+  const e=entAt(P.x+DIRS[P.dir][0],P.y+DIRS[P.dir][1]);if(!e)return;
+  const c=save.city,L=LEVELS[c],d=doneOf(c),n=need(c),noProf="Prima parla con la Prof! Primero habla con la Prof, frente a la escuela.";
+  if(e.k==="prof"){save.lesson[c]=1;persist();show("lesson")}
+  else if(e.k==="board")show("text");
+  else if(e.k==="arc")show("arc");
+  else if(e.k==="chest")startChest();
+  else if(e.k==="item"){save.carry=e.id;persist();say("Oggetto","Hai preso <b>"+esc(ITEMS[e.id][0])+"</b> ("+ITEMS[e.id][1]+"). Llévaselo a quien lo necesite. Si coges otro objeto, este vuelve a su sitio.")}
+  else if(e.k==="talk"){
+    if(!save.lesson[c])say(L.dial.who,noProf);
+    else if(d.includes("D"))say(L.dial.who,"È stato un piacere! Ya tienes mi sello.");
+    else startDial()}
+  else if(e.k==="quest"){const Q=L.quest;
+    if(d.includes("F"))say("Vecino","Grazie ancora per l'aiuto!");
+    else if(!save.carry)say("Vecino","<span class='it'>"+esc(Q.ask)+"</span><br><span class='mute'>Hay tres objetos por la ciudad. Lee bien qué necesita y tráeselo.</span>");
+    else if(save.carry===Q.want){d.push("F");save.carry=null;persist();hud();say("Vecino","<span class='it'>Perfetto, "+esc(ITEMS[Q.want][0])+"! Grazie mille.</span><br><b>+1 sello</b>",btn("CONTINUAR","data-chk"))}
+    else{const it=ITEMS[save.carry][0];save.carry=null;persist();say("Vecino","<span class='it'>No, "+esc(it)+" non mi serve!</span><br><span class='mute'>El objeto vuelve a su sitio. Habla otra vez con él para releer lo que busca.</span>")}}
+  else if(e.k==="guide"){const t=tourOf(c);
+    if(t.done)say("Guida","Grazie per la mancia! Tus apuntes del tour están en el Quaderno. Recuerda: el Capotreno te preguntará sobre el tour.",btn("REPETIR EL TOUR","data-retour")+btn("OK","data-close",""));
+    else{if(!t.on){t.on=true;persist()}say("Guida","<span class='it'>Benvenuti al free walking tour di "+L.city+"! Seguitemi!</span><br>Te llevo a tres lugares y te cuento su historia. Presta atención: antes de subir al tren, el Capotreno te preguntará sobre ellos.",btn("¡VAMOS!","data-walk"))}}
+  else if(e.k==="flag")show("stop",{i:e.i,tr:false});
+  else if(e.k==="q"){
+    if(!save.lesson[c])say("Vecino",noProf);
+    else if(d.includes(e.i))say("Vecino","Bravo! Ya tienes mi sello.");
+    else startQ(e.i)}
+  else if(e.k==="capo"){
+    if(d.length<n)return say("Capotreno","Biglietto, prego! Te faltan "+(n-d.length)+" sellos para subir al tren.");
+    if(!tourOf(c).done)return say("Capotreno","Biglietto, prego! Prima di partire ti faccio tre domande sul free walking tour. Habla con la guía del paraguas amarillo y haz el tour.");
+    show("exam",{k:0,wrong:[],opts:shuffle([0,1,2]),pick:-1});
+  }
+}
+
+ov.addEventListener("click",ev=>{
+  const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
+  const b=ev.target.closest("button");if(!b||b.disabled)return;
+  const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
+  if("close" in D)hide();
+  else if("go" in D)travel(+D.go);
+  else if("note" in D)show("note",{prev:S,sel:c});
+  else if("text" in D)show("text",{prev:S});
+  else if("back2" in D){if(S.prev){S=S.prev;render()}else hide()}
+  else if("sel" in D){S.sel=+D.sel;render()}
+  else if("chk" in D){if(!allDone())hide()}
+  else if("qnext" in D){if(!dead()&&!(S.res.ok&&allDone()))hide()}
+  else if("dend" in D){if(!allDone())hide()}
+  else if("opt" in D){S.pick=+D.opt;answer(S.pick===0,q.t==="mc"?null:q.s.replace("___",q.o[0]))}
+  else if("take" in D){S.ans.push(S.bank.splice(+D.take,1)[0]);render()}
+  else if("back" in D){S.bank.push(S.ans.splice(+D.back,1)[0]);render()}
+  else if("check" in D){const a=q.a[0];answer(q.a.includes(S.ans.join(" ")),a[0].toUpperCase()+a.slice(1)+".")}
+  else if("word" in D){S.pick=+D.word;const w=q.s.split(" ");w[q.w]=q.fix;answer(S.pick===q.w,w.join(" "))}
+  else if("tr" in D){S.tr=true;render()}
+  else if("stopok" in D){const t=tourOf(c);if(!t.seen.includes(S.i))t.seen.push(S.i);persist();const nx=[0,1,2].find(k=>!t.seen.includes(k));
+    if(nx!==undefined){const gd=S.guided;hide();if(gd)guideTo(nx)}else if(!t.done||S.guided)finishTour();else hide()}
+  else if("walk" in D){const t=tourOf(c),nx=[0,1,2].find(k=>!t.seen.includes(k));hide();guideTo(nx===undefined?0:nx)}
+  else if("retour" in D){tourOf(c).seen=[];persist();hide();guideTo(0)}
+  else if("ex" in D){S.pick=+D.ex;if(S.pick!==0)S.wrong.push(S.k);render()}
+  else if("exnext" in D){S.k++;
+    if(S.k<3){S.pick=-1;S.opts=shuffle([0,1,2]);render()}
+    else if(!S.wrong.length)board(c,true);
+    else say("Capotreno","Hai sbagliato "+S.wrong.length+(S.wrong.length>1?" domande":" domanda")+": viajarás en <b>clase turista</b>. Antes de subir, un repaso rápido del tour: ¿vero o falso?",btn("EMPEZAR REPASO","data-rip"))}
+  else if("rip" in D){show("rip",{list:shuffle(LEVELS[c].tour.qs.flatMap((Q,i)=>[{i,a:Q[1][0],v:1},{i,a:Q[1][1+Math.floor(Math.random()*2)],v:0}])),n:0,res:null})}
+  else if("rv" in D){const it=S.list[S.n],ok=+D.rv===it.v;if(!ok)S.list.push(Object.assign({},it));S.res={ok};render()}
+  else if("rnext" in D){S.n++;S.res=null;if(S.n>=S.list.length)board(c,false);else render()}
+  else if("tq" in D){const k=+D.tq;if(k===0){S.won=true;tourOf(c).done=true;save.hearts=3;persist();hud()}else S.bad.push(k);render()}
+  else if("say" in D)dialPick(+D.say);
+  else if("sf" in D)sfAns(+D.sf);
+  else if("game" in D){if(D.game==="sfida")startSfida();else show("pairs",{items:shuffle(LEVELS[c].pairs.flatMap((p,id)=>[{id,t:p[0]},{id,t:p[1]}])),ok:[],bad:[],sel:-1})}
+  else if("ltake" in D){S.err=false;S.ans.push(S.bank.splice(+D.ltake,1)[0]);
+    if(!S.bank.length){if(S.ans.join("")===LEVELS[c].chest.w){S.won=true;save.cards[c]=1;persist()}else S.err=true}
+    render()}
+  else if("lback" in D){S.err=false;S.bank.push(S.ans.splice(+D.lback,1)[0]);render()}
+  else if("pair" in D){const k=+D.pair;S.bad=[];
+    if(S.sel<0||S.sel===k)S.sel=S.sel===k?-1:k;
+    else{if(S.items[S.sel].id===S.items[k].id)S.ok.push(S.items[k].id);else S.bad=[S.sel,k];S.sel=-1;
+      if(S.ok.length===S.items.length/2){save.hearts=3;persist();hud()}}
+    render()}
+});
+const KEYS={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
+addEventListener("keydown",e=>{if(S.ov)return;const k=KEYS[e.key];if(k){held[k]=true;e.preventDefault()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();interact()}});
+addEventListener("keyup",e=>{const k=KEYS[e.key];if(k)held[k]=false});
+for(const b of $("dpad").querySelectorAll("button")){const d=b.dataset.d;
+  const on=e=>{e.preventDefault();for(const k in held)held[k]=false;held[d]=true;b.classList.add("on")},off=()=>{held[d]=false;b.classList.remove("on")};
+  b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);
+  b.addEventListener("contextmenu",e=>e.preventDefault())}
+$("bA").addEventListener("click",interact);
+cv.addEventListener("click",interact);
+$("bNote").addEventListener("click",()=>{if(!S.ov)show("note",{sel:save.city})});
+$("bMap").addEventListener("click",()=>{if(!S.ov)show("map")});
+
+buildCity();welcome();requestAnimationFrame(frame);
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
+</script>
+</body>
+</html>
