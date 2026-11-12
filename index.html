@@ -82,6 +82,13 @@ td:first-child{background:var(--accent);white-space:nowrap}
 .pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
 #italy,#trip{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
 .center{text-align:center}
+.sopa{display:grid;grid-template-columns:repeat(9,1fr);gap:3px}
+.cell{aspect-ratio:1;background:#fff;border:2px solid var(--ink);font-family:var(--px);font-size:11px;color:var(--ink);padding:0}
+.cell.f{background:var(--good-bg);border-color:var(--good)}.cell.s{background:var(--accent)}
+.words{font-family:var(--px);font-size:10px;line-height:1.8;text-align:center}
+.face{width:120px;height:132px;image-rendering:pixelated;border:3px solid var(--ink);align-self:center}
+.idrow{display:grid;grid-template-columns:84px 40px 1fr 40px;align-items:center;gap:6px}
+.idrow .it{text-align:center;font-size:24px}
 .legend{font-size:19px;margin:0}
 .tile.sel{background:var(--accent)}
 .chat{display:flex;flex-direction:column;gap:8px}
@@ -110,6 +117,7 @@ td:first-child{background:var(--accent);white-space:nowrap}
       <button class="pbtn a" id="bA">A · HABLAR</button>
       <button class="pbtn" id="bNote">QUADERNO</button>
       <button class="pbtn" id="bMap">MAPA</button>
+      <button class="pbtn" id="bDos">DOSSIER</button>
     </div>
   </div>
   <div id="ov"></div>
@@ -596,6 +604,7 @@ function postRender(c){
   const pc=(S.ov==="stop"||S.ov==="rip")&&ov.querySelector("#pic");if(pc){const i=S.ov==="stop"?S.i:S.list[S.n].i;drawPic(pc.getContext("2d"),L.tour.qs[i][2],c)}
   const it=S.ov==="map"&&ov.querySelector("#italy");if(it)drawItaly(it.getContext("2d"));
   const tc=S.ov==="trip"&&ov.querySelector("#trip");if(tc)drawTrip(tc.getContext("2d"));
+  const fc=(S.ov==="idk"||S.ov==="dos")&&ov.querySelector("#face");if(fc)drawFaceFor(fc.getContext("2d"));
 }
 
 /* ---------- tour guiado ---------- */
@@ -629,12 +638,12 @@ function stepWalk(dt){
 function arrive(){
   const i=W.i,f=LEVELS[save.city].tour.at.stops[i],gd=guideEnt();
   if(Math.abs(gd.x-P.x)+Math.abs(gd.y-P.y)===1)P.dir=dirOf(gd.x-P.x,gd.y-P.y);
-  gd.dir=dirOf(f[0]-gd.x,f[1]-gd.y);W=null;show("stop",{i,tr:false,guided:true});
+  gd.dir=dirOf(f[0]-gd.x,f[1]-gd.y);W=null;show("stop",{i,tr:false,guided:true});speak(LEVELS[save.city].tour.facts[i][0]);
 }
 function finishTour(){
   const c=save.city,t=tourOf(c),gd=guideEnt(),h=LEVELS[c].tour.at.guide;
-  t.done=true;save.hearts=3;gd.x=h[0];gd.y=h[1];gd.dir="down";persist();hud();
-  say("Guida","<span class='it'>Il tour è finito. Grazie a tutti!</span><br>Recuperas tus 3 vidas y los apuntes quedan en el Quaderno. Antes de subir al tren, el Capotreno te hará 3 preguntas sobre el tour: si aciertas todas, viajas en VIP.");
+  t.done=true;save.hearts=Math.min(3,save.hearts+1);gd.x=h[0];gd.y=h[1];gd.dir="down";persist();hud();
+  say("Guida","<span class='it'>Il tour è finito. Grazie a tutti!</span><br>Recuperas 1 vida y los apuntes quedan en el Quaderno. Antes de subir al tren, el Capotreno te hará 3 preguntas sobre el tour: si aciertas todas, viajas en VIP.");
 }
 function board(c,vip){
   const L=LEVELS[c],st=Math.max(save.stars[c]||0,Math.max(1,3-(save.miss[c]||0)));save.stars[c]=st;if(vip)save.vip[c]=1;
@@ -659,7 +668,7 @@ const HAIRS=["#5d275d","#333c57","#a7663a","#1a1c2c","#ffcd75","#94b0c2"];
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 
 const K="il-viaggio-arcade-v1";
-let save={city:0,max:0,done:{},lesson:{},stars:{},miss:{},hearts:3,seen:{},cards:{},best:{},carry:null,tour:{},open:{},vip:{}};
+let save={city:0,max:0,done:{},lesson:{},stars:{},miss:{},hearts:3,seen:{},cards:{},best:{},carry:null,tour:{},open:{},vip:{},clue:{},found:{},intro:{}};
 try{const s=JSON.parse(localStorage.getItem(K));if(s&&typeof s.city==="number")save=Object.assign(save,s)}catch(e){}
 for(let i=1;i<=Math.min(save.max||0,7);i++)save.open[i]=1;
 const persist=()=>{try{localStorage.setItem(K,JSON.stringify(save))}catch(e){}};
@@ -752,7 +761,7 @@ function mark(c,x,y,ok){
 }
 
 const doneOf=c=>save.done[c]||(save.done[c]=[]);
-const need=c=>LEVELS[c].q.length+2;
+const need=c=>7;
 function buildCity(){
   const c=save.city,L=LEVELS[c],A=L.at;
   MAP=buildMap(L.sp);
@@ -764,18 +773,18 @@ function buildCity(){
         at("quest",A.quest,{shirt:"#257179",hair:"#ffcd75"}),at("chest",A.chest)];
   L.q.forEach((_,i)=>ents.push(Object.assign(at("q",A.q[i],{shirt:SHIRTS[(i+c)%6],hair:HAIRS[(i*2+c)%6]}),{i})));
   L.quest.items.forEach((id,i)=>ents.push(Object.assign(at("item",A.items[i]),{id})));
-  ents.push(at("guide",L.tour.at.guide,{shirt:"#ef7d57",hair:"#333c57"}));L.tour.at.stops.forEach((p,i)=>ents.push(Object.assign(at("flag",p),{i})));
+  ents.push(at("guide",L.tour.at.guide,{shirt:"#ef7d57",hair:"#333c57"}));placeWit();L.tour.at.stops.forEach((p,i)=>ents.push(Object.assign(at("flag",p),{i})));
   Object.assign(P,{x:A.start[0],y:A.start[1],fx:A.start[0],fy:A.start[1],dir:"down",moving:false});
   hud();
 }
 function hud(){
   const c=save.city,L=LEVELS[c],d=doneOf(c).length,n=need(c);
   const rt=routeOf(c).ids;$("hCity").textContent=(rt.indexOf(c)+1)+"/"+rt.length+" "+L.city.toUpperCase();
-  $("hStamps").textContent="SELLOS "+d+"/"+n;
+  $("hStamps").textContent="PISTE "+Math.min(7,save.clue[c]||0)+"/7";
   $("hHearts").innerHTML=[0,1,2].map(i=>`<span class="${i<save.hearts?"":"off"}">♥</span>`).join("");
-  $("goal").textContent=W?"▶ Sigue a la guía…":save.carry?"▶ Llevas "+ITEMS[save.carry][0]+". ¿A quién se lo das?":!save.lesson[c]?"▶ Busca a la Prof, frente a la escuela.":d<n?"▶ Consigue sellos: habla con todos los que tienen «!».":!tourOf(c).done?"▶ Haz el free walking tour con la guía del paraguas amarillo.":"▶ Ve a la estación: el Capotreno te preguntará sobre el tour.";
+  $("goal").textContent=W?"▶ Sigue a la guía…":save.carry?"▶ Llevas "+ITEMS[save.carry][0]+". ¿A quién se lo das?":!save.lesson[c]?"▶ Busca a la Prof, frente a la escuela.":(save.clue[c]||0)<7?"▶ Reúne pistas: habla con todos los que tienen «!».":!save.found[c]?"▶ Resuelve la sopa de letras (botón DOSSIER).":!tourOf(c).done?"▶ Haz el free walking tour con la guía del paraguas amarillo.":"▶ Ve a la estación: el Capotreno te preguntará sobre el tour.";
 }
-const hidden=e=>e.k==="item"&&(save.carry===e.id||doneOf(save.city).includes("F"))||e.k==="flag"&&!tourOf(save.city).on;
+const hidden=e=>e.k==="item"&&(save.carry===e.id||doneOf(save.city).includes("F"))||e.k==="flag"&&(!tourOf(save.city).on||tourOf(save.city).done);
 const entAt=(x,y)=>ents.find(e=>e.x===x&&e.y===y&&!hidden(e));
 const walk=(x,y)=>x>=0&&y>=0&&x<MW&&y<MH&&!SOLID.includes(MAP[y][x])&&!entAt(x,y);
 
@@ -805,8 +814,9 @@ function frame(t){
       if(e.k==="q")mark(g,x,y,d.includes(e.i));
       else if(e.k==="talk")mark(g,x,y,d.includes("D"));
       else if(e.k==="quest")mark(g,x,y,d.includes("F"));
+      else if(e.k==="wit")mark(g,x,y,d.includes("I"));
       else if(e.k==="prof"&&!save.lesson[c])mark(g,x,y,false);
-      else if(e.k==="capo"&&d.length>=need(c)&&tourOf(c).done)mark(g,x,y,false);
+      else if(e.k==="capo"&&save.found[c]&&tourOf(c).done)mark(g,x,y,false);
       else if(e.k==="guide"){R(g,x+13,y-3,1,13,"#1a1c2c");R(g,x+9,y-6,9,3,"#ffcd75");R(g,x+11,y-8,5,2,"#ffcd75")}}}
   requestAnimationFrame(frame);
 }
@@ -847,7 +857,7 @@ function qHtml(){
     <div class="tiles">${S.bank.map((t,k)=>`<button class="tile" data-take="${k}" ${d?"disabled":""}>${esc(t)}</button>`).join("")}</div>
     ${d?"":btn("COMPROBAR","data-check "+(S.bank.length?"disabled":""))}`;
   }else b=`<p class="mute">Hay una palabra equivocada. Tócala.</p><p class="it">${q.s.split(" ").map((w,i)=>`<button class="word${d?(i===q.w?" ok":i===S.pick?" no":""):""}" data-word="${i}" ${d?"disabled":""}>${esc(w)}</button>`).join(" ")}</p>`;
-  const fb=d?`<div class="fb ${d.ok?"ok":"no"}"><b>${d.ok?"GIUSTO! +1 SELLO":"SBAGLIATO · -1 ♥"}</b>${d.sol?`<span class="it">${esc(d.sol)}</span>`:""}<span>${esc(q.e)}</span></div>${btn("CONTINUAR","data-qnext")}`
+  const fb=d?`<div class="fb ${d.ok?"ok":"no"}"><b>${d.ok?"GIUSTO! +1 PISTA":"SBAGLIATO · -1 ♥"}</b>${d.sol?`<span class="it">${esc(d.sol)}</span>`:""}<span>${esc(q.e)}</span></div>${btn("CONTINUAR","data-qnext")}`
     :`<div class="row">${btn("QUADERNO","data-note","")}${btn("VER TEXTO","data-text","")}${btn("SALIR","data-close","")}</div>`;
   return `<div class="row"><span class="eyebrow">Reto · ${esc(L.tema)}</span>${hp()}</div>${b}${fb}`;
 }
@@ -862,22 +872,22 @@ function render(){
     const sel=got.includes(S.sel)?S.sel:got[got.length-1];
     h=`<h2>Quaderno</h2>`+(got.length?`<div class="tabs">${got.map(i=>`<button class="tab${i===sel?" on":""}" data-sel="${i}">${esc(LEVELS[i].city)}</button>`).join("")}</div><div class="eyebrow">${esc(LEVELS[sel].tema)}</div>${lessonHtml(sel)}${tourNotes(sel)}`:`<p>Todavía está vacío. Habla con la Prof de ${esc(L.city)} para apuntar tu primera lección.</p>`)+btn("CERRAR","data-back2");
   }
-  else if(S.ov==="text")h=`<div class="eyebrow">Tablón de ${esc(L.city)}</div><p class="it">${passage(L.text)}</p><p class="mute" id="gloss">Toca una palabra subrayada para traducirla.</p>${btn("CERRAR","data-back2")}`;
+  else if(S.ov==="text")h=`<div class="eyebrow">Tablón de ${esc(L.city)}</div><p class="it">${passage(L.text)}</p>${spk(L.text.replace(/\{([^|]+)\|[^}]+\}/g,"$1"))}<p class="mute" id="gloss">Toca una palabra subrayada para traducirla.</p>${btn("CERRAR","data-back2")}`;
   else if(S.ov==="map"){const rt=routeOf(c),cards=rt.ids.filter(i=>save.cards[i]),others=ROUTES.filter(r=>r!==rt);
     h=`<div class="eyebrow">Mapa del viaje</div><h2>${esc(rt.n)}</h2><canvas id="italy" width="120" height="140"></canvas><p class="legend mute"><span style="color:#e0a100">━</span> hecho · ┅ pendiente · <span style="color:#b13e53">■</span> estás aquí</p>
     ${rt.ids.map((i,k)=>{const x=LEVELS[i];return `<button class="mapbtn" data-go="${i}" ${isOpen(i)?"":"disabled"}><span>${k+1}. ${esc(x.city)}${i===c?" ◀":""}${save.cards[i]?" ✉":""}${tourOf(i).done?" ⚑":""}${save.vip[i]?" VIP":""}</span><span>${isOpen(i)?stars(save.stars[i]||0):"cerrada"}</span></button>`}).join("")}
     <div class="eyebrow">Cartoline · ${cards.length}/${rt.ids.length}</div>${cards.length?cards.map(i=>`<p class="tip"><b>${esc(LEVELS[i].city)}.</b> ${esc(LEVELS[i].card)}</p>`).join(""):`<p class="mute">Abre el baúl de cada ciudad para coleccionar sus postales.</p>`}
     <div class="eyebrow">Otras rutas</div>${others.map(r=>btn("IR A "+r.n.toUpperCase(),"data-go="+[...r.ids].reverse().find(isOpen),"")).join("")}<p class="mute">Ruta avanzada (B2): próximamente.</p>${btn("CERRAR","data-close")}`}
-  else if(S.ov==="arc"){top=false;h=`<div class="eyebrow">Sala giochi</div><p>Scegli un gioco! Si completas uno, recuperas tus 3 vidas.</p>${btn("COPPIE · UNIR PAREJAS","data-game='pairs'")}${btn("SFIDA VELOCE · CONTRARRELOJ"+(save.best[c]?" ("+save.best[c]+"/10)":""),"data-game='sfida'")}${btn("SALIR","data-close","")}`}
+  else if(S.ov==="arc"){top=false;h=`<div class="eyebrow">Sala giochi</div><p>Scegli un gioco! Cada juego completado te devuelve 1 vida (máximo 3).</p>${btn("COPPIE · UNIR PAREJAS","data-game='pairs'")}${btn("SFIDA VELOCE · CONTRARRELOJ"+(save.best[c]?" ("+save.best[c]+"/10)":""),"data-game='sfida'")}${btn("SALIR","data-close","")}`}
   else if(S.ov==="pairs"){
     const left=S.items.filter(x=>!S.ok.includes(x.id)).length;
-    h=`<div class="eyebrow">Sala giochi · Coppie</div><p>${left?"Une cada casilla con su pareja.":"Tutte le coppie! Recuperas tus 3 vidas."}</p>
+    h=`<div class="eyebrow">Sala giochi · Coppie</div><p>${left?"Une cada casilla con su pareja.":"Tutte le coppie! Recuperas 1 vida."}</p>
     <div class="tiles">${S.items.map((x,k)=>`<button class="tile${S.ok.includes(x.id)?" ok":S.bad.includes(k)?" no":k===S.sel?" sel":""}" data-pair="${k}" ${S.ok.includes(x.id)?"disabled":""}>${esc(x.t)}</button>`).join("")}</div>
     <div class="row">${left?btn("QUADERNO","data-note",""):""}${btn(left?"SALIR":"CERRAR","data-close",left?"":"go")}</div>`;
   }
   else if(S.ov==="sfida"){
     const f=L.sf;
-    if(S.end)h=`<div class="eyebrow">Sfida veloce</div><h2>${S.score} / ${S.list.length}</h2><p>${S.score>=S.list.length*.8?"Bravissimo! Recuperas tus 3 vidas.":"Necesitas un 80 % de aciertos para recuperar vidas. Riprova!"}</p>${btn("OTRA VEZ","data-game='sfida'")}${btn("CERRAR","data-close","")}`;
+    if(S.end)h=`<div class="eyebrow">Sfida veloce</div><h2>${S.score} / ${S.list.length}</h2><p>${S.score>=S.list.length*.8?"Bravissimo! Recuperas 1 vida.":"Necesitas un 80 % de aciertos para recuperar una vida. Riprova!"}</p>${btn("OTRA VEZ","data-game='sfida'")}${btn("CERRAR","data-close","")}`;
     else{const it=S.list[S.n],fl=S.flash;
       h=`<div class="row"><span class="eyebrow">Sfida veloce · ${S.n+1}/${S.list.length}</span><span class="eyebrow">Aciertos ${S.score}</span></div><p class="mute">${esc(f.q)}</p>
       <div class="bar">${fl?"":"<i></i>"}</div><p class="big">${esc(it[0])}</p>
@@ -887,18 +897,22 @@ function render(){
     const D=L.dial,turn=D.turns[S.t];
     h=`<div class="row"><span class="eyebrow">Dialogo · ${esc(D.who)}</span>${hp()}</div>
     <div class="chat">${S.log.map(m=>`<div class="bub${m.n?"":" me"}">${esc(m.x)}</div>`).join("")}</div>
-    ${S.end?`<div class="fb ok"><b>GIUSTO! +1 SELLO</b></div>${btn("CONTINUAR","data-dend")}`
+    ${S.end?`<div class="fb ok"><b>GIUSTO! +1 PISTA</b></div>${btn("CONTINUAR","data-dend")}`
      :`<p class="mute">¿Qué respondes?</p><div class="opts">${S.opts.map(i=>`<button class="opt${S.bad.includes(i)?" no":""}" data-say="${i}" ${S.bad.includes(i)?"disabled":""}>${esc(turn[1][i])}</button>`).join("")}</div>
        ${S.fb?`<div class="fb no"><b>COME, SCUSI? · -1 ♥</b><span>${esc(turn[2])}</span></div>`:""}<div class="row">${btn("QUADERNO","data-note","")}${btn("SALIR","data-close","")}</div>`}`;
   }
   else if(S.ov==="stop"){const f=L.tour.facts[S.i],more=[0,1,2].some(k=>k!==S.i&&!tourOf(c).seen.includes(k));
-    h=`<div class="eyebrow">Free walking tour · tappa ${S.i+1}/3</div><canvas id="pic" class="pic" width="132" height="72"></canvas><div class="eyebrow">La guida racconta:</div><p class="it">${esc(f[0])}</p>${S.tr?`<p class="tip">${esc(f[1])}</p>`:btn("VER TRADUCCIÓN","data-tr","")}${btn(S.guided&&more?"SIGUIENTE PARADA →":"CONTINUAR","data-stopok")}`}
+    h=`<div class="eyebrow">Free walking tour · tappa ${S.i+1}/3</div><canvas id="pic" class="pic" width="132" height="72"></canvas><div class="eyebrow">La guida racconta:</div><p class="it">${esc(f[0])}</p>${spk(f[0])}${S.tr?`<p class="tip">${esc(f[1])}</p>`:btn("VER TRADUCCIÓN","data-tr","")}${btn(S.guided&&more?"SIGUIENTE PARADA →":"CONTINUAR","data-stopok")}`}
   else if(S.ov==="exam"){const Q=L.tour.qs[S.k],ans=S.pick>=0;
     h=`<div class="row"><span class="eyebrow">Capotreno · domanda ${S.k+1}/3</span><span class="eyebrow">Sul free tour</span></div><p class="it">${esc(Q[0])}</p><div class="opts">${S.opts.map(i=>`<button class="opt${ans?(i===0?" ok":i===S.pick?" no":""):""}" data-ex="${i}" ${ans?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>`+(ans?`<div class="fb ${S.pick===0?"ok":"no"}"><b>${S.pick===0?"GIUSTO!":"SBAGLIATO"}</b>${S.pick===0?"":`<span>${esc(L.tour.facts[S.k][0])}</span>`}</div>${btn("CONTINUAR","data-exnext")}`:"")}
   else if(S.ov==="rip"){const it=S.list[S.n],Q=L.tour.qs[it.i];
     h=`<div class="row"><span class="eyebrow">Ripasso · vero o falso</span><span class="eyebrow">${S.n+1}/${S.list.length}</span></div><canvas id="pic" class="pic" width="132" height="72"></canvas><p class="mute">${esc(Q[0])}</p><p class="big">${esc(it.a)}</p>`+(S.res?`<div class="fb ${S.res.ok?"ok":"no"}"><b>${S.res.ok?"GIUSTO!":"SBAGLIATO · volverá a salir"}</b>${S.res.ok?"":`<span class="it">${esc(L.tour.facts[it.i][0])}</span>`}</div>${btn("CONTINUAR","data-rnext")}`:`<div class="duo"><button class="opt" data-rv="1">VERO</button><button class="opt" data-rv="0">FALSO</button></div>`)}
   else if(S.ov==="tourq"){const Q=L.tour.quiz;h=`<div class="eyebrow">La guida · domanda finale</div><p class="it">${esc(Q[0])}</p>`+(S.won?`<div class="fb ok"><b>GIUSTO!</b><span class="it">${esc(Q[1][0])}.</span><span>Tour completado: recuperas tus 3 vidas y los apuntes quedan en tu Quaderno.</span></div>${btn("CERRAR","data-close")}`:`<div class="opts">${S.opts.map(i=>`<button class="opt${S.bad.includes(i)?" no":""}" data-tq="${i}" ${S.bad.includes(i)?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>${S.bad.length?`<p class="mute">No es eso. Puedes volver a leer las banderas: en un free tour no se pierden vidas.</p>`:""}${btn("SALIR","data-close","")}`)}
   else if(S.ov==="trip")h=tripHtml();
+  else if(S.ov==="card")h=cardHtml();
+  else if(S.ov==="sopa")h=sopaHtml();
+  else if(S.ov==="idk")h=idkHtml();
+  else if(S.ov==="dos")h=dosHtml();
   else if(S.ov==="chest"){
     const C=L.chest;
     h=S.won?`<div class="eyebrow">Baule aperto!</div><h2>Cartolina da ${esc(L.city)}</h2><p class="it">${esc(L.card)}</p><p class="mute">Guardada en el Mapa, con tus postales.</p>${btn("CERRAR","data-close")}`
@@ -918,13 +932,13 @@ function answer(ok,sol){
   if(ok){if(!doneOf(c).includes(S.i))doneOf(c).push(S.i);persist()}else lose();
   S.res={ok,sol};render();hud();
 }
-function startDial(){const D=LEVELS[save.city].dial;show("dial",{t:0,log:[{n:1,x:D.turns[0][0]}],opts:shuffle([0,1,2]),bad:[],fb:false,end:false})}
+function startDial(){const D=LEVELS[save.city].dial;show("dial",{t:0,log:[{n:1,x:D.turns[0][0]}],opts:shuffle([0,1,2]),bad:[],fb:false,end:false});speak(D.turns[0][0])}
 function dialPick(k){
   const c=save.city,D=LEVELS[c].dial,turn=D.turns[S.t];
   if(k!==0){S.bad.push(k);S.fb=true;lose();if(!dead())render();return}
   S.log.push({x:turn[1][0]});S.t++;S.bad=[];S.fb=false;S.opts=shuffle([0,1,2]);
-  if(S.t<D.turns.length)S.log.push({n:1,x:D.turns[S.t][0]});
-  else{S.log.push({n:1,x:D.end});S.end=true;if(!doneOf(c).includes("D"))doneOf(c).push("D");persist()}
+  if(S.t<D.turns.length){S.log.push({n:1,x:D.turns[S.t][0]});speak(D.turns[S.t][0])}
+  else{S.log.push({n:1,x:D.end});speak(D.end);S.end=true;if(!doneOf(c).includes("D"))doneOf(c).push("D");persist()}
   render();hud();
 }
 function startSfida(){const f=LEVELS[save.city].sf;show("sfida",{list:shuffle(f.items).slice(0,10),n:0,score:0,flash:null,end:false});arm()}
@@ -933,16 +947,17 @@ function sfAns(k){
   if(S.ov!=="sfida"||S.flash||S.end)return;clearTimeout(tm);
   const ok=k===S.list[S.n][1];if(ok)S.score++;S.flash={k};render();
   tm=setTimeout(()=>{if(S.ov!=="sfida")return;S.flash=null;S.n++;
-    if(S.n>=S.list.length){S.end=true;const c=save.city;save.best[c]=Math.max(save.best[c]||0,Math.round(S.score*10/S.list.length));if(S.score>=S.list.length*.8)save.hearts=3;persist();hud()}
+    if(S.n>=S.list.length){S.end=true;const c=save.city;save.best[c]=Math.max(save.best[c]||0,Math.round(S.score*10/S.list.length));if(S.score>=S.list.length*.8)save.hearts=Math.min(3,save.hearts+1);persist();hud()}
     else arm();render()},ok?350:1100);
 }
 function startChest(){const c=save.city,w=LEVELS[c].chest.w;
   if(save.cards[c])return say("Baule","Ya has abierto este baúl. Tu postal de "+LEVELS[c].city+" está en el Mapa.");
   let b=shuffle(w.split(""));if(b.join("")===w)b.reverse();show("chest",{bank:b,ans:[],err:false,won:false})}
 function travel(i){save.city=i;save.open[i]=1;save.hearts=3;save.carry=null;persist();buildCity();welcome()}
-function welcome(){const c=save.city,L=LEVELS[c];
-  if(save.seen[c]===4)return hide();save.seen[c]=4;persist();
-  say("Benvenuto a "+L.city+"!","Tema: <b>"+esc(L.tema)+"</b>.<br>· La Prof explica el tema; sus tablas van a tu Quaderno.<br>· Cada persona con «!» da un sello: retos, un diálogo y alguien que ha perdido un objeto.<br>· El baúl esconde una postal y la sala giochi devuelve vidas.<br>· La guía del paraguas amarillo te lleva de paseo por la historia local. Presta atención: antes de subir al tren, el Capotreno te preguntará sobre el tour (todo bien = billete VIP).<br>· Con todos los sellos, el Capotreno te deja subir al tren.")}
+function welcome(){const c=save.city,L=LEVELS[c],cs=caseOf(c);
+  if(!save.intro[cs.id]){save.intro[cs.id]=1;persist();speak(cs.intro);return say("Detective · "+cs.title,"<span class='it'>"+esc(cs.intro)+"</span>"+spk(cs.intro),btn("ACCETTO IL CASO","data-wel"))}
+  if(save.seen[c]===5)return nextStep();save.seen[c]=5;persist();
+  say("Benvenuto a "+L.city+"!","Tema: <b>"+esc(L.tema)+"</b>. <span class='it'>Il ladro è passato da qui!</span><br>· La Prof explica el tema; sus tablas van a tu Quaderno.<br>· Cada persona con «!» te da una pista: retos, diálogo, alguien que perdió un objeto y un testigo para el identikit.<br>· Con 7 pistas resuelves la sopa de letras y descubres adónde ha ido. El DOSSIER guarda todo lo que sabes del ladrón.<br>· La guía del paraguas amarillo hace un free walking tour (solo una vez). Antes de subir al tren, el Capotreno te pregunta sobre él: todo bien = VIP.<br>· La sala giochi devuelve 1 vida por juego.",btn("OK","data-ns"))}
 function interact(){
   if(S.ov||P.moving||W)return;
   const e=entAt(P.x+DIRS[P.dir][0],P.y+DIRS[P.dir][1]);if(!e)return;
@@ -958,11 +973,15 @@ function interact(){
     else startDial()}
   else if(e.k==="quest"){const Q=L.quest;
     if(d.includes("F"))say("Vecino","Grazie ancora per l'aiuto!");
-    else if(!save.carry)say("Vecino","<span class='it'>"+esc(Q.ask)+"</span><br><span class='mute'>Hay tres objetos por la ciudad. Lee bien qué necesita y tráeselo.</span>");
-    else if(save.carry===Q.want){d.push("F");save.carry=null;persist();hud();say("Vecino","<span class='it'>Perfetto, "+esc(ITEMS[Q.want][0])+"! Grazie mille.</span><br><b>+1 sello</b>",btn("CONTINUAR","data-chk"))}
+    else if(!save.carry){say("Vecino","<span class='it'>"+esc(Q.ask)+"</span><br><span class='mute'>Hay tres objetos por la ciudad. Escucha bien qué necesita y tráeselo.</span>"+spk(Q.ask));speak(Q.ask)}
+    else if(save.carry===Q.want){d.push("F");save.carry=null;persist();hud();say("Vecino","<span class='it'>Perfetto, "+esc(ITEMS[Q.want][0])+"! Grazie mille.</span><br><b>+1 pista</b>",btn("CONTINUAR","data-chk"))}
     else{const it=ITEMS[save.carry][0];save.carry=null;persist();say("Vecino","<span class='it'>No, "+esc(it)+" non mi serve!</span><br><span class='mute'>El objeto vuelve a su sitio. Habla otra vez con él para releer lo que busca.</span>")}}
+  else if(e.k==="wit"){
+    if(!save.lesson[c])say("Testimone",noProf);
+    else if(d.includes("I"))say("Testimone","Spero che lo prendiate presto! Ya tienes mi identikit.");
+    else startIdk()}
   else if(e.k==="guide"){const t=tourOf(c);
-    if(t.done)say("Guida","Grazie per la mancia! Tus apuntes del tour están en el Quaderno. Recuerda: el Capotreno te preguntará sobre el tour.",btn("REPETIR EL TOUR","data-retour")+btn("OK","data-close",""));
+    if(t.done)say("Guida","Grazie per la mancia! El tour solo se hace una vez: tus apuntes están en el Quaderno. Recuerda que el Capotreno te preguntará sobre él.");
     else{if(!t.on){t.on=true;persist()}say("Guida","<span class='it'>Benvenuti al free walking tour di "+L.city+"! Seguitemi!</span><br>Te llevo a tres lugares y te cuento su historia. Presta atención: antes de subir al tren, el Capotreno te preguntará sobre ellos.",btn("¡VAMOS!","data-walk"))}}
   else if(e.k==="flag")show("stop",{i:e.i,tr:false});
   else if(e.k==="q"){
@@ -970,7 +989,8 @@ function interact(){
     else if(d.includes(e.i))say("Vecino","Bravo! Ya tienes mi sello.");
     else startQ(e.i)}
   else if(e.k==="capo"){
-    if(d.length<n)return say("Capotreno","Biglietto, prego! Te faltan "+(n-d.length)+" sellos para subir al tren.");
+    if((save.clue[c]||0)<7)return say("Capotreno","Biglietto, prego! Primero reúne las 7 pistas de "+L.city+" (llevas "+(save.clue[c]||0)+").");
+    if(!save.found[c])return say("Capotreno","¿Adónde quieres ir? Primero descubre adónde ha ido el ladrón: resuelve la sopa de letras desde el DOSSIER.");
     if(!tourOf(c).done)return say("Capotreno","Biglietto, prego! Prima di partire ti faccio tre domande sul free walking tour. Habla con la guía del paraguas amarillo y haz el tour.");
     show("exam",{k:0,wrong:[],opts:shuffle([0,1,2]),pick:-1});
   }
@@ -981,14 +1001,22 @@ ov.addEventListener("click",ev=>{
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
   if("close" in D)hide();
+  else if("voice" in D)speak(D.voice);
+  else if("wel" in D)welcome();
+  else if("ns" in D||"cardok" in D)nextStep();
+  else if("sopa" in D)startSopa();
+  else if("dosv" in D)show("dos",{prev:S});
+  else if("cell" in D)sopaTap(+D.cell);
+  else if("idp" in D)idkStep(D.idp);
+  else if("idok" in D)idkCheck();
   else if("go" in D)travel(+D.go);
   else if("note" in D)show("note",{prev:S,sel:c});
   else if("text" in D)show("text",{prev:S});
   else if("back2" in D){if(S.prev){S=S.prev;render()}else hide()}
   else if("sel" in D){S.sel=+D.sel;render()}
-  else if("chk" in D){if(!allDone())hide()}
-  else if("qnext" in D){if(!dead()&&!(S.res.ok&&allDone()))hide()}
-  else if("dend" in D){if(!allDone())hide()}
+  else if("chk" in D)nextStep();
+  else if("qnext" in D){if(!dead())nextStep()}
+  else if("dend" in D)nextStep();
   else if("opt" in D){S.pick=+D.opt;answer(S.pick===0,q.t==="mc"?null:q.s.replace("___",q.o[0]))}
   else if("take" in D){S.ans.push(S.bank.splice(+D.take,1)[0]);render()}
   else if("back" in D){S.bank.push(S.ans.splice(+D.back,1)[0]);render()}
@@ -1003,7 +1031,7 @@ ov.addEventListener("click",ev=>{
   else if("tgo" in D){S.annDone=true;S.phase="run";S.res=null;render()}
   else if("nb" in D){const ok=+D.nb===0;if(ok)S.score++;S.res={ok};render()}
   else if("nbnext" in D){S.log.push({x:S.nb[S.t][1][0]});S.t++;S.res=null;
-    if(S.t<S.nb.length){S.log.push({n:1,x:S.nb[S.t][0]});S.opts=shuffle([0,1,2])}else{S.nbDone=true;S.phase="run"}render()}
+    if(S.t<S.nb.length){S.log.push({n:1,x:S.nb[S.t][0]});S.opts=shuffle([0,1,2]);speak(S.nb[S.t][0])}else{S.nbDone=true;S.phase="run"}render()}
   else if("arrive" in D)travel(S.to);
   else if("walk" in D){const t=tourOf(c),nx=[0,1,2].find(k=>!t.seen.includes(k));hide();guideTo(nx===undefined?0:nx)}
   else if("retour" in D){tourOf(c).seen=[];persist();hide();guideTo(0)}
@@ -1026,7 +1054,7 @@ ov.addEventListener("click",ev=>{
   else if("pair" in D){const k=+D.pair;S.bad=[];
     if(S.sel<0||S.sel===k)S.sel=S.sel===k?-1:k;
     else{if(S.items[S.sel].id===S.items[k].id)S.ok.push(S.items[k].id);else S.bad=[S.sel,k];S.sel=-1;
-      if(S.ok.length===S.items.length/2){save.hearts=3;persist();hud()}}
+      if(S.ok.length===S.items.length/2){save.hearts=Math.min(3,save.hearts+1);persist();hud()}}
     render()}
 });
 const KEYS={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
@@ -1040,6 +1068,7 @@ $("bA").addEventListener("click",interact);
 cv.addEventListener("click",interact);
 $("bNote").addEventListener("click",()=>{if(!S.ov)show("note",{sel:save.city})});
 $("bMap").addEventListener("click",()=>{if(!S.ov)show("map")});
+$("bDos").addEventListener("click",()=>{if(!S.ov&&!W)show("dos")});
 
 /* ---------- viaje en tren ---------- */
 const ANN={
@@ -1091,8 +1120,8 @@ function drawTrip(x){
 function tripStep(dt){
   S.p=Math.min(1,S.p+dt/3200);
   const cvs=ov.querySelector&&ov.querySelector("#trip");if(cvs)drawTrip(cvs.getContext("2d"));
-  if(!S.annDone&&S.p>=.38){S.phase="ann";render()}
-  else if(S.annDone&&!S.nbDone&&S.p>=.72){S.phase="nb";S.t=0;S.res=null;S.log=[{n:1,x:S.nb[0][0]}];S.opts=shuffle([0,1,2]);render()}
+  if(!S.annDone&&S.p>=.38){S.phase="ann";render();speak(S.ann.it)}
+  else if(S.annDone&&!S.nbDone&&S.p>=.72){S.phase="nb";S.t=0;S.res=null;S.log=[{n:1,x:S.nb[0][0]}];S.opts=shuffle([0,1,2]);render();speak(S.nb[0][0])}
   else if(S.p>=1){S.phase="arr";render()}
 }
 function tripHtml(){
@@ -1108,6 +1137,211 @@ function tripHtml(){
        :`<p class="mute">¿Qué respondes?</p><div class="opts">${S.opts.map(i=>`<button class="opt" data-nb="${i}">${esc(tu[1][i])}</button>`).join("")}</div>`)}
   else b=`<h2>Siamo arrivati a ${esc(To)}!</h2><p>Vocabolario del viaggio: <b>${S.score}/3</b></p>${btn("BAJAR DEL TREN","data-arrive")}`;
   return `<div class="row"><span class="eyebrow">${esc(F)} → ${esc(To)}</span><span class="eyebrow">${vip?"VIP · prima classe":"seconda classe"}</span></div><canvas id="trip" width="120" height="140"></canvas>${b}`;
+}
+
+/* ---------- la trama: dos casos ---------- */
+const CASES=[
+{id:"a2",route:0,title:"La mappa rubata",obj:"Oggetto rubato: una mappa antica dell'Adriatico, del 1500, dal museo di Aosta.",woman:true,feat:{hair:3,glasses:0,face:0},
+ intro:"Caso n. 1. Ieri qualcuno ha rubato una mappa antica dal museo di Aosta. È una mappa del 1500 e mostra tutto il mare Adriatico. Sei il detective: cerca le piste in ogni città, completa il dossier e scopri dove va il ladro.",
+ ending:"Al porto trovi Elena con la mappa in mano. «Volevo solo vedere il paese del nonno», dice. Le proponi un'idea: il museo le darà una copia della mappa e lei potrà fare il suo viaggio. Elena sorride e ti dà la mappa originale. Caso risolto!",
+ cities:{
+ 8:{prof:["Sesso","donna"],sopa:["GENOVA","MARE","PESTO"],clues:[
+  "Il ladro ha mangiato una fonduta enorme in un ristorante vicino al museo.",
+  "Una cameriera ha visto bene il ladro: è una donna, non un uomo!",
+  "Al ristorante guardava la mappa e diceva: «Nonno, finalmente!»",
+  "Ha chiesto un treno per il mare.","Vuole vedere un acquario molto grande.","Ha comprato un libro sul pesto.","Va in una città con un faro famoso: la Lanterna."]},
+ 9:{prof:["Nome","Elena Rossi"],sopa:["TRENTO","CASTELLO","LAGO"],clues:[
+  "La ladra è venuta a Genova per il pesto: ha mangiato le trofie al porto.",
+  "All'acquario ha pagato con la carta: si chiama Elena Rossi.",
+  "Al porto ha chiesto: «Ci sono navi per l'Istria?» Ma oggi non ce n'erano.",
+  "Ora va in montagna.","Ha chiesto informazioni sulle Dolomiti.","Vuole mangiare i canederli.","Va in una città con un castello grande e un lago vicino."]},
+ 10:{prof:["Età","34 anni"],sopa:["TRIESTE","BORA","CAFFE"],clues:[
+  "Elena è venuta a Trento per i canederli e per le montagne.",
+  "In albergo ha lasciato il documento: Elena ha 34 anni.",
+  "Al castello ha studiato la mappa per tre ore. Ha segnato un piccolo paese con una X.",
+  "Va in una città sul mare, vicino alla Slovenia.","Vuole bere un caffè in un caffè storico.","Ha paura della bora, un vento molto forte.","Ha detto: «Torno nella mia città.»"]},
+ 11:{prof:["Nonno","Mario, pescatore nato in Istria"],sopa:["PERUGIA","UMBRIA","BACI"],clues:[
+  "Elena è tornata a Trieste, la sua città: ha bevuto un «nero» in un caffè storico.",
+  "Una signora del caffè la conosce: il nonno di Elena si chiamava Mario ed era un pescatore nato in Istria.",
+  "La signora racconta: «Mario ha lasciato il suo paese da bambino. Diceva sempre che il paese era sulla mappa del museo.»",
+  "Ora vuole studiare un vecchio libro all'università.","Va in una città piccola, in Umbria.","Le piace molto il cioccolato.","Va nella città dei Baci."]},
+ 12:{prof:["Lavoro","insegnante di geografia"],sopa:["ANCONA","PORTO","CROAZIA"],clues:[
+  "Elena è venuta a Perugia per i Baci di cioccolato e per la biblioteca.",
+  "All'università dicono che Elena è un'insegnante di geografia.",
+  "In biblioteca ha trovato il nome del paese del nonno: era sulla costa dell'Istria, ma oggi non esiste più.",
+  "Vuole prendere un traghetto.","Va in una città sul mare Adriatico.","Il traghetto va in Croazia.","Ha detto: «Parto dal porto di Ancona.»"]},
+ 13:{prof:["Movente","trovare il paese del nonno"],sopa:["MOLO","TRAGHETTO","MAPPA"],clues:[
+  "Elena è ad Ancona: vuole prendere il traghetto per la Croazia stasera.",
+  "Il movente: Elena non vuole vendere la mappa. Vuole trovare il paese del nonno.",
+  "Ha scritto in un messaggio: «Dopo il viaggio riporto la mappa al museo. Promesso.»",
+  "Il traghetto parte alle nove di sera.","Elena aspetta al porto.","Ha un biglietto per Spalato.","Cerca il molo numero tre."]}
+ }},
+{id:"b1",route:1,title:"Lo Stradivari rubato",obj:"Oggetto rubato: un violino Stradivari del Museo del Violino di Cremona.",woman:false,feat:{hair:0,glasses:1,face:1},
+ intro:"Caso n. 2. Ieri sera qualcuno ha rubato un violino Stradivari dal Museo del Violino di Cremona. Vale milioni di euro ed è un tesoro d'Italia. Un testimone ha visto il ladro salire su un treno. Sei il detective: segui le sue tracce città per città e completa il dossier.",
+ ending:"Al Teatro Massimo trovi Totò sul palco. Suona lo Stradivari per suo padre Nino, seduto in prima fila. Quando finisce, ti dà il violino: «Grazie per avermi lasciato finire.» Il museo di Cremona riavrà il suo tesoro e, grazie al tuo dossier, metterà una targa: «Restaurato da Nino Greco, liutaio di Palermo». Caso risolto!",
+ cities:{
+ 0:{prof:["Sesso","uomo, circa cinquant'anni"],sopa:["MILANO","OPERA","DUOMO"],clues:[
+  "Il barista dice che il ladro è venuto a Torino per bere un bicerin. Ne ha bevuti tre!",
+  "Il barista lo ricorda bene: è un uomo e sembra avere circa cinquant'anni.",
+  "Al bar ha detto: «Questo violino non è per me. È per una persona che amo.»",
+  "Ha comprato un biglietto per una città vicina, a meno di due ore di treno.","Ha detto che stasera vuole sentire l'opera.","Voleva vedere una grande chiesa bianca con una statua d'oro.","Ha parlato di moda e di risotto giallo."]},
+ 1:{prof:["Nome","Salvatore Greco, detto Totò"],sopa:["VENEZIA","GONDOLA","CANALI"],clues:[
+  "Il ladro è venuto a Milano per l'opera: ieri sera era alla Scala, in prima fila.",
+  "Il bigliettaio della Scala ricorda il nome sul biglietto: Salvatore Greco. Gli amici lo chiamano Totò.",
+  "Alla Scala piangeva. Una signora l'ha sentito dire: «Papà, presto sentirai di nuovo questa musica.»",
+  "Ha chiesto informazioni su una città dove non ci sono macchine.","Voleva ascoltare Vivaldi in una chiesa.","Ha detto che vuole fare un giro in gondola.","Ha comprato una mappa dei canali."]},
+ 2:{prof:["Età","47 anni"],sopa:["BOLOGNA","TORRI","PORTICI"],clues:[
+  "Totò è venuto a Venezia per Vivaldi: un concerto di musica barocca in una chiesa.",
+  "Il gondoliere ha visto il suo documento: Totò ha 47 anni.",
+  "In gondola ha aperto la custodia e ha guardato il violino per molto tempo, senza suonarlo.",
+  "Ha detto al gondoliere che aveva voglia di pasta fresca.","Voleva vedere due torri antiche.","Ha chiesto dov'è l'università più antica d'Europa.","Va nella città dei portici."]},
+ 3:{prof:["Lavoro","violinista"],sopa:["FIRENZE","CUPOLA","ARNO"],clues:[
+  "Totò è venuto a Bologna per le tagliatelle al ragù: dice che le faceva sua madre.",
+  "Al ristorante ha suonato un violino normale per pagare la cena: è un violinista bravissimo.",
+  "Al cameriere ha raccontato: «Mio padre faceva violini. Era il migliore di tutti.»",
+  "Voleva vedere una cupola famosissima.","Ha parlato di Michelangelo e del Rinascimento.","Ha chiesto quale fiume attraversa la città.","Ha preso un treno per la Toscana."]},
+ 4:{prof:["Famiglia","padre di Rosa, 12 anni"],sopa:["ROMA","FONTANA","COLOSSEO"],clues:[
+  "Totò è venuto a Firenze per guardare la cupola di Brunelleschi al tramonto.",
+  "Ha mandato una cartolina da Firenze a sua figlia Rosa, che ha 12 anni.",
+  "Sulla cartolina ha scritto: «Cara Rosa, il nonno avrà finalmente giustizia.»",
+  "Ha detto che vuole lanciare una moneta in una fontana.","Ha chiesto informazioni sul Colosseo.","Va nella capitale d'Italia.","Ha comprato una guida della Città Eterna."]},
+ 5:{prof:["Figlio di","Nino Greco, liutaio di 80 anni"],sopa:["NAPOLI","VESUVIO","PIZZA"],clues:[
+  "Totò ha lanciato una moneta nella Fontana di Trevi: vuole tornare a Roma con suo padre.",
+  "In un archivio scopri chi è suo padre: Nino Greco, liutaio (costruisce violini), di 80 anni.",
+  "L'archivio dice: nel 1975 Nino Greco ha restaurato lo Stradivari. Poi l'hanno accusato di averlo rovinato e ha perso il lavoro.",
+  "Ha detto che voleva una vera pizza margherita.","Ha guardato a lungo la foto di un vulcano.","Ha chiesto che cos'è un caffè sospeso.","Va verso sud, vicino al Vesuvio."]},
+ 6:{prof:["Nato a","Palermo, Sicilia"],sopa:["PALERMO","SICILIA","ISOLA"],clues:[
+  "Totò è venuto a Napoli per la pizza e il caffè: ha pagato tre caffè sospesi.",
+  "Il pizzaiolo ha riconosciuto il suo accento: Totò è nato a Palermo, in Sicilia.",
+  "Ha detto al pizzaiolo: «Mio padre è molto malato. Voglio che senta ancora una volta il violino che ha restaurato.»",
+  "Ha preso un traghetto di notte verso un'isola.","Ha parlato di arancine e cannoli.","Va a casa, sull'isola più grande del Mediterraneo.","Ha detto: «Stasera suono nel teatro più grande della mia città.»"]},
+ 7:{prof:["Movente","suonare il violino per suo padre"],sopa:["MASSIMO","TEATRO","VIOLINO"],clues:[
+  "Totò è tornato a casa: a Palermo vive suo padre Nino.",
+  "Il movente: Totò non vuole vendere il violino. Vuole suonarlo per suo padre e dimostrare che non l'aveva rovinato.",
+  "La vicina di Nino dice: «Nino ha sempre detto che quel violino suonava meglio dopo il suo restauro.»",
+  "Totò ha prenotato un teatro per stasera.","È il teatro d'opera più grande d'Italia.","Si trova in piazza Verdi.","Il suo nome vuol dire «il più grande»."]}
+ }}
+];
+const caseOf=c=>CASES.find(k=>ROUTES[k.route].ids.includes(c));
+const spk=t=>`<button class="pbtn" data-voice="${String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}">🔊 ASCOLTA</button>`;
+
+/* ---------- pistas ---------- */
+function nextStep(){
+  const c=save.city,d=doneOf(c),k=save.clue[c]||0,cs=caseOf(c);
+  if(k<7&&d.length>k){save.clue[c]=k+1;persist();hud();const txt=cs.cities[c].clues[k];show("card",{k,txt});speak(txt);return}
+  if(k>=7&&!save.found[c])return say("Detective","<span class='it'>Hai sette piste!</span><br>Ahora descubre adónde ha ido: busca las palabras escondidas en la sopa de letras.",btn("SOPA DE LETRAS","data-sopa")+btn("MÁS TARDE","data-close",""));
+  hide();
+}
+function cardHtml(){
+  const c=save.city,cs=caseOf(c),p=cs.cities[c].prof;
+  return `<div class="eyebrow">Nuova pista · ${S.k+1}/7</div><h2>${esc(cs.title)}</h2><p class="it tip">${esc(S.txt)}</p>${spk(S.txt)}`+
+   (S.k===1?`<div class="fb ok"><b>DOSSIER AGGIORNATO</b><span>${esc(p[0])}: ${esc(p[1])}</span></div>`:"")+btn("CONTINUAR","data-cardok");
+}
+
+/* ---------- sopa de letras ---------- */
+function makeSopa(words){
+  const N=9,AB="ABCDEFGILMNOPRSTUVZ";
+  for(let tries=0;tries<300;tries++){
+    const g=Array(N*N).fill(""),place=[];let ok=true;
+    for(const w of words){let done=false;
+      for(let t=0;t<300&&!done;t++){const d=[[1,0],[0,1],[1,1]][Math.floor(Math.random()*3)];
+        const x0=Math.floor(Math.random()*(N-(d[0]?w.length-1:0))),y0=Math.floor(Math.random()*(N-(d[1]?w.length-1:0)));
+        let fits=true;for(let i=0;i<w.length;i++){const k=(y0+d[1]*i)*N+x0+d[0]*i;if(g[k]&&g[k]!==w[i]){fits=false;break}}
+        if(fits){const cells=[];for(let i=0;i<w.length;i++){const k=(y0+d[1]*i)*N+x0+d[0]*i;g[k]=w[i];cells.push(k)}place.push(cells);done=true}}
+      if(!done){ok=false;break}}
+    if(ok){for(let i=0;i<g.length;i++)if(!g[i])g[i]=AB[Math.floor(Math.random()*AB.length)];return {g,place}}
+  }
+}
+function startSopa(){const c=save.city,w=caseOf(c).cities[c].sopa,m=makeSopa(w);show("sopa",{g:m.g,place:m.place,words:w,found:[],sel:-1})}
+function sopaTap(i){
+  if(S.found.length===S.words.length)return;
+  if(S.sel<0||S.sel===i){S.sel=S.sel===i?-1:i;return render()}
+  const N=9,ax=S.sel%N,ay=Math.floor(S.sel/N),bx=i%N,by=Math.floor(i/N),dx=Math.sign(bx-ax),dy=Math.sign(by-ay),n=Math.max(Math.abs(bx-ax),Math.abs(by-ay));
+  S.sel=-1;
+  if(ax===bx||ay===by||Math.abs(bx-ax)===Math.abs(by-ay)){
+    const line=[];for(let k=0;k<=n;k++)line.push((ay+dy*k)*N+ax+dx*k);
+    S.place.forEach((p,wi)=>{if(S.found.includes(wi)||p.length!==line.length)return;
+      if(p.every((v,k)=>v===line[k])||p.every((v,k)=>v===line[line.length-1-k])){S.found.push(wi);speak(S.words[wi].toLowerCase())}});
+  }
+  if(S.found.length===S.words.length){const c=save.city;save.found[c]=1;persist();hud();
+    const nx=nextOf(c);speak(nx===undefined?caseOf(c).ending:destLine(c))}
+  render();
+}
+const destLine=c=>(caseOf(c).woman?"La ladra è andata a ":"Il ladro è andato a ")+LEVELS[nextOf(c)].city+"!";
+function sopaHtml(){
+  const c=save.city,cs=caseOf(c),fc=new Set(S.found.flatMap(wi=>S.place[wi])),done=S.found.length===S.words.length,last=nextOf(c)===undefined;
+  const grid=`<div class="sopa">${S.g.map((l,i)=>`<button class="cell${fc.has(i)?" f":i===S.sel?" s":""}" data-cell="${i}">${l}</button>`).join("")}</div>`;
+  const words=`<p class="words">${S.words.map((w,wi)=>S.found.includes(wi)?`<s>${w}</s>`:"?".repeat(w.length)).join(" · ")}</p>`;
+  if(done)return `<div class="eyebrow">Sopa de letras · ${esc(cs.title)}</div>${grid}${words}`+(last
+    ?`<h2>Caso risolto!</h2><p class="it tip">${esc(cs.ending)}</p>${spk(cs.ending)}<p class="mute">Habla con el Capotreno para cerrar la ruta.</p>`
+    :`<h2>${esc(destLine(c))}</h2><p class="mute">Destino descubierto. Haz el free walking tour si te falta y ve a la estación: el Capotreno te espera.</p>`)+btn("CONTINUAR","data-close");
+  return `<div class="eyebrow">Sopa de letras · ${S.words.length} palabras</div><p class="mute">Toca la primera y la última letra de cada palabra (horizontal, vertical o diagonal). Las pistas te ayudan a adivinarlas.</p>${grid}${words}${btn("VER DOSSIER","data-dosv","")}${btn("SALIR","data-close","")}`;
+}
+
+/* ---------- identikit ---------- */
+const FK=["hair","glasses","face","hat","coat"],FN={hair:"Capelli",glasses:"Occhiali",face:"Viso",hat:"Cappello",coat:"Giacca"};
+const FL={hair:["corti e neri","lunghi e biondi","ricci e castani","lunghi e neri","grigi"],glasses:["no","sì"],face:["senza barba","con i baffi","con la barba"],hat:["nessuno","rosso","blu","verde","giallo"],coat:["rossa","blu","verde","gialla","nera"]};
+const target=c=>Object.assign({},caseOf(c).feat,{hat:(c*3+1)%5,coat:(c*2+1)%5});
+function desc(c){
+  const w=caseOf(c).woman,t=target(c);
+  let s=`L'ho vist${w?"a":"o"} ieri alla stazione! Era ${w?"una donna":"un uomo"} con i capelli ${FL.hair[t.hair]}. `;
+  s+=t.glasses?"Portava gli occhiali. ":"Non portava gli occhiali. ";
+  s+=w?"Non aveva né barba né baffi, ovviamente! ":t.face===1?"Aveva i baffi. ":t.face===2?"Aveva la barba. ":"Non aveva né barba né baffi. ";
+  s+=(t.hat?`Aveva un cappello ${FL.hat[t.hat]} `:"Non aveva il cappello ")+`e una giacca ${FL.coat[t.coat]}.`;
+  return s;
+}
+function drawFace(x,v){
+  const HC=["#1a1c2c","#ffcd75","#a7663a","#1a1c2c","#c5d3dc"][v.hair],CC=["#b13e53","#3b5dc9","#38b764","#ffcd75","#333c57"],HT=[null,"#b13e53","#3b5dc9","#38b764","#ffcd75"];
+  R(x,0,0,40,44,"#94b0c2");R(x,8,32,24,12,CC[v.coat]);R(x,18,32,4,6,"#f4f4e4");R(x,17,28,6,5,"#f2c9a0");
+  if(v.hair===1||v.hair===3){R(x,9,10,4,20,HC);R(x,27,10,4,20,HC)}
+  R(x,12,10,16,19,"#f2c9a0");
+  if(v.hair===2){R(x,10,5,20,7,HC);R(x,9,8,3,8,HC);R(x,28,8,3,8,HC);R(x,12,11,3,2,HC);R(x,25,11,3,2,HC)}else{R(x,11,7,18,5,HC);R(x,11,10,2,6,HC);R(x,27,10,2,6,HC)}
+  R(x,15,17,2,2,"#1a1c2c");R(x,23,17,2,2,"#1a1c2c");
+  if(v.glasses){R(x,13,15,6,5,"#333c57");R(x,14,16,4,3,"#73eff7");R(x,21,15,6,5,"#333c57");R(x,22,16,4,3,"#73eff7");R(x,19,17,2,1,"#333c57");R(x,15,17,2,2,"#1a1c2c");R(x,23,17,2,2,"#1a1c2c")}
+  R(x,19,20,2,2,"#d9a07a");
+  if(v.face===2)R(x,12,22,16,8,v.hair===4?"#c5d3dc":"#5d3a1a");
+  if(v.face===1)R(x,15,23,10,2,v.hair===4?"#c5d3dc":"#5d3a1a");
+  R(x,17,25,6,1,"#b13e53");
+  if(HT[v.hat]){R(x,10,3,20,6,HT[v.hat]);R(x,7,8,26,2,HT[v.hat]);R(x,10,7,20,1,"#1a1c2c")}
+}
+function drawFaceFor(x){
+  if(S.ov==="idk")return drawFace(x,S.won?target(save.city):S.v);
+  const r=ROUTES[caseOf(save.city).route],i=[...r.ids].reverse().find(i=>(save.done[i]||[]).includes("I"));
+  if(i!==undefined)return drawFace(x,target(i));
+  R(x,0,0,40,44,"#94b0c2");R(x,8,32,24,12,"#333c57");R(x,12,8,16,22,"#333c57");R(x,17,13,6,3,"#f4f4e4");R(x,21,16,2,4,"#f4f4e4");R(x,19,21,2,2,"#f4f4e4");R(x,19,25,2,2,"#f4f4e4");
+}
+function startIdk(){const v={};FK.forEach(k=>v[k]=Math.floor(Math.random()*FL[k].length));const t=desc(save.city);show("idk",{v,err:0,won:false,t});speak(t)}
+function idkStep(s){const [k,d]=s.split(","),n=FL[k].length;S.v[k]=(S.v[k]+(+d)+n)%n;S.err=0;render()}
+function idkCheck(){
+  const c=save.city,t=target(c),bad=FK.filter(k=>S.v[k]!==t[k]).length;
+  if(!bad){S.won=true;if(!doneOf(c).includes("I"))doneOf(c).push("I");persist();hud();speak("Sì, è lui! Perfetto!");return render()}
+  lose();if(!dead()){S.err=bad;render()}
+}
+function idkHtml(){
+  const rows=FK.map(k=>`<div class="idrow"><span class="eyebrow">${FN[k]}</span><button class="tile" data-idp="${k},-1" aria-label="Anterior">◀</button><span class="it">${esc(FL[k][S.v[k]])}</span><button class="tile" data-idp="${k},1" aria-label="Siguiente">▶</button></div>`).join("");
+  if(S.won)return `<div class="eyebrow">Identikit · il testimone</div><canvas id="face" class="face" width="40" height="44"></canvas><div class="fb ok"><b>IDENTIKIT PERFETTO! +1 PISTA</b><span>El retrato queda en tu Dossier.</span></div>${btn("CONTINUAR","data-ns")}`;
+  return `<div class="row"><span class="eyebrow">Identikit · il testimone</span>${hp()}</div><p class="it tip">«${esc(S.t)}»</p>${spk(S.t)}<canvas id="face" class="face" width="40" height="44"></canvas>${rows}`+
+   (S.err?`<div class="fb no"><b>NON È LUI! · -1 ♥</b><span>Hay ${S.err} ${S.err>1?"detalles equivocados":"detalle equivocado"}. Vuelve a escuchar al testigo.</span></div>`:"")+
+   `<div class="row">${btn("CONFRONTA","data-idok","")}${btn("SALIR","data-close","")}</div>`;
+}
+
+/* ---------- dossier ---------- */
+function dosHtml(){
+  const c=save.city,cs=caseOf(c),r=ROUTES[cs.route];
+  const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+    return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
+  const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn("RESOLVER LA SOPA DE LETRAS","data-sopa"):"";
+  return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas><table>${rows}</table>${sp}<div class="eyebrow">Diario delle piste</div>${diary||"<p class='mute'>Todavía no tienes pistas.</p>"}${btn("CERRAR","data-close")}`;
+}
+
+/* ---------- testigo en el mapa ---------- */
+function placeWit(){
+  const A=LEVELS[save.city].at,occ=new Set(ents.map(e=>e.x+","+e.y)),seen=new Set([A.start[0]+","+A.start[1]]),q=[[A.start[0],A.start[1],0]];
+  const open=(x,y)=>!SOLID.includes(MAP[y][x])&&MAP[y][x]!=="="&&!occ.has(x+","+y);
+  while(q.length){const [x,y,d]=q.shift();
+    if(d>=5&&open(x,y)&&Object.values(DIRS).every(([dx,dy])=>open(x+dx,y+dy))){ents.push({k:"wit",x,y,o:{shirt:"#5d275d",hair:"#c5d3dc",hat:"#566c86"}});return}
+    for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,k=nx+","+ny;if(seen.has(k)||SOLID.includes(MAP[ny][nx]))continue;seen.add(k);q.push([nx,ny,d+1])}}
 }
 
 buildCity();welcome();requestAnimationFrame(frame);
