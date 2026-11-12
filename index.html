@@ -80,7 +80,8 @@ td:first-child{background:var(--accent);white-space:nowrap}
 .mapbtn{display:flex;justify-content:space-between;gap:8px;width:100%;background:#fff;border:3px solid var(--ink);padding:8px 10px;color:var(--ink);font-size:24px;text-align:left}
 .mapbtn:disabled{opacity:.4}
 .pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
-#italy{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
+#italy,#trip{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
+.center{text-align:center}
 .legend{font-size:19px;margin:0}
 .tile.sel{background:var(--accent)}
 .chat{display:flex;flex-direction:column;gap:8px}
@@ -585,16 +586,16 @@ function pline(x,a,b,col,dot){let [x0,y0]=a;const [x1,y1]=b,dx=Math.abs(x1-x0),d
 function drawItaly(x){
   R(x,0,0,120,140,"#41a6f6");
   for(const poly of [ITALY,SICILY,SARD]){x.fillStyle="#38b764";x.beginPath();poly.forEach((p,k)=>{const [a,b]=proj(p);k?x.lineTo(a,b):x.moveTo(a,b)});x.closePath();x.fill()}
-  for(let k=0;k<B2LL.length-1;k++)pline(x,proj(B2LL[k]),proj(B2LL[k+1]),"#94b0c2",true);
-  for(const r of ROUTES)for(let k=0;k<r.ids.length-1;k++){const a=r.ids[k],b=r.ids[k+1],done=(save.stars[a]||0)>0;pline(x,proj(CITYLL[a]),proj(CITYLL[b]),done?"#ffcd75":"#f4f4e4",!done)}
-  B2LL.forEach(p=>{const [a,b]=proj(p);R(x,a-1,b-1,4,4,"#566c86")});
-  CITYLL.forEach((p,i)=>{const [a,b]=proj(p),cur=i===save.city,col=cur?"#b13e53":(save.stars[i]||0)>0?"#ffcd75":isOpen(i)?"#f4f4e4":"#566c86";
+  const rt=routeOf(save.city);
+  for(let k=0;k<rt.ids.length-1;k++){const a=rt.ids[k],b=rt.ids[k+1],done=(save.stars[a]||0)>0;pline(x,proj(CITYLL[a]),proj(CITYLL[b]),done?"#ffcd75":"#f4f4e4",!done)}
+  rt.ids.forEach(i=>{const [a,b]=proj(CITYLL[i]),cur=i===save.city,col=cur?"#b13e53":(save.stars[i]||0)>0?"#ffcd75":isOpen(i)?"#f4f4e4":"#566c86";
     if(cur){R(x,a-3,b-3,8,8,"#1a1c2c");R(x,a-2,b-2,6,6,col)}else{R(x,a-2,b-2,6,6,"#1a1c2c");R(x,a-1,b-1,4,4,col)}});
 }
 function postRender(c){
   if(!ov.querySelector)return;const L=LEVELS[c];
   const pc=(S.ov==="stop"||S.ov==="rip")&&ov.querySelector("#pic");if(pc){const i=S.ov==="stop"?S.i:S.list[S.n].i;drawPic(pc.getContext("2d"),L.tour.qs[i][2],c)}
   const it=S.ov==="map"&&ov.querySelector("#italy");if(it)drawItaly(it.getContext("2d"));
+  const tc=S.ov==="trip"&&ov.querySelector("#trip");if(tc)drawTrip(tc.getContext("2d"));
 }
 
 /* ---------- tour guiado ---------- */
@@ -639,7 +640,7 @@ function board(c,vip){
   const L=LEVELS[c],st=Math.max(save.stars[c]||0,Math.max(1,3-(save.miss[c]||0)));save.stars[c]=st;if(vip)save.vip[c]=1;
   const cls=vip?"<b>Biglietto VIP · prima classe!</b>":"<b>Biglietto turista · seconda classe.</b>",sr="<span style='font-size:28px'>"+stars(st)+"</span>",nx=nextOf(c);
   if(nx!==undefined){save.open[nx]=1;persist();
-    say("Capotreno",cls+"<br>"+L.city+" superada: "+sr+"<br>Próxima parada: <b>"+LEVELS[nx].city+"</b> ("+esc(LEVELS[nx].tema)+").",btn("SUBIR AL TREN →","data-go="+nx)+btn("QUEDARME AQUÍ","data-close",""))}
+    say("Capotreno",cls+"<br>"+L.city+" superada: "+sr+"<br>Próxima parada: <b>"+LEVELS[nx].city+"</b> ("+esc(LEVELS[nx].tema)+").",btn("SUBIR AL TREN →","data-trip="+nx)+btn("QUEDARME AQUÍ","data-close",""))}
   else{persist();say("Capotreno",cls+"<br>Complimenti! Has completado la "+routeOf(c).n+": "+sr+"<br>Desde el Mapa puedes volver a cualquier ciudad para mejorar tus estrellas o empezar otra ruta.")}
 }
 
@@ -780,7 +781,8 @@ const walk=(x,y)=>x>=0&&y>=0&&x<MW&&y<MH&&!SOLID.includes(MAP[y][x])&&!entAt(x,y
 
 let last=0;
 function frame(t){
-  const dt=Math.min(50,t-last);last=t;
+  const dt=Math.max(0,Math.min(50,t-last));last=t;
+  if(S.ov==="trip"&&S.phase==="run")tripStep(dt);
   if(W&&!S.ov)stepWalk(dt);
   else if(!S.ov){
     if(P.moving){P.t+=dt/150;
@@ -861,11 +863,11 @@ function render(){
     h=`<h2>Quaderno</h2>`+(got.length?`<div class="tabs">${got.map(i=>`<button class="tab${i===sel?" on":""}" data-sel="${i}">${esc(LEVELS[i].city)}</button>`).join("")}</div><div class="eyebrow">${esc(LEVELS[sel].tema)}</div>${lessonHtml(sel)}${tourNotes(sel)}`:`<p>Todavía está vacío. Habla con la Prof de ${esc(L.city)} para apuntar tu primera lección.</p>`)+btn("CERRAR","data-back2");
   }
   else if(S.ov==="text")h=`<div class="eyebrow">Tablón de ${esc(L.city)}</div><p class="it">${passage(L.text)}</p><p class="mute" id="gloss">Toca una palabra subrayada para traducirla.</p>${btn("CERRAR","data-back2")}`;
-  else if(S.ov==="map"){
-    const cards=LEVELS.filter((_,i)=>save.cards[i]);
-    h=`<h2>Mapa del viaje</h2><canvas id="italy" width="120" height="140"></canvas><p class="legend mute"><span style="color:#e0a100">━</span> hecho · ┅ pendiente · <span style="color:#b13e53">■</span> estás aquí · gris: ruta B2, próximamente</p>${ROUTES.map(r=>`<div class="eyebrow">${r.n}</div>`+r.ids.map((i,k)=>{const x=LEVELS[i];return `<button class="mapbtn" data-go="${i}" ${isOpen(i)?"":"disabled"}><span>${k+1}. ${esc(x.city)}${i===c?" ◀":""}${save.cards[i]?" ✉":""}${tourOf(i).done?" ⚑":""}${save.vip[i]?" VIP":""}</span><span>${isOpen(i)?stars(save.stars[i]||0):"cerrada"}</span></button>`}).join("")).join("")}<div class="eyebrow">Ruta avanzada · B2</div><p class="mute">Próximamente.</p>
-    <div class="eyebrow">Cartoline · ${cards.length}/${LEVELS.length}</div>${cards.length?cards.map(x=>`<p class="tip"><b>${esc(x.city)}.</b> ${esc(x.card)}</p>`).join(""):`<p class="mute">Abre el baúl de cada ciudad para coleccionar sus postales.</p>`}${btn("CERRAR","data-close")}`;
-  }
+  else if(S.ov==="map"){const rt=routeOf(c),cards=rt.ids.filter(i=>save.cards[i]),others=ROUTES.filter(r=>r!==rt);
+    h=`<div class="eyebrow">Mapa del viaje</div><h2>${esc(rt.n)}</h2><canvas id="italy" width="120" height="140"></canvas><p class="legend mute"><span style="color:#e0a100">━</span> hecho · ┅ pendiente · <span style="color:#b13e53">■</span> estás aquí</p>
+    ${rt.ids.map((i,k)=>{const x=LEVELS[i];return `<button class="mapbtn" data-go="${i}" ${isOpen(i)?"":"disabled"}><span>${k+1}. ${esc(x.city)}${i===c?" ◀":""}${save.cards[i]?" ✉":""}${tourOf(i).done?" ⚑":""}${save.vip[i]?" VIP":""}</span><span>${isOpen(i)?stars(save.stars[i]||0):"cerrada"}</span></button>`}).join("")}
+    <div class="eyebrow">Cartoline · ${cards.length}/${rt.ids.length}</div>${cards.length?cards.map(i=>`<p class="tip"><b>${esc(LEVELS[i].city)}.</b> ${esc(LEVELS[i].card)}</p>`).join(""):`<p class="mute">Abre el baúl de cada ciudad para coleccionar sus postales.</p>`}
+    <div class="eyebrow">Otras rutas</div>${others.map(r=>btn("IR A "+r.n.toUpperCase(),"data-go="+[...r.ids].reverse().find(isOpen),"")).join("")}<p class="mute">Ruta avanzada (B2): próximamente.</p>${btn("CERRAR","data-close")}`}
   else if(S.ov==="arc"){top=false;h=`<div class="eyebrow">Sala giochi</div><p>Scegli un gioco! Si completas uno, recuperas tus 3 vidas.</p>${btn("COPPIE · UNIR PAREJAS","data-game='pairs'")}${btn("SFIDA VELOCE · CONTRARRELOJ"+(save.best[c]?" ("+save.best[c]+"/10)":""),"data-game='sfida'")}${btn("SALIR","data-close","")}`}
   else if(S.ov==="pairs"){
     const left=S.items.filter(x=>!S.ok.includes(x.id)).length;
@@ -896,6 +898,7 @@ function render(){
   else if(S.ov==="rip"){const it=S.list[S.n],Q=L.tour.qs[it.i];
     h=`<div class="row"><span class="eyebrow">Ripasso · vero o falso</span><span class="eyebrow">${S.n+1}/${S.list.length}</span></div><canvas id="pic" class="pic" width="132" height="72"></canvas><p class="mute">${esc(Q[0])}</p><p class="big">${esc(it.a)}</p>`+(S.res?`<div class="fb ${S.res.ok?"ok":"no"}"><b>${S.res.ok?"GIUSTO!":"SBAGLIATO · volverá a salir"}</b>${S.res.ok?"":`<span class="it">${esc(L.tour.facts[it.i][0])}</span>`}</div>${btn("CONTINUAR","data-rnext")}`:`<div class="duo"><button class="opt" data-rv="1">VERO</button><button class="opt" data-rv="0">FALSO</button></div>`)}
   else if(S.ov==="tourq"){const Q=L.tour.quiz;h=`<div class="eyebrow">La guida · domanda finale</div><p class="it">${esc(Q[0])}</p>`+(S.won?`<div class="fb ok"><b>GIUSTO!</b><span class="it">${esc(Q[1][0])}.</span><span>Tour completado: recuperas tus 3 vidas y los apuntes quedan en tu Quaderno.</span></div>${btn("CERRAR","data-close")}`:`<div class="opts">${S.opts.map(i=>`<button class="opt${S.bad.includes(i)?" no":""}" data-tq="${i}" ${S.bad.includes(i)?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>${S.bad.length?`<p class="mute">No es eso. Puedes volver a leer las banderas: en un free tour no se pierden vidas.</p>`:""}${btn("SALIR","data-close","")}`)}
+  else if(S.ov==="trip")h=tripHtml();
   else if(S.ov==="chest"){
     const C=L.chest;
     h=S.won?`<div class="eyebrow">Baule aperto!</div><h2>Cartolina da ${esc(L.city)}</h2><p class="it">${esc(L.card)}</p><p class="mute">Guardada en el Mapa, con tus postales.</p>${btn("CERRAR","data-close")}`
@@ -994,6 +997,14 @@ ov.addEventListener("click",ev=>{
   else if("tr" in D){S.tr=true;render()}
   else if("stopok" in D){const t=tourOf(c);if(!t.seen.includes(S.i))t.seen.push(S.i);persist();const nx=[0,1,2].find(k=>!t.seen.includes(k));
     if(nx!==undefined){const gd=S.guided;hide();if(gd)guideTo(nx)}else if(!t.done||S.guided)finishTour();else hide()}
+  else if("trip" in D)startTrip(c,+D.trip);
+  else if("speak" in D)speak(S.ann.it);
+  else if("an" in D){S.pick=+D.an;const ok=S.pick===0;if(ok)S.score++;S.res={ok};render()}
+  else if("tgo" in D){S.annDone=true;S.phase="run";S.res=null;render()}
+  else if("nb" in D){const ok=+D.nb===0;if(ok)S.score++;S.res={ok};render()}
+  else if("nbnext" in D){S.log.push({x:S.nb[S.t][1][0]});S.t++;S.res=null;
+    if(S.t<S.nb.length){S.log.push({n:1,x:S.nb[S.t][0]});S.opts=shuffle([0,1,2])}else{S.nbDone=true;S.phase="run"}render()}
+  else if("arrive" in D)travel(S.to);
   else if("walk" in D){const t=tourOf(c),nx=[0,1,2].find(k=>!t.seen.includes(k));hide();guideTo(nx===undefined?0:nx)}
   else if("retour" in D){tourOf(c).seen=[];persist();hide();guideTo(0)}
   else if("ex" in D){S.pick=+D.ex;if(S.pick!==0)S.wrong.push(S.k);render()}
@@ -1029,6 +1040,75 @@ $("bA").addEventListener("click",interact);
 cv.addEventListener("click",interact);
 $("bNote").addEventListener("click",()=>{if(!S.ov)show("note",{sel:save.city})});
 $("bMap").addEventListener("click",()=>{if(!S.ov)show("map")});
+
+/* ---------- viaje en tren ---------- */
+const ANN={
+A2:[
+ ["Il treno per {to} è in arrivo al binario 3.",["El tren a {to} está llegando al andén 3","El tren a {to} sale a las 3","El tren a {to} está cancelado"],"Binario = andén. In arrivo = llegando."],
+ ["Il treno viaggia con dieci minuti di ritardo.",["El tren lleva diez minutos de retraso","El tren llega diez minutos antes","El viaje dura diez minutos"],"Ritardo = retraso. Anticipo = adelanto."],
+ ["Prossima fermata: {to}.",["Próxima parada: {to}","Última parada antes de {to}","El tren no para en {to}"],"Fermata = parada. Prossima = próxima."],
+ ["Il servizio bar si trova nella carrozza cinque.",["La cafetería está en el vagón cinco","El baño está en el vagón cinco","Hay que bajar por el vagón cinco"],"Carrozza = vagón. Si trova = se encuentra."],
+ ["Si prega di non lasciare i bagagli incustoditi.",["No dejen el equipaje sin vigilar","Dejen el equipaje en el pasillo","Recojan el equipaje al bajar"],"Bagagli = equipaje. Incustodito = sin vigilancia."],
+ ["Benvenuti a bordo del treno regionale per {to}.",["Bienvenidos al tren regional a {to}","El tren regional a {to} ha llegado","Suban rápido al tren regional a {to}"],"Regionale = tren de cercanías o regional."]],
+B1:[
+ ["Il treno delle 15:20 per {to} è stato soppresso a causa di uno sciopero.",["El tren de las 15:20 a {to} se cancela por una huelga","El tren de las 15:20 a {to} va lleno por una fiesta","El tren de las 15:20 a {to} cambia de andén por obras"],"Soppresso = cancelado. Sciopero = huelga."],
+ ["Si avvisano i signori viaggiatori che il treno non fermerà nelle stazioni intermedie.",["El tren no parará en las estaciones intermedias","El tren parará en todas las estaciones","El tren se detendrá un rato en la estación"],"Fermare = parar. Intermedie = intermedias."],
+ ["Si invitano i passeggeri a convalidare il biglietto prima di salire a bordo.",["Hay que validar el billete antes de subir","Se puede comprar el billete a bordo","El billete se enseña al bajar"],"Convalidare = validar. Salire = subir."],
+ ["A causa di un guasto tecnico, il treno arriverà a {to} con circa venti minuti di ritardo.",["Por una avería, el tren llegará a {to} unos veinte minutos tarde","Por obras, el tren saldrá de {to} veinte minutos antes","Por la lluvia, el viaje a {to} durará veinte minutos"],"Guasto = avería. Circa = aproximadamente."],
+ ["Il capotreno passerà a breve per il controllo dei biglietti.",["El revisor pasará pronto a revisar los billetes","El revisor ya ha bajado del tren","Los billetes se compran al revisor"],"A breve = en breve, pronto."],
+ ["Si ricorda che è vietato fumare a bordo del treno, anche nelle toilette.",["Recuerdan que está prohibido fumar en todo el tren, también en los baños","Se puede fumar solo en los baños","Hay un vagón para fumadores"],"Vietato = prohibido. Anche = también."]]
+};
+const NB={
+A2:[
+ [["Scusi, questo posto è libero?",["Sì, prego, si sieda!","Sì, sono libero domani.","No, sono di Barcellona."],"Posto libero = asiento libre. Si sieda = siéntese (Lei)."],["Dove va?",["Vado a {to}.","Vengo da {to}.","Sono {to}."],"Andare a + ciudad. Venire da = venir de."]],
+ [["Di dove sei?",["Sono di Barcellona.","Ho Barcellona.","Vado di Barcellona."],"Essere di + ciudad de origen."],["Quanto dura il viaggio?",["Circa due ore.","Ho due anni.","Sono le due."],"Durare = durar. Circa = más o menos."]],
+ [["Vuoi un biscotto?",["Sì, grazie, molto gentile!","Sì, prego, molto gentile!","No, grazie, sono gentile."],"Al aceptar se dice grazie; prego es para ofrecer o responder a grazie."],["Ti piace viaggiare in treno?",["Sì, mi piace molto.","Sì, mi piacciono molto.","Sì, ti piace molto."],"Con un verbo (viaggiare) → mi piace."]],
+ [["Che ore sono, per favore?",["Sono le tre e mezza.","È le tre e mezza.","Ho le tre e mezza."],"Sono le + hora (excepto è l'una)."],["A che ora arriviamo a {to}?",["Arriviamo alle quattro.","Arriviamo a le quattro.","Arriviamo in quattro."],"a + le = alle."]],
+ [["Hai una penna? Devo scrivere una cosa.",["Sì, eccola!","Sì, eccolo!","Sì, ecco lei!"],"Penna es femenino → eccola."],["Grazie mille!",["Prego, figurati!","Grazie a te, prego!","Scusa, prego!"],"A «grazie» se responde «prego» o «figurati»."]]],
+B1:[
+ [["Sei mai stato a {to}?",["No, è la prima volta che ci vado.","No, è la prima volta che ne vado.","No, ci sono andato domani."],"Ci = a ese lugar."],["Se vuoi, ti consiglio un ristorante.",["Magari! Me lo scrivi qui?","Magari! Te lo scrivo qui?","Magari! Glielo scrivi qui?"],"Me lo = a mí + eso."]],
+ [["Ti dispiace se apro il finestrino?",["No, figurati, fai pure!","Sì, figurati, fai pure!","No, mi dispiaccio."],"«Ti dispiace?» → «No, figurati» = no me molesta."],["Fa caldo, vero?",["Sì, magari avessimo l'aria condizionata!","Sì, magari abbiamo l'aria condizionata!","Sì, magari avremmo l'aria condizionata!"],"Magari + congiuntivo imperfetto = ojalá."]],
+ [["Pensi che arriveremo in orario?",["Spero di sì, ma credo che ci sia un po' di ritardo.","Spero di sì, ma credo che c'è un po' di ritardo.","Spero sì, ma credo che ci sarebbe un po' di ritardo."],"Credere che + congiuntivo: ci sia."],["Che cosa farai appena arrivi?",["Appena arriverò, lascerò la valigia in albergo.","Appena arrivo, lasciavo la valigia in albergo.","Appena arrivassi, lascerò la valigia in albergo."],"Appena + futuro → futuro."]],
+ [["Come mai studi l'italiano?",["Perché mi piacerebbe vivere in Italia.","Perché mi piacerà vivere in Italia ieri.","Perché mi è piaciuta vivere in Italia."],"Deseo → condizionale: mi piacerebbe."],["Da quanto tempo lo studi?",["Lo studio da un anno.","Lo studio per un anno fa.","Lo studiavo da un anno domani."],"Da + tiempo = desde hace."]],
+ [["Mi sa dire se questo treno ferma a {to}?",["Sì, ferma proprio lì: è la prossima fermata.","Sì, ferma proprio lì: è la prossima fermare.","Sì, si ferma proprio là: è il prossimo binario."],"Fermata = parada; fermare = parar."],["Meno male! Avevo paura di aver sbagliato treno.",["Tranquillo, se avessi sbagliato te l'avrei detto!","Tranquillo, se sbagliavi te lo direi!","Tranquillo, se hai sbagliato te l'avrei detto!"],"Hipótesis irreal: se + trapassato, condizionale passato."]]]
+};
+const fill=(s,o)=>s.replace(/\{to\}/g,o.to).replace(/\{from\}/g,o.from);
+function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="it-IT";u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function startTrip(from,to){
+  const lv=routeOf(to).ids.includes(8)?"A2":"B1",o={to:LEVELS[to].city,from:LEVELS[from].city};
+  const a=ANN[lv][Math.floor(Math.random()*ANN[lv].length)],d=NB[lv][Math.floor(Math.random()*NB[lv].length)];
+  show("trip",{from,to,p:0,phase:"run",score:0,annDone:false,nbDone:false,res:null,pick:-1,
+    ann:{it:fill(a[0],o),o:a[1].map(x=>fill(x,o)),n:a[2],opts:shuffle([0,1,2])},
+    nb:d.map(t=>[fill(t[0],o),t[1].map(x=>fill(x,o)),t[2]]),t:0,log:[],opts:[]});
+}
+function drawTrip(x){
+  drawItaly(x);
+  const A=proj(CITYLL[S.from]),B=proj(CITYLL[S.to]),px=Math.round(A[0]+(B[0]-A[0])*S.p),py=Math.round(A[1]+(B[1]-A[1])*S.p);
+  pline(x,A,[px,py],"#ffcd75",false);
+  R(x,A[0]-2,A[1]-2,6,6,"#1a1c2c");R(x,A[0]-1,A[1]-1,4,4,"#ffcd75");R(x,B[0]-3,B[1]-3,8,8,"#1a1c2c");R(x,B[0]-2,B[1]-2,6,6,"#f4f4e4");
+  R(x,px-4,py-3,9,6,"#1a1c2c");R(x,px-3,py-2,7,4,"#b13e53");R(x,px-2,py-1,1,1,"#73eff7");R(x,px,py-1,1,1,"#73eff7");R(x,px+2,py-1,1,1,"#73eff7");
+}
+function tripStep(dt){
+  S.p=Math.min(1,S.p+dt/3200);
+  const cvs=ov.querySelector&&ov.querySelector("#trip");if(cvs)drawTrip(cvs.getContext("2d"));
+  if(!S.annDone&&S.p>=.38){S.phase="ann";render()}
+  else if(S.annDone&&!S.nbDone&&S.p>=.72){S.phase="nb";S.t=0;S.res=null;S.log=[{n:1,x:S.nb[0][0]}];S.opts=shuffle([0,1,2]);render()}
+  else if(S.p>=1){S.phase="arr";render()}
+}
+function tripHtml(){
+  const F=LEVELS[S.from].city,To=LEVELS[S.to].city,vip=!!save.vip[S.from];let b="";
+  const fb=(ok,txt,extra)=>`<div class="fb ${ok?"ok":"no"}"><b>${ok?"GIUSTO!":"NON PROPRIO"}</b>${extra||""}<span>${esc(txt)}</span></div>`;
+  if(S.phase==="run")b=`<p class="mute center">Il treno è in viaggio verso ${esc(To)}…</p>`;
+  else if(S.phase==="ann"){const a=S.ann;
+    b=`<div class="eyebrow">Annuncio a bordo · ¿Qué dice?</div><p class="tip it">«${esc(a.it)}»</p>${btn("🔊 ASCOLTA","data-speak","")}
+    <div class="opts">${a.opts.map(i=>`<button class="opt${S.res?(i===0?" ok":i===S.pick?" no":""):""}" data-an="${i}" ${S.res?"disabled":""}>${esc(a.o[i])}</button>`).join("")}</div>`+(S.res?fb(S.res.ok,a.n)+btn("CONTINUAR","data-tgo"):"")}
+  else if(S.phase==="nb"){const tu=S.nb[S.t];
+    b=`<div class="eyebrow">Il vicino di posto</div><div class="chat">${S.log.map(m=>`<div class="bub${m.n?"":" me"}">${esc(m.x)}</div>`).join("")}</div>`+
+      (S.res?fb(S.res.ok,tu[2],S.res.ok?"":`<span class="it">${esc(tu[1][0])}</span>`)+btn("CONTINUAR","data-nbnext")
+       :`<p class="mute">¿Qué respondes?</p><div class="opts">${S.opts.map(i=>`<button class="opt" data-nb="${i}">${esc(tu[1][i])}</button>`).join("")}</div>`)}
+  else b=`<h2>Siamo arrivati a ${esc(To)}!</h2><p>Vocabolario del viaggio: <b>${S.score}/3</b></p>${btn("BAJAR DEL TREN","data-arrive")}`;
+  return `<div class="row"><span class="eyebrow">${esc(F)} → ${esc(To)}</span><span class="eyebrow">${vip?"VIP · prima classe":"seconda classe"}</span></div><canvas id="trip" width="120" height="140"></canvas>${b}`;
+}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
