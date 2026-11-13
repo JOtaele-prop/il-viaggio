@@ -25,9 +25,10 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--panel)}
+html,body{margin:0;background:var(--bg);color:var(--panel);height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 body{font-family:var(--tx);font-size:22px;line-height:1.15}
-#app{position:relative;max-width:480px;margin:0 auto;padding:10px 16px 20px;display:flex;flex-direction:column;gap:8px;min-height:560px}
+#app{position:relative;max-width:480px;height:100%;margin:0 auto;padding:10px 16px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+#cv{flex:none;align-self:center;aspect-ratio:240/208;width:min(100%,calc((100dvh - 300px)*240/208));height:auto}
 button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .hud{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--px);font-size:11px}
@@ -44,10 +45,10 @@ canvas{width:100%;height:auto;display:block;image-rendering:pixelated;image-rend
 .pbtn.a{background:var(--accent);font-size:13px;padding:16px 8px}
 .pbtn.go{background:var(--accent);width:100%;margin-top:6px}
 .pbtn:disabled{opacity:.45}
-#ov{position:absolute;inset:0;background:rgba(10,12,22,.82);padding:14px 16px;display:none;overflow-y:auto;z-index:5}
-#ov.show{display:flex;flex-direction:column;justify-content:center}
-#ov.top{justify-content:flex-start}
-.win{background:var(--panel);color:var(--ink);border:4px solid var(--ink);outline:4px solid var(--panel);box-shadow:0 0 0 8px var(--ink);padding:16px 14px;display:flex;flex-direction:column;gap:12px;margin:8px}
+#ov{position:fixed;inset:0;background:rgba(10,12,22,.82);padding:14px 16px;display:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;z-index:5}
+#ov.show{display:flex;flex-direction:column}
+#ov:not(.top) .win{margin-top:auto;margin-bottom:auto}
+.win{background:var(--panel);color:var(--ink);border:4px solid var(--ink);outline:4px solid var(--panel);box-shadow:0 0 0 8px var(--ink);padding:16px 14px;display:flex;flex-direction:column;gap:12px;margin:8px auto;width:calc(100% - 16px);max-width:448px;flex:none}
 .win h2{font-family:var(--px);font-size:13px;line-height:1.5;margin:0;text-wrap:balance}
 .win p{margin:0}
 .eyebrow{font-family:var(--px);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
@@ -879,7 +880,8 @@ function qHtml(){
   return `<div class="row"><span class="eyebrow">Reto · ${esc(L.tema)}</span>${hp()}</div>${b}${fb}`;
 }
 function render(){
-  if(!S.ov){ov.className="";ov.innerHTML="";return}
+  if(!S.ov){ov.className="";ov.innerHTML="";ov.dataset.ov="";return}
+  const keep=ov.dataset.ov===S.ov?ov.scrollTop:0;
   const c=save.city,L=LEVELS[c];let h="",top=true;
   const xh=EXOV[S.ov]&&EXOV[S.ov]();
   if(xh){h=xh;top=!["brief","help","tut"].includes(S.ov)}
@@ -941,7 +943,7 @@ function render(){
       ${S.err?`<p class="mute">No es esa palabra. Toca las letras para devolverlas.</p>`:""}<div class="row">${btn("QUADERNO","data-note","")}${btn("SALIR","data-close","")}</div>`;
   }
   ov.className="show"+(top?" top":"");ov.innerHTML=`<div class="win">${h}</div>`;postRender(c);
-  if(S.ov==="dial"){const w=ov.firstChild;if(w&&w.scrollIntoView)ov.scrollTop=ov.scrollHeight}else ov.scrollTop=0;
+  const grow=S.ov==="dial"||(S.ov==="trip"&&S.phase==="nb");ov.scrollTop=grow?ov.scrollHeight:keep;ov.dataset.ov=S.ov;
 }
 
 function startQ(i){const q=LEVELS[save.city].q[i];
