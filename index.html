@@ -28,7 +28,8 @@
 html,body{margin:0;background:var(--bg);color:var(--panel);height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 body{font-family:var(--tx);font-size:22px;line-height:1.15}
 #app{position:relative;max-width:480px;height:100%;margin:0 auto;padding:10px 16px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
-#cv{flex:none;align-self:center;aspect-ratio:240/208;width:min(100%,calc((100dvh - 300px)*240/208));height:auto}
+#cv{flex:none;align-self:center;aspect-ratio:240/208;width:min(100%,calc((100dvh - 330px)*240/208));height:auto}
+@media (max-height:640px){.side .pbtn{padding:8px 6px}.side .pbtn.a{padding:11px 6px}.dpad{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px)}.goal{font-size:18px;min-height:0}#app{gap:6px;padding-top:6px}}
 button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .hud{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--px);font-size:11px}
