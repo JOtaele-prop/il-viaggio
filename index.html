@@ -38,7 +38,7 @@ canvas{width:100%;height:auto;display:block;image-rendering:pixelated;image-rend
 .dpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px)}
 .dpad button{background:#333c57;border:3px solid #566c86;color:var(--panel);font-family:var(--px);font-size:14px}
 .dpad button:active,.dpad button.on{background:var(--blue)}
-.side{display:flex;flex-direction:column;gap:10px;align-items:stretch;flex:1;max-width:190px}
+.side{display:flex;flex-direction:column;gap:7px;align-items:stretch;flex:1;max-width:190px}
 .pbtn{font-family:var(--px);font-size:10px;padding:12px 8px;background:var(--panel);color:var(--ink);border:3px solid var(--ink);box-shadow:0 4px 0 #000;line-height:1.3}
 .pbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #000}
 .pbtn.a{background:var(--accent);font-size:13px;padding:16px 8px}
@@ -82,6 +82,21 @@ td:first-child{background:var(--accent);white-space:nowrap}
 .pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
 #italy,#trip{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
 .center{text-align:center}
+.small{font-size:17px}
+.check{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;font-size:22px}
+.check li.ok{color:var(--good)}
+.pippo{width:96px;height:72px;image-rendering:pixelated;border:3px solid var(--ink);align-self:center}
+.keyw{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.keyw span{width:26px;height:26px;border:3px solid var(--ink);background:#fff;font-family:var(--px);font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.keyw span.on{background:var(--accent)}
+.cw{display:grid;gap:2px;align-self:center;width:100%}
+.cwc{aspect-ratio:1;background:#fff;border:2px solid var(--ink);position:relative;font-family:var(--px);font-size:10px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.cwc.x{background:transparent;border-color:transparent}.cwc.r{background:var(--good-bg)}
+.cwc small{position:absolute;top:1px;left:2px;font-size:6px;font-family:var(--px)}
+.cwin{flex:1;min-width:0;font-family:var(--px);font-size:13px;padding:10px;border:3px solid var(--ink);text-transform:uppercase;color:var(--ink);background:#fff}
+.tile.shelf{display:flex;flex-direction:column;align-items:center;font-size:20px;line-height:1.05;min-width:84px}
+.emo{font-size:26px}
+summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .sopa{display:grid;grid-template-columns:repeat(9,1fr);gap:3px}
 .cell{aspect-ratio:1;background:#fff;border:2px solid var(--ink);font-family:var(--px);font-size:11px;color:var(--ink);padding:0}
 .cell.f{background:var(--good-bg);border-color:var(--good)}.cell.s{background:var(--accent)}
@@ -118,6 +133,7 @@ td:first-child{background:var(--accent);white-space:nowrap}
       <button class="pbtn" id="bNote">QUADERNO</button>
       <button class="pbtn" id="bMap">MAPA</button>
       <button class="pbtn" id="bDos">DOSSIER</button>
+      <button class="pbtn" id="bHelp">AIUTO 🐦</button>
     </div>
   </div>
   <div id="ov"></div>
@@ -642,7 +658,7 @@ function arrive(){
 }
 function finishTour(){
   const c=save.city,t=tourOf(c),gd=guideEnt(),h=LEVELS[c].tour.at.guide;
-  t.done=true;save.hearts=Math.min(3,save.hearts+1);gd.x=h[0];gd.y=h[1];gd.dir="down";persist();hud();
+  t.done=true;save.hearts=Math.min(3,save.hearts+1);const hh=gd.home||h;gd.x=hh[0];gd.y=hh[1];gd.dir="down";persist();hud();
   say("Guida","<span class='it'>Il tour è finito. Grazie a tutti!</span><br>Recuperas 1 vida y los apuntes quedan en el Quaderno. Antes de subir al tren, el Capotreno te hará 3 preguntas sobre el tour: si aciertas todas, viajas en VIP.");
 }
 function board(c,vip){
@@ -818,6 +834,7 @@ function frame(t){
       else if(e.k==="prof"&&!save.lesson[c])mark(g,x,y,false);
       else if(e.k==="capo"&&save.found[c]&&tourOf(c).done)mark(g,x,y,false);
       else if(e.k==="guide"){R(g,x+13,y-3,1,13,"#1a1c2c");R(g,x+9,y-6,9,3,"#ffcd75");R(g,x+11,y-8,5,2,"#ffcd75")}}}
+  drawPtr(cx,cy,dt);
   requestAnimationFrame(frame);
 }
 
@@ -864,13 +881,15 @@ function qHtml(){
 function render(){
   if(!S.ov){ov.className="";ov.innerHTML="";return}
   const c=save.city,L=LEVELS[c];let h="",top=true;
-  if(S.ov==="say"){top=false;h=`<div class="eyebrow">${esc(S.who)}</div><p>${S.txt}</p>${S.extra||btn("OK","data-close")}`}
+  const xh=EXOV[S.ov]&&EXOV[S.ov]();
+  if(xh){h=xh;top=!["brief","help","tut"].includes(S.ov)}
+  else if(S.ov==="say"){top=false;h=`<div class="eyebrow">${esc(S.who)}</div><p>${S.txt}</p>${S.extra||btn("OK","data-close")}`}
   else if(S.ov==="lesson")h=`<div class="eyebrow">La Prof · ${esc(L.city)}</div><h2>${esc(L.tema)}</h2>${lessonHtml(c)}<p class="mute">Esta página queda guardada en tu Quaderno: puedes abrirla en cualquier momento, también durante un reto.</p>${btn("ENTENDIDO","data-close")}`;
   else if(S.ov==="q")h=qHtml();
   else if(S.ov==="note"){
     const got=LEVELS.map((_,i)=>i).filter(i=>save.lesson[i]);
     const sel=got.includes(S.sel)?S.sel:got[got.length-1];
-    h=`<h2>Quaderno</h2>`+(got.length?`<div class="tabs">${got.map(i=>`<button class="tab${i===sel?" on":""}" data-sel="${i}">${esc(LEVELS[i].city)}</button>`).join("")}</div><div class="eyebrow">${esc(LEVELS[sel].tema)}</div>${lessonHtml(sel)}${tourNotes(sel)}`:`<p>Todavía está vacío. Habla con la Prof de ${esc(L.city)} para apuntar tu primera lección.</p>`)+btn("CERRAR","data-back2");
+    h=`<h2>Quaderno</h2>${Object.keys(save.vocab||{}).length?btn("PAROLE DEI NEGOZI ("+Object.keys(save.vocab).length+")","data-vocab",""):""}`+(got.length?`<div class="tabs">${got.map(i=>`<button class="tab${i===sel?" on":""}" data-sel="${i}">${esc(LEVELS[i].city)}</button>`).join("")}</div><div class="eyebrow">${esc(LEVELS[sel].tema)}</div>${lessonHtml(sel)}${tourNotes(sel)}`:`<p>Todavía está vacío. Habla con la Prof de ${esc(L.city)} para apuntar tu primera lección.</p>`)+btn("CERRAR","data-back2");
   }
   else if(S.ov==="text")h=`<div class="eyebrow">Tablón de ${esc(L.city)}</div><p class="it">${passage(L.text)}</p>${spk(L.text.replace(/\{([^|]+)\|[^}]+\}/g,"$1"))}<p class="mute" id="gloss">Toca una palabra subrayada para traducirla.</p>${btn("CERRAR","data-back2")}`;
   else if(S.ov==="map"){const rt=routeOf(c),cards=rt.ids.filter(i=>save.cards[i]),others=ROUTES.filter(r=>r!==rt);
@@ -1000,6 +1019,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
+  if(exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -1069,6 +1089,7 @@ cv.addEventListener("click",interact);
 $("bNote").addEventListener("click",()=>{if(!S.ov)show("note",{sel:save.city})});
 $("bMap").addEventListener("click",()=>{if(!S.ov)show("map")});
 $("bDos").addEventListener("click",()=>{if(!S.ov&&!W)show("dos")});
+$("bHelp").addEventListener("click",()=>{if(!S.ov&&!W)show("help",{mode:"menu",hi:pick(LINES.pippo)})});
 
 /* ---------- viaje en tren ---------- */
 const ANN={
@@ -1342,6 +1363,407 @@ function placeWit(){
   while(q.length){const [x,y,d]=q.shift();
     if(d>=5&&open(x,y)&&Object.values(DIRS).every(([dx,dy])=>open(x+dx,y+dy))){ents.push({k:"wit",x,y,o:{shirt:"#5d275d",hair:"#c5d3dc",hat:"#566c86"}});return}
     for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,k=nx+","+ny;if(seen.has(k)||SOLID.includes(MAP[ny][nx]))continue;seen.add(k);q.push([nx,ny,d+1])}}
+}
+
+/* ================= v6: guía, idioma progresivo, ayuda, tiendas, enigmas ================= */
+save.puz=save.puz||{};save.read=save.read||{};save.vocab=save.vocab||{};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const stage=()=>{const n=Object.values(save.stars).filter(v=>v>0).length;return n<2?0:n<6?1:2};
+const tr=(es,it)=>{const s=stage();return s===0?es:s===1?it+`<br><span class="mute small">${es}</span>`:it};
+const trp=(es,it)=>stage()===0?es:it;
+function sayL(who,it,es,extra){say(who,`<span class="it">${esc(it)}</span>`+(es&&stage()<2?`<br><span class="mute">${es}</span>`:"")+spk(it),extra);speak(it)}
+
+/* ---------- frases que cambian ---------- */
+const LINES={
+ greetQ:["Ciao! Hai un minuto? Ho una domanda per te.","Ehi, detective! Vediamo se sai rispondere…","Buongiorno! Ho visto il ladro… ma prima rispondi a questa!","Aiutami con questa frase e ti do una pista.","Salve! Facciamo un piccolo test di italiano?"],
+ needRead:["Hai letto il cartello in piazza? Leggilo, poi torna da me.","La mia domanda è sul cartello in piazza: leggilo prima!"],
+ doneQ:["Bravo! Hai già la mia pista.","Grazie ancora, detective!","In bocca al lupo con il ladro!","Corri, il ladro scappa!"],
+ noProf:["Prima parla con la Prof, a scuola!","Non sei ancora andato a lezione? La Prof ti aspetta a scuola."],
+ questDone:["Grazie ancora per l'aiuto!","Che gentile sei stato!","Senza di te non ce l'avrei fatta!"],
+ witDone:["Spero che lo prendiate presto!","Ho già detto tutto quello che ho visto.","Era proprio un tipo strano…"],
+ talkDone:["È stato un piacere!","Ci vediamo, detective!","Buona fortuna con le indagini!"],
+ guideDone:["Grazie per la mancia!","Spero che il tour ti sia piaciuto!","Torna a trovarci un giorno!"],
+ capoHi:["Biglietto, prego!","Buongiorno, detective!","Il treno non aspetta!"],
+ pippo:["Tranquillo, ci sono io!","Hai bisogno di una mano? Anzi, di un'ala?","Grr… cioè, cucù! Come posso aiutarti?"]
+};
+
+/* ---------- tutorial ---------- */
+const TUT=[
+ ["¡Bienvenido a Il Viaggio!","Benvenuto in Il Viaggio!","Eres un detective que viaja por Italia persiguiendo a un ladrón. En cada ciudad aprendes un tema de italiano y reúnes pistas para descubrir adónde ha huido.","Sei un detective che viaggia per l'Italia per inseguire un ladro. In ogni città impari un tema di italiano e raccogli piste per scoprire dove è scappato."],
+ ["Cómo moverte","Come muoverti","Muévete con la cruceta (o con las flechas del teclado). Para hablar con alguien o entrar por una puerta, ponte delante y pulsa A. Los personajes con «!» tienen algo para ti.","Muoviti con la croce (o con le frecce della tastiera). Per parlare con qualcuno o entrare da una porta, mettiti davanti e premi A. I personaggi con «!» hanno qualcosa per te."],
+ ["Qué hacer en cada ciudad","Cosa fare in ogni città","1. La Prof, en la escuela (cartel verde), te explica el tema.\n2. Lee el cartel de la plaza.\n3. Consigue 7 pistas hablando con la gente.\n4. Resuelve el enigma (sopa de letras o crucigrama): te dice adónde fue el ladrón.\n5. Haz el free walking tour.\n6. Ve a la estación (cartel azul): el Capotreno te pregunta y subes al tren.","1. La Prof, a scuola (cartello verde), ti spiega il tema.\n2. Leggi il cartello in piazza.\n3. Raccogli 7 piste parlando con la gente.\n4. Risolvi l'enigma (crucipuzzle o cruciverba): ti dice dove è andato il ladro.\n5. Fai il free walking tour.\n6. Vai in stazione (cartello azzurro): il Capotreno ti fa domande e sali sul treno."],
+ ["Ayuda y tiendas","Aiuto e negozi","¿Te has perdido? Pulsa AIUTO: Pippo, el palomo, te dice qué hacer y te señala el camino. Las casas con un dibujo en el tejado son tiendas con juegos de vocabulario. Cuanto más avances, más italiano y menos español.","Ti sei perso? Premi AIUTO: Pippo il piccione ti dice cosa fare e ti indica la strada. Le case con un disegno sul tetto sono negozi con giochi di vocabolario. Più vai avanti, più italiano e meno spagnolo."]
+];
+function tutHtml(){const p=TUT[S.p],s=stage();const body=(s===0?p[2]:p[3]).split("\n").map(l=>`<p>${esc(l)}</p>`).join("");
+  return `<div class="eyebrow">${trp("Cómo se juega","Come si gioca")} · ${S.p+1}/${TUT.length}</div><canvas id="pippo" class="pippo" width="32" height="24"></canvas><h2>${esc(s===0?p[0]:p[1])}</h2>${body}${s===1?`<p class="mute small">${esc(p[2])}</p>`:""}
+  <div class="row">${S.p>0?btn("◀","data-tutb",""):"<span></span>"}${btn(S.p<TUT.length-1?trp("SIGUIENTE ▶","AVANTI ▶"):trp("¡A JUGAR!","ANDIAMO!"),"data-tutn","a")}</div>`}
+
+/* ---------- objetivo actual y briefing ---------- */
+function nextTarget(plain){
+  const c=save.city,L=LEVELS[c],d=doneOf(c),k=save.clue[c]||0,f=fn=>ents.find(fn),x=plain?trp:tr;
+  if(W)return {txt:x("Sigue a la guía.","Segui la guida.")};
+  if(!save.lesson[c])return {txt:x("Ve a la escuela (cartel verde SCUOLA) y habla con la Prof.","Vai a scuola (cartello verde SCUOLA) e parla con la Prof."),ent:f(e=>e.k==="prof")};
+  if(!save.read[c])return {txt:x("Lee el cartel de la plaza: algunos vecinos te preguntarán sobre él.","Leggi il cartello in piazza: alcuni vicini ti faranno domande."),ent:f(e=>e.k==="board")};
+  if(k<7){
+    if(d.length>k)return {txt:x("Tienes pistas sin abrir.","Hai piste da aprire."),act:"ns"};
+    if(save.carry)return {txt:x("Llevas "+ITEMS[save.carry][0]+": dáselo a quien lo buscaba.","Hai "+ITEMS[save.carry][0]+": portalo a chi lo cercava."),ent:f(e=>e.k==="quest")};
+    const cand=ents.filter(e=>!hidden(e)&&((e.k==="q"&&!d.includes(e.i))||(e.k==="talk"&&!d.includes("D"))||(e.k==="wit"&&!d.includes("I"))||(e.k==="quest"&&!d.includes("F"))));
+    if(cand.length){const e=cand.sort((a,b)=>Math.abs(a.x-P.x)+Math.abs(a.y-P.y)-Math.abs(b.x-P.x)-Math.abs(b.y-P.y))[0];
+      const nm={q:["un vecino","un vicino"],talk:[L.dial.who,L.dial.who],wit:["el testigo","il testimone"],quest:["un vecino que ha perdido algo","un vicino che ha perso qualcosa"]}[e.k];
+      return {txt:x("Habla con "+nm[0]+" (tiene «!»): te dará una pista.","Parla con "+nm[1]+" (ha il «!»): ti darà una pista."),ent:e}}
+  }
+  if(!save.found[c])return {txt:x("Resuelve el enigma para saber adónde fue el ladrón.","Risolvi l'enigma per scoprire dove è andato il ladro."),act:"puz"};
+  if(!tourOf(c).done)return {txt:x("Haz el free walking tour con la guía del paraguas amarillo.","Fai il free walking tour con la guida dall'ombrello giallo."),ent:f(e=>e.k==="guide")};
+  return {txt:x("Ve a la estación (cartel azul STAZIONE): el Capotreno te espera.","Vai in stazione (cartello azzurro STAZIONE): il Capotreno ti aspetta."),ent:f(e=>e.k==="capo")};
+}
+function dirTxt(e){const dx=e.x-P.x,dy=e.y-P.y,n=Math.abs(dx)+Math.abs(dy),a=Math.round(Math.atan2(dy,dx)/(Math.PI/4));
+  const ar=["→","↘","↓","↙","←","↖","↑","↗"][(a+8)%8];return tr(`Está a ${n} pasos, hacia ${ar}.`,`È a ${n} passi, verso ${ar}.`)}
+const puzType=c=>routeOf(c).ids.indexOf(c)%2?"cw":"sopa";
+function briefHtml(){
+  const c=save.city,L=LEVELS[c],rt=routeOf(c),cs=caseOf(c),k=Math.min(7,save.clue[c]||0),nt=nextTarget();
+  const it=[[save.lesson[c],tr("Clase con la Prof (escuela)","Lezione con la Prof (scuola)")],[save.read[c],tr("Leer el cartel de la plaza","Leggere il cartello in piazza")],[k>=7,tr("Pistas","Piste")+` ${k}/7`],
+    [save.found[c],puzType(c)==="sopa"?tr("Sopa de letras: adónde fue","Crucipuzzle: dove è andato"):tr("Crucigrama: adónde fue","Cruciverba: dove è andato")],[tourOf(c).done,"Free walking tour"],[false,tr("Estación: preguntas y tren","Stazione: domande e treno")]];
+  return `<div class="eyebrow">${esc(rt.n)} · ${rt.ids.indexOf(c)+1}/${rt.ids.length} · ${esc(cs.title)}</div><h2>${trp("Estás en","Sei a")} ${esc(L.city)}</h2><p>${trp("Tema de italiano","Tema di italiano")}: <b>${esc(L.tema)}</b></p>
+  <ul class="check">${it.map(([ok,t])=>`<li class="${ok?"ok":""}">${ok?"✓":"□"} ${t}</li>`).join("")}</ul>
+  <div class="tip"><b>${trp("Ahora","Adesso")}:</b> ${nt.txt}</div><div class="row">${btn("AIUTO 🐦","data-help","")}${btn(trp("¡A JUGAR!","ANDIAMO!"),"data-ns","a")}</div>`;
+}
+
+/* ---------- Pippo, el ayudante ---------- */
+const TOPICS={
+ piste:["Pistas","Piste","Cada persona con «!» te da una pista cuando completas su actividad: retos de gramática, un diálogo, el vecino que perdió un objeto (búscalo por la ciudad y llévaselo) y el testigo del identikit. Con 7 pistas se abre el enigma.","Ogni persona con «!» ti dà una pista quando completi la sua attività: esercizi di grammatica, un dialogo, il vicino che ha perso un oggetto (cercalo in città e portaglielo) e il testimone dell'identikit. Con 7 piste si apre l'enigma."],
+ enigma:["Enigma","Enigma","El enigma te dice adónde fue el ladrón. Sopa de letras: toca la primera y la última letra de cada palabra. Crucigrama: toca una definición y escribe la palabra. Las palabras salen de tus pistas y lo que encuentras queda guardado. Cada enigma resuelto te da una letra de la palabra clave del caso.","L'enigma ti dice dove è andato il ladro. Crucipuzzle: tocca la prima e l'ultima lettera di ogni parola. Cruciverba: tocca una definizione e scrivi la parola. Le parole vengono dalle tue piste e quello che trovi resta salvato. Ogni enigma risolto ti dà una lettera della parola chiave del caso."],
+ identikit:["Identikit","Identikit","Escucha al testigo y monta el retrato con las flechas. El ladrón se disfraza: sombrero y chaqueta cambian en cada ciudad. Al principio algunos rasgos ya vienen fijados; luego tendrás que adivinarlos todos.","Ascolta il testimone e componi il ritratto con le frecce. Il ladro si traveste: cappello e giacca cambiano in ogni città. All'inizio alcuni dettagli sono già fissati, poi dovrai indovinarli tutti."],
+ tour:["Free walking tour","Free walking tour","La guía te lleva por tres lugares de la ciudad. Solo se hace una vez: ¡presta atención! El Capotreno te preguntará sobre el tour; si aciertas todo, viajas en VIP.","La guida ti porta in tre luoghi della città. Si fa una volta sola: stai attento! Il Capotreno ti farà domande sul tour; se rispondi bene a tutto, viaggi in VIP."],
+ treno:["Tren","Treno","En la estación el Capotreno te hace 3 preguntas. Durante el viaje escucharás anuncios y hablarás con tu compañero de asiento.","In stazione il Capotreno ti fa 3 domande. Durante il viaggio ascolterai gli annunci e parlerai con il tuo vicino di posto."],
+ vite:["Vidas","Vite","Tienes 3 vidas y las pierdes al fallar retos. Recuperas 1 vida en cada juego de la sala giochi, en cada cliente bien atendido en las tiendas y al terminar el tour.","Hai 3 vite e le perdi quando sbagli. Recuperi 1 vita con ogni gioco della sala giochi, con ogni cliente servito bene nei negozi e alla fine del tour."],
+ negozi:["Tiendas","Negozi","Las casas con un dibujo en el tejado son tiendas: ponte delante de la puerta y pulsa A. Dentro atiendes a los clientes y aprendes vocabulario, que se guarda en el Quaderno.","Le case con un disegno sul tetto sono negozi: mettiti davanti alla porta e premi A. Dentro servi i clienti e impari parole nuove, che restano nel Quaderno."]
+};
+function helpHtml(){
+  let body;
+  if(S.mode==="next"){const nt=nextTarget();body=`<p class="tip">${nt.txt}${nt.ent?"<br>"+dirTxt(nt.ent):""}</p>`+(nt.ent?btn(trp("LLÉVAME ALLÍ","PORTAMI LÌ"),"data-hptr"):"")+(nt.act==="puz"?btn(trp("ABRIR EL ENIGMA","APRI L'ENIGMA"),"data-puz"):"")+(nt.act==="ns"?btn(trp("ABRIR PISTAS","APRI LE PISTE"),"data-ns"):"")}
+  else if(S.mode==="topics")body=`<div class="tabs">${Object.keys(TOPICS).map(k=>`<button class="tab" data-htopic="${k}">${esc(trp(TOPICS[k][0],TOPICS[k][1]))}</button>`).join("")}</div>`;
+  else if(S.mode==="topic"){const t=TOPICS[S.t];body=`<h2>${esc(trp(t[0],t[1]))}</h2><p>${tr(esc(t[2]),esc(t[3]))}</p>`}
+  else body=`<p class="it">${esc(S.hi)}</p>`;
+  return `<div class="eyebrow">Pippo il piccione · aiuto</div><canvas id="pippo" class="pippo" width="32" height="24"></canvas>${body}
+   ${btn(trp("¿QUÉ HAGO AHORA?","COSA FACCIO ADESSO?"),"data-hnext","")}${btn(trp("¿CÓMO FUNCIONA…?","COME FUNZIONA…?"),"data-htopics","")}${btn(trp("VER LA GUÍA DEL JUEGO","GUIDA DEL GIOCO"),"data-tut","")}${btn(trp("CERRAR","CHIUDI"),"data-close")}`;
+}
+function drawPippo(x){R(x,0,0,32,24,"#73eff7");R(x,0,20,32,4,"#38b764");R(x,9,10,14,9,"#94b0c2");R(x,19,6,7,7,"#7a93a8");R(x,21,8,2,2,"#1a1c2c");R(x,26,9,3,2,"#e0a100");R(x,11,11,8,3,"#566c86");R(x,18,13,4,2,"#38b764");R(x,13,19,2,2,"#e0a100");R(x,18,19,2,2,"#e0a100");R(x,5,11,5,4,"#7a93a8")}
+let ptr=null;
+function drawPtr(cx,cy,dt){
+  if(!ptr)return;ptr.t-=dt;if(ptr.t<=0){ptr=null;return}
+  const b=Math.round(Math.sin(ptr.t/110)*2),sx=ptr.x*T-cx,sy=ptr.y*T-cy;
+  R(g,sx+4,sy-16+b,8,3,"#1a1c2c");R(g,sx+5,sy-15+b,6,1,"#ffcd75");R(g,sx+6,sy-13+b,4,2,"#ffcd75");R(g,sx+7,sy-11+b,2,2,"#ffcd75");
+  const px=P.fx*T-cx+8,py=P.fy*T-cy+8,dx=ptr.x-P.fx,dy=ptr.y-P.fy,m=Math.hypot(dx,dy)||1;
+  if(m>1.5)[12,17,22].forEach((r,i)=>{R(g,px+dx/m*r-2,py+dy/m*r-2,4+i,4+i,"#1a1c2c");R(g,px+dx/m*r-1,py+dy/m*r-1,2+i,2+i,"#ffcd75")});
+}
+
+/* ---------- puertas: escuela, estación y tiendas ---------- */
+const SHOPS={
+ bar:{n:"Bar",e:"☕",it:[["caffè","caffè","un","☕","café"],["cappuccino","cappuccini","un","🥛","capuchino"],["cornetto","cornetti","un","🥐","cruasán"],["spremuta","spremute","una","🍊","zumo de naranja"],["tramezzino","tramezzini","un","🥪","sándwich"],["tè","tè","un","🍵","té"],["acqua","acque","un'","💧","agua"]]},
+ gelateria:{n:"Gelateria",e:"🍦",it:[["cono","coni","un","🍦","cucurucho"],["coppetta","coppette","una","🍨","tarrina"],["gelato al cioccolato","gelati al cioccolato","un","🍫","helado de chocolate"],["gelato alla fragola","gelati alla fragola","un","🍓","helado de fresa"],["gelato al limone","gelati al limone","un","🍋","helado de limón"],["granita","granite","una","🧊","granizado"],["frullato","frullati","un","🥤","batido"]]},
+ ferramenta:{n:"Ferramenta",e:"🔨",it:[["martello","martelli","un","🔨","martillo"],["cacciavite","cacciaviti","un","🪛","destornillador"],["chiave inglese","chiavi inglesi","una","🔧","llave inglesa"],["lampadina","lampadine","una","💡","bombilla"],["vite","viti","una","🔩","tornillo"],["metro","metri","un","📏","metro"],["scala","scale","una","🪜","escalera"]]},
+ forno:{n:"Forno",e:"🥖",it:[["pagnotta","pagnotte","una","🍞","hogaza de pan"],["focaccia","focacce","una","🫓","focaccia"],["pizzetta","pizzette","una","🍕","pizzita"],["biscotto","biscotti","un","🍪","galleta"],["torta","torte","una","🎂","tarta"],["filone","filoni","un","🥖","barra de pan"],["ciambella","ciambelle","una","🍩","rosquilla"]]},
+ frutta:{n:"Frutta e verdura",e:"🍎",it:[["mela","mele","una","🍎","manzana"],["pera","pere","una","🍐","pera"],["banana","banane","una","🍌","plátano"],["pomodoro","pomodori","un","🍅","tomate"],["arancia","arance","un'","🍊","naranja"],["limone","limoni","un","🍋","limón"],["patata","patate","una","🥔","patata"]]},
+ farmacia:{n:"Farmacia",e:"💊",it:[["cerotto","cerotti","un","🩹","tirita"],["aspirina","aspirine","un'","💊","aspirina"],["crema solare","creme solari","una","🧴","crema solar"],["spazzolino","spazzolini","uno","🪥","cepillo de dientes"],["termometro","termometri","un","🌡️","termómetro"],["sapone","saponi","un","🧼","jabón"]]},
+ edicola:{n:"Edicola",e:"📰",it:[["giornale","giornali","un","📰","periódico"],["cartolina","cartoline","una","🖼️","postal"],["biglietto dell'autobus","biglietti dell'autobus","un","🎫","billete de autobús"],["penna","penne","una","🖊️","bolígrafo"],["mappa","mappe","una","🗺️","mapa"],["rivista","riviste","una","📖","revista"]]},
+ vestiti:{n:"Abbigliamento",e:"👕",it:[["maglietta","magliette","una","👕","camiseta"],["sciarpa","sciarpe","una","🧣","bufanda"],["giacca","giacche","una","🧥","chaqueta"],["cappello","cappelli","un","🧢","gorra"],["vestito","vestiti","un","👗","vestido"],["borsa","borse","una","👜","bolso"],["calzino","calzini","un","🧦","calcetín"]]}
+};
+const SHOPK=Object.keys(SHOPS);
+let DOORS=[];
+function makeDoors(c){
+  const L=LEVELS[c],pr=ents.find(e=>e.k==="prof"),cp=ents.find(e=>e.k==="capo"),dist=(d,e)=>Math.abs(d.x-e.x)+Math.abs(d.y-e.y);
+  const ds=L.sp.h.map(([x,y,w,s])=>({x:x+(w>>1),y:y+2,hx:x,hy:y,w,big:!!s}));
+  const big=ds.filter(d=>d.big),st=(big.length?big:ds).slice().sort((a,b)=>dist(a,cp)-dist(b,cp))[0];
+  const sc=ds.filter(d=>d!==st).sort((a,b)=>dist(a,pr)-dist(b,pr))[0];
+  let k=0;ds.forEach(d=>{d.type=d===st?"station":d===sc?"school":SHOPK[(c*3+k++)%SHOPK.length]});
+  return ds;
+}
+function clearDoors(){
+  const fronts=new Set(DOORS.map(d=>d.x+","+(d.y+1))),A=LEVELS[save.city].at;
+  const free=(x,y)=>x>0&&y>0&&x<MW-1&&y<MH-1&&!SOLID.includes(MAP[y][x])&&MAP[y][x]!=="="&&!ents.some(e=>e.x===x&&e.y===y)&&!fronts.has(x+","+y)&&!(x===A.start[0]&&y===A.start[1]);
+  for(const d of DOORS){const fx=d.x,fy=d.y+1,e=ents.find(e=>e.x===fx&&e.y===fy);if(!e)continue;
+    const spot=[[fx-1,fy],[fx+1,fy],[fx-2,fy],[fx+2,fy],[fx,fy+1],[fx-1,fy+1],[fx+1,fy+1]].find(([x,y])=>free(x,y));
+    if(spot){e.x=spot[0];e.y=spot[1];if(e.k==="guide")e.home=spot}}
+}
+function drawBG(){
+  const c=save.city,L=LEVELS[c];
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)drawTile(bgx,MAP[y][x],x,y,L);
+  if(L.sp.L)LAND[c](bgx,L.sp.L[0]*T,L.sp.L[1]*T,GROUND[L.g][0]);
+  bgx.textAlign="center";bgx.textBaseline="middle";
+  for(const d of DOORS){const px=d.x*T+8,py=(d.hy+1)*T+8;
+    if(d.type==="school"||d.type==="station"){const txt=d.type==="school"?"SCUOLA":"STAZIONE",col=d.type==="school"?"#257179":"#3b5dc9";
+      bgx.font="6px 'Press Start 2P', monospace";const w=Math.ceil(bgx.measureText(txt).width)+6;
+      R(bgx,px-w/2-1,py-6,w+2,12,"#1a1c2c");R(bgx,px-w/2,py-5,w,10,col);bgx.fillStyle="#f4f4e4";bgx.fillText(txt,px,py+1);
+      if(d.type==="school"){R(bgx,px-1,d.hy*T-8,2,10,"#5d3a1a");R(bgx,px+1,d.hy*T-8,6,4,"#38b764");R(bgx,px+1,d.hy*T-4,6,0.01,"#000")}
+      else{R(bgx,px-5,d.hy*T+2,10,10,"#1a1c2c");R(bgx,px-4,d.hy*T+3,8,8,"#f4f4e4");R(bgx,px,d.hy*T+4,1,4,"#1a1c2c");R(bgx,px,d.hy*T+7,3,1,"#1a1c2c")}}
+    else{R(bgx,px-8,py-8,16,16,"#1a1c2c");R(bgx,px-7,py-7,14,14,"#f4f4e4");bgx.font="10px sans-serif";bgx.fillText(SHOPS[d.type].e,px,py+1)}}
+}
+function buildCity(){
+  const c=save.city,L=LEVELS[c],A=L.at;
+  MAP=buildMap(L.sp);
+  const at=(k,p,o)=>({k,x:p[0],y:p[1],o});
+  ents=[at("prof",A.prof,{shirt:"#5d275d",hair:"#94b0c2"}),at("arc",A.arc,{shirt:"#ffcd75",hair:"#b13e53"}),at("board",A.board),
+        at("capo",A.capo,{shirt:"#29366f",hair:"#333c57",hat:"#29366f"}),at("talk",A.talk,{shirt:"#f4f4e4",hair:"#1a1c2c",hat:"#f4f4e4"}),
+        at("quest",A.quest,{shirt:"#257179",hair:"#ffcd75"}),at("chest",A.chest)];
+  L.q.forEach((_,i)=>ents.push(Object.assign(at("q",A.q[i],{shirt:SHIRTS[(i+c)%6],hair:HAIRS[(i*2+c)%6]}),{i})));
+  L.quest.items.forEach((id,i)=>ents.push(Object.assign(at("item",A.items[i]),{id})));
+  ents.push(at("guide",L.tour.at.guide,{shirt:"#ef7d57",hair:"#333c57"}));placeWit();L.tour.at.stops.forEach((p,i)=>ents.push(Object.assign(at("flag",p),{i})));
+  DOORS=makeDoors(c);clearDoors();drawBG();ptr=null;
+  Object.assign(P,{x:A.start[0],y:A.start[1],fx:A.start[0],fy:A.start[1],dir:"down",moving:false});
+  hud();
+}
+try{document.fonts&&document.fonts.ready.then(()=>{if(MAP.length)drawBG()})}catch(e){}
+
+/* ---------- tiendas ---------- */
+function newOrder(type){
+  const sh=SHOPS[type],s=stage(),n=s===0?2:3,idx=shuffle(sh.it.map((_,i)=>i)).slice(0,n),want={};
+  idx.forEach(i=>want[i]=1+Math.floor(Math.random()*(s===0?2:3)));
+  const parts=idx.map(i=>{const it=sh.it[i],q=want[i];return q===1?(it[2]==="un'"?"un'"+it[0]:it[2]+" "+it[0]):(q===2?"due ":"tre ")+it[1]});
+  const list=parts.length>1?parts.slice(0,-1).join(", ")+" e "+parts[parts.length-1]:parts[0];
+  const tpl=pick(s<2?["Buongiorno! Vorrei {L}, per favore.","Mi dà {L}, per favore?","Per me {L}, grazie.","Salve! Prendo {L}."]:["Buongiorno! Mi servirebbero {L}, se possibile.","Avrei bisogno di {L}, grazie.","Mi potrebbe dare {L}?"]);
+  return {want,txt:tpl.replace("{L}",list)};
+}
+function startShop(type){const o=newOrder(type);show("shop",{type,o,cart:{},res:null});speak(o.txt)}
+function shopHtml(){
+  const sh=SHOPS[S.type],s=stage(),cart=Object.keys(S.cart).filter(i=>S.cart[i]>0);
+  const shelf=sh.it.map((it,i)=>`<button class="tile shelf" data-shopadd="${i}" ${S.res?"disabled":""}><span class="emo">${it[3]}</span> ${esc(it[0])}${s===0?`<br><span class="mute small">${esc(it[4])}</span>`:""}</button>`).join("");
+  const counter=cart.length?cart.map(i=>`<button class="tile" data-shoprm="${i}" ${S.res?"disabled":""}>${S.cart[i]}× ${sh.it[i][3]} ${esc(sh.it[i][0])}</button>`).join(""):`<span class="mute">${trp("Toca los productos para ponerlos en el mostrador.","Tocca i prodotti per metterli sul bancone.")}</span>`;
+  const wantTxt=Object.keys(S.o.want).map(i=>`${S.o.want[i]}× ${sh.it[i][3]} ${esc(sh.it[i][0])}`).join(" · ");
+  return `<div class="row"><span class="eyebrow">${sh.e} ${esc(sh.n)}</span>${hp()}</div><canvas id="shopc" class="pic" width="132" height="56"></canvas>
+   <div class="eyebrow">${trp("El cliente dice:","Il cliente dice:")}</div><p class="it tip">«${esc(S.o.txt)}»</p>${spk(S.o.txt)}
+   <div class="eyebrow">${trp("Mostrador","Bancone")}</div><div class="tiles answer">${counter}</div><div class="tiles">${shelf}</div>`+
+   (S.res?`<div class="fb ${S.res.ok?"ok":"no"}"><b>${S.res.ok?(S.res.life?"PERFETTO! +1 ♥":"PERFETTO!"):"NON PROPRIO"}</b>${S.res.ok?`<span>${trp("Palabras guardadas en el Quaderno.","Parole salvate nel Quaderno.")}</span>`:`<span>${trp("El cliente quería:","Il cliente voleva:")} ${wantTxt}</span>`}</div>${btn(trp("OTRO CLIENTE","PROSSIMO CLIENTE"),"data-shopnew")}`
+   :btn(trp("SERVIR AL CLIENTE","SERVI IL CLIENTE"),"data-shopok"))+btn(trp("SALIR DE LA TIENDA","ESCI DAL NEGOZIO"),"data-close","");
+}
+function shopOk(){
+  const sh=SHOPS[S.type],w=S.o.want,keys=new Set([...Object.keys(w),...Object.keys(S.cart).filter(i=>S.cart[i]>0)]);
+  const ok=[...keys].every(i=>(w[i]||0)===(S.cart[i]||0));let life=false;
+  if(ok){Object.keys(w).forEach(i=>save.vocab[sh.it[i][0]]=sh.it[i][4]);if(save.hearts<3){save.hearts++;life=true}persist();hud();speak(pick(["Perfetto, grazie!","Grazie mille, arrivederci!","Bravissimo, grazie!"]))}
+  S.res={ok,life};render();
+}
+function drawShop(x,type){
+  const wall={bar:"#a7663a",gelateria:"#f6d5d8",ferramenta:"#94b0c2",forno:"#e8c98a",frutta:"#d3f0d6",farmacia:"#e2f3ea",edicola:"#c5d3dc",vestiti:"#f4e0b0"}[type];
+  R(x,0,0,132,56,wall);R(x,0,0,132,3,"#1a1c2c");for(let s=0;s<2;s++){R(x,6,8+s*14,120,2,"#5d3a1a");SHOPS[type].it.forEach((it,i)=>R(x,10+i*16,2+s*14,8,6,["#b13e53","#3b5dc9","#38b764","#ffcd75","#ef7d57","#5d275d","#73eff7"][(i+s)%7]))}
+  drawChar(x,58,30,{shirt:"#f4f4e4",hair:"#5d3a1a"},"down",0);R(x,0,44,132,12,"#5d3a1a");R(x,0,44,132,2,"#a7663a");
+}
+function enterDoor(d){
+  const c=save.city;
+  if(d.type==="school"){save.lesson[c]=1;persist();hud();return show("lesson")}
+  if(d.type==="station")return capoTalk();
+  startShop(d.type);
+}
+function vocabHtml(){const v=Object.keys(save.vocab).sort();
+  return `<h2>Quaderno · Parole</h2><p class="mute">${trp("Palabras que has usado en las tiendas.","Parole che hai usato nei negozi.")}</p><table>${v.map(w=>`<tr><td>${esc(w)}</td><td>${esc(save.vocab[w])}</td></tr>`).join("")}</table>${btn("CERRAR","data-close")}`}
+
+/* ---------- capotreno ---------- */
+function capoTalk(){
+  const c=save.city,L=LEVELS[c],k=save.clue[c]||0,hi=pick(LINES.capoHi);
+  if(k<7)return sayL("Capotreno",hi+" Ti mancano "+(7-k)+" piste.","Te faltan "+(7-k)+" pistas en "+L.city+".");
+  if(!save.found[c])return sayL("Capotreno",hi+" Dove vuoi andare? Prima risolvi l'enigma!","Primero resuelve el enigma para saber adónde fue el ladrón.",btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz")+btn("OK","data-close",""));
+  if(!tourOf(c).done)return sayL("Capotreno",hi+" Prima di partire ti faccio tre domande sul free walking tour.","Haz antes el tour con la guía del paraguas amarillo.");
+  show("exam",{k:0,wrong:[],opts:shuffle([0,1,2]),pick:-1});
+}
+
+/* ---------- interacción ---------- */
+function interact(){
+  if(S.ov||P.moving||W)return;
+  const fx=P.x+DIRS[P.dir][0],fy=P.y+DIRS[P.dir][1],e=entAt(fx,fy);
+  if(!e){const dr=DOORS.find(o=>o.x===fx&&o.y===fy);if(dr)enterDoor(dr);return}
+  const c=save.city,L=LEVELS[c],d=doneOf(c),np=who=>sayL(who,pick(LINES.noProf),"Primero habla con la Prof, en la escuela (cartel verde).");
+  if(e.k==="prof"){save.lesson[c]=1;persist();hud();show("lesson")}
+  else if(e.k==="board")show("text");
+  else if(e.k==="arc")show("arc");
+  else if(e.k==="chest")startChest();
+  else if(e.k==="item"){save.carry=e.id;persist();hud();sayL("Oggetto","Hai preso "+ITEMS[e.id][0]+".","("+ITEMS[e.id][1]+") Llévaselo a quien lo necesite. Si coges otro objeto, este vuelve a su sitio.")}
+  else if(e.k==="talk"){if(!save.lesson[c])np(L.dial.who);else if(d.includes("D"))sayL(L.dial.who,pick(LINES.talkDone),"Ya tienes su pista.");else startDial()}
+  else if(e.k==="quest"){const Q=L.quest;
+    if(d.includes("F"))sayL("Vicino",pick(LINES.questDone),"Ya tienes su pista.");
+    else if(!save.carry)sayL("Vicino",Q.ask,"Hay tres objetos por la ciudad. Escucha bien qué necesita y tráeselo.");
+    else if(save.carry===Q.want){d.push("F");save.carry=null;persist();hud();sayL("Vicino","Perfetto, "+ITEMS[Q.want][0]+"! Grazie mille.","+1 pista",btn("CONTINUAR","data-chk"))}
+    else{const it=ITEMS[save.carry][0];save.carry=null;persist();hud();sayL("Vicino","No, "+it+" non mi serve!","El objeto vuelve a su sitio. Vuelve a escuchar lo que busca.")}}
+  else if(e.k==="wit"){if(!save.lesson[c])np("Testimone");else if(d.includes("I"))sayL("Testimone",pick(LINES.witDone),"Ya tienes su identikit.");else startIdk()}
+  else if(e.k==="guide"){const t=tourOf(c);
+    if(t.done)sayL("Guida",pick(LINES.guideDone),"El tour solo se hace una vez: tus apuntes están en el Quaderno.");
+    else{if(!t.on){t.on=true;persist()}sayL("Guida","Benvenuti al free walking tour di "+L.city+"! Seguitemi!","Te llevo a tres lugares. Presta atención: el Capotreno te preguntará sobre ellos y el tour solo se hace una vez.",btn(trp("¡VAMOS!","ANDIAMO!"),"data-walk"))}}
+  else if(e.k==="flag")show("stop",{i:e.i,tr:false});
+  else if(e.k==="q"){const q=L.q[e.i];
+    if(!save.lesson[c])np("Vicino");
+    else if(d.includes(e.i))sayL("Vicino",pick(LINES.doneQ),"Ya tienes su pista.");
+    else if(q.t==="mc"&&!save.read[c])sayL("Vicino",pick(LINES.needRead),"Su pregunta es sobre el cartel de la plaza: léelo primero.");
+    else sayL("Vicino",pick(LINES.greetQ),"",btn(trp("¡ADELANTE!","AVANTI!"),"data-sq="+e.i)+btn(trp("AHORA NO","NON ADESSO"),"data-close",""))}
+  else if(e.k==="capo")capoTalk();
+}
+
+/* ---------- inicio y pistas ---------- */
+function welcome(){const c=save.city,cs=caseOf(c);
+  if(!save.tut)return show("tut",{p:0});
+  if(!save.intro[cs.id]){save.intro[cs.id]=1;persist();speak(cs.intro);return say("Detective · "+cs.title,"<span class='it'>"+esc(cs.intro)+"</span>"+spk(cs.intro)+(stage()<2?"<br><span class='mute'>"+trp("Persigue al ladrón ciudad por ciudad: cada ciudad te da pistas sobre él y sobre su próximo destino.","")+"</span>":""),btn("ACCETTO IL CASO","data-wel"))}
+  show("brief");
+}
+function nextStep(){
+  const c=save.city,d=doneOf(c),k=save.clue[c]||0,cs=caseOf(c);
+  if(k<7&&d.length>k){save.clue[c]=k+1;persist();hud();const txt=cs.cities[c].clues[k];show("card",{k,txt});speak(txt);return}
+  if(k>=7&&!save.found[c])return sayL("Detective","Hai sette piste! Ora scopri dove è andato il ladro.",puzType(c)==="sopa"?"Busca en la sopa de letras las palabras escondidas: salen de tus pistas.":"Completa el crucigrama: las definiciones salen de tus pistas.",btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz")+btn(trp("MÁS TARDE","PIÙ TARDI"),"data-close",""));
+  hide();
+}
+function hud(){
+  const c=save.city,L=LEVELS[c],rt=routeOf(c).ids;
+  $("hCity").textContent=(rt.indexOf(c)+1)+"/"+rt.length+" "+L.city.toUpperCase();
+  $("hStamps").textContent="PISTE "+Math.min(7,save.clue[c]||0)+"/7";
+  $("hHearts").innerHTML=[0,1,2].map(i=>`<span class="${i<save.hearts?"":"off"}">♥</span>`).join("");
+  $("goal").textContent="▶ "+(save.carry&&!W?trp("Llevas "+ITEMS[save.carry][0]+". ¿A quién se lo das?","Hai "+ITEMS[save.carry][0]+". A chi lo porti?"):nextTarget(true).txt);
+}
+
+/* ---------- enigmas: palabra clave ---------- */
+const KEYW={a2:["RADICI","Elena cercava le sue radici: il paese del nonno."],b1:["SINFONIA","La musica che unisce Totò e suo padre."]};
+const keyLetter=c=>KEYW[caseOf(c).id][0][routeOf(c).ids.indexOf(c)];
+function keyBoxes(c){const cs=caseOf(c),r=ROUTES[cs.route];return `<div class="keyw">${r.ids.map((i,k)=>`<span class="${save.found[i]?"on":""}">${save.found[i]?KEYW[cs.id][0][k]:""}</span>`).join("")}</div>`}
+function startPuzzle(){puzType(save.city)==="sopa"?startSopa():startCw()}
+function puzzleDone(c){save.found[c]=1;persist();hud()}
+function doneHtml(c){
+  const cs=caseOf(c),last=nextOf(c)===undefined,kw=KEYW[cs.id];
+  return `<div class="fb ok"><b>${trp("LETRA DE LA PALABRA CLAVE","LETTERA DELLA PAROLA CHIAVE")}: ${keyLetter(c)}</b>${keyBoxes(c)}</div>`+(last
+    ?`<h2>Caso risolto!</h2><p class="it tip">${esc(cs.ending)}</p>${spk(cs.ending)}<div class="fb ok"><b>${trp("PALABRA CLAVE","PAROLA CHIAVE")}: ${kw[0]}</b><span class="it">${esc(kw[1])}</span></div><p class="mute">${trp("Habla con el Capotreno para cerrar la ruta.","Parla con il Capotreno per chiudere il percorso.")}</p>`
+    :`<h2>${esc(destLine(c))}</h2><p class="mute">${tr("Destino descubierto. Haz el free walking tour si te falta y ve a la estación.","Destinazione scoperta. Fai il free walking tour se ti manca e vai in stazione.")}</p>`)+btn("CONTINUAR","data-close");
+}
+const hintsHtml=c=>{const cl=caseOf(c).cities[c].clues,k=save.clue[c]||0;return `<details><summary>${trp("Tus pistas","Le tue piste")}</summary>${cl.slice(0,k).filter((_,i)=>i!==1).map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}</details>`};
+
+/* sopa de letras con progreso guardado */
+function startSopa(){const c=save.city,cd=caseOf(c).cities[c];let z=save.puz[c];
+  if(!z||!z.g){const m=makeSopa(cd.sopa);z=save.puz[c]={g:m.g,place:m.place,found:[]};persist()}
+  show("sopa",{g:z.g,place:z.place,words:cd.sopa,found:z.found,sel:-1})}
+function sopaTap(i){
+  if(S.found.length===S.words.length)return;
+  if(S.sel<0||S.sel===i){S.sel=S.sel===i?-1:i;return render()}
+  const N=9,ax=S.sel%N,ay=Math.floor(S.sel/N),bx=i%N,by=Math.floor(i/N),dx=Math.sign(bx-ax),dy=Math.sign(by-ay),n=Math.max(Math.abs(bx-ax),Math.abs(by-ay));
+  S.sel=-1;
+  if(ax===bx||ay===by||Math.abs(bx-ax)===Math.abs(by-ay)){const line=[];for(let k=0;k<=n;k++)line.push((ay+dy*k)*N+ax+dx*k);
+    S.place.forEach((p,wi)=>{if(S.found.includes(wi)||p.length!==line.length)return;
+      if(p.every((v,k)=>v===line[k])||p.every((v,k)=>v===line[line.length-1-k])){S.found.push(wi);persist();speak(S.words[wi].toLowerCase())}})}
+  if(S.found.length===S.words.length){const c=save.city;puzzleDone(c);speak(nextOf(c)===undefined?caseOf(c).ending:destLine(c))}
+  render();
+}
+function sopaHtml(){
+  const c=save.city,fc=new Set(S.found.flatMap(wi=>S.place[wi])),done=S.found.length===S.words.length;
+  const grid=`<div class="sopa">${S.g.map((l,i)=>`<button class="cell${fc.has(i)?" f":i===S.sel?" s":""}" data-cell="${i}">${l}</button>`).join("")}</div>`;
+  const words=`<p class="words">${S.words.map((w,wi)=>S.found.includes(wi)?`<s>${w}</s>`:"_ ".repeat(w.length).trim()).join(" · ")}</p>`;
+  if(done)return `<div class="eyebrow">${trp("Sopa de letras","Crucipuzzle")}</div>${grid}${words}${doneHtml(c)}`;
+  return `<div class="eyebrow">${trp("Sopa de letras","Crucipuzzle")} · ${S.found.length}/${S.words.length}</div><p class="mute">${tr("Hay 3 palabras escondidas (en horizontal, vertical o diagonal). Salen de tus pistas, y una es el destino del ladrón. Toca la primera letra y luego la última. Lo que encuentras queda guardado.","Ci sono 3 parole nascoste (in orizzontale, verticale o diagonale). Vengono dalle tue piste e una è la destinazione del ladro. Tocca la prima lettera e poi l'ultima. Quello che trovi resta salvato.")}</p>${grid}${words}${hintsHtml(c)}${btn("SALIR","data-close","")}`;
+}
+
+/* crucigrama */
+const CWDEF={
+ TRENTO:"Città del Trentino con un grande castello.",CASTELLO:"Edificio antico con torri: lì vivevano i principi.",LAGO:"Acqua dolce tra le montagne: non è il mare.",
+ PERUGIA:"Capoluogo dell'Umbria, città dei Baci.",UMBRIA:"Regione verde nel centro d'Italia, senza mare.",BACI:"Cioccolatini con un messaggio d'amore.",
+ MOLO:"Dove si fermano le navi nel porto.",TRAGHETTO:"Nave che porta persone e macchine.",MAPPA:"L'oggetto rubato dal museo di Aosta.",
+ VENEZIA:"Città sull'acqua, senza macchine.",GONDOLA:"Barca nera tipica dei canali.",CANALI:"Le «strade» d'acqua di Venezia.",
+ FIRENZE:"Capoluogo della Toscana, culla del Rinascimento.",CUPOLA:"Il tetto rotondo del Duomo di Brunelleschi.",ARNO:"Il fiume che attraversa Firenze.",
+ NAPOLI:"La città della pizza margherita.",VESUVIO:"Il vulcano vicino a Napoli.",PIZZA:"Piatto con pomodoro e mozzarella.",
+ MASSIMO:"Il teatro più grande d'Italia si chiama Teatro…",TEATRO:"Luogo dove si vedono opere e concerti.",VIOLINO:"Lo strumento che Totò ha rubato."
+};
+function tryCw(ws){
+  const cells=new Map(),placed=[],key=(x,y)=>x+","+y;
+  const put=(w,x,y,dir)=>{for(let i=0;i<w.length;i++)cells.set(key(x+(dir?0:i),y+(dir?i:0)),w[i]);placed.push({w,x,y,dir})};
+  const can=(w,x,y,dir)=>{const dx=dir?0:1,dy=dir?1:0;if(cells.has(key(x-dx,y-dy))||cells.has(key(x+dx*w.length,y+dy*w.length)))return false;let cross=0;
+    for(let i=0;i<w.length;i++){const X=x+dx*i,Y=y+dy*i,ch=cells.get(key(X,Y));if(ch!==undefined){if(ch!==w[i])return false;cross++;continue}
+      if(cells.has(key(X+dy,Y+dx))||cells.has(key(X-dy,Y-dx)))return false}
+    return cross>0};
+  put(ws[0],0,0,0);
+  for(const w of ws.slice(1)){let ok=false;
+    out:for(const p of placed)for(let i=0;i<p.w.length;i++)for(let j=0;j<w.length;j++){if(w[j]!==p.w[i])continue;const dir=p.dir?0:1,X=p.x+(p.dir?0:i)-(dir?0:j),Y=p.y+(p.dir?i:0)-(dir?j:0);
+      if(can(w,X,Y,dir)){put(w,X,Y,dir);ok=true;break out}}
+    if(!ok)return null}
+  return placed;
+}
+function makeCw(words){
+  let pl=null;for(const pm of [[0,1,2],[1,0,2],[2,0,1],[0,2,1],[1,2,0],[2,1,0]]){pl=tryCw(pm.map(i=>words[i]));if(pl)break}
+  if(!pl)pl=words.map((w,i)=>({w,x:0,y:i*2,dir:0}));
+  const mx=Math.min(...pl.map(p=>p.x)),my=Math.min(...pl.map(p=>p.y));pl.forEach(p=>{p.x-=mx;p.y-=my});
+  const W=Math.max(...pl.map(p=>p.x+(p.dir?1:p.w.length))),H=Math.max(...pl.map(p=>p.y+(p.dir?p.w.length:1)));
+  pl.sort((a,b)=>a.y-b.y||a.x-b.x);let n=0;const nums={};pl.forEach(p=>{const k=p.x+","+p.y;p.num=nums[k]||(nums[k]=++n)});
+  return {W,H,words:pl};
+}
+function startCw(){const c=save.city,cd=caseOf(c).cities[c];let z=save.puz[c];
+  if(!z||!z.cw){z=save.puz[c]={cw:makeCw(cd.sopa),solved:[]};persist()}
+  show("cw",{cw:z.cw,solved:z.solved,cs:-1,msg:""})}
+function cwHtml(){
+  const c=save.city,cw=S.cw,cell={},rev=new Set();
+  cw.words.forEach((p,wi)=>{for(let i=0;i<p.w.length;i++){const k=(p.x+(p.dir?0:i))+","+(p.y+(p.dir?i:0));cell[k]=p.w[i];if(S.solved.includes(wi))rev.add(k)}});
+  const starts={};cw.words.forEach(p=>starts[p.x+","+p.y]=p.num);
+  let g="";for(let y=0;y<cw.H;y++)for(let x=0;x<cw.W;x++){const k=x+","+y;g+=cell[k]?`<span class="cwc${rev.has(k)?" r":""}">${starts[k]?`<small>${starts[k]}</small>`:""}${rev.has(k)?cell[k]:""}</span>`:`<span class="cwc x"></span>`}
+  const done=S.solved.length===cw.words.length;
+  const grid=`<div class="cw" style="grid-template-columns:repeat(${cw.W},1fr);max-width:${Math.min(100,cw.W*11)}%">${g}</div>`;
+  if(done)return `<div class="eyebrow">${trp("Crucigrama","Cruciverba")}</div>${grid}${doneHtml(c)}`;
+  const clues=cw.words.map((p,wi)=>`<button class="opt${S.solved.includes(wi)?" ok":""}" data-cwsel="${wi}" ${S.solved.includes(wi)?"disabled":""} style="${S.cs===wi?"outline:3px solid var(--blue)":""}"><b>${p.num} ${p.dir?"↓":"→"}</b> ${esc(CWDEF[p.w]||"")} (${p.w.length})${S.solved.includes(wi)?" · "+p.w:""}</button>`).join("");
+  const inp=S.cs>=0?`<div class="row"><input id="cwin" class="cwin" maxlength="${cw.words[S.cs].w.length}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${"_".repeat(cw.words[S.cs].w.length)}" aria-label="Palabra">${btn("OK","data-cwok","")}</div>${S.msg?`<p class="mute">${S.msg}</p>`:""}`:"";
+  return `<div class="eyebrow">${trp("Crucigrama","Cruciverba")} · ${S.solved.length}/${cw.words.length}</div><p class="mute">${tr("Toca una definición y escribe la palabra. Las respuestas salen de tus pistas; una es el destino del ladrón. Lo que resuelves queda guardado.","Tocca una definizione e scrivi la parola. Le risposte vengono dalle tue piste; una è la destinazione del ladro. Quello che risolvi resta salvato.")}</p>${grid}<div class="opts">${clues}</div>${inp}${hintsHtml(c)}${btn("SALIR","data-close","")}`;
+}
+function cwOk(){
+  const el=$("cwin"),v=((el&&el.value)||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z]/g,""),p=S.cw.words[S.cs];
+  if(v===p.w){S.solved.push(S.cs);persist();speak(p.w.toLowerCase());S.cs=-1;S.msg="";
+    if(S.solved.length===S.cw.words.length){const c=save.city;puzzleDone(c);speak(nextOf(c)===undefined?caseOf(c).ending:destLine(c))}}
+  else S.msg=tr("No es esa palabra. Vuelve a leer tus pistas.","Non è la parola giusta. Rileggi le tue piste.");
+  render();setTimeout(()=>{const e=$("cwin");if(e&&e.focus)e.focus()},30);
+}
+ov.addEventListener("keydown",ev=>{if(ev.target&&ev.target.id==="cwin"&&ev.key==="Enter"){ev.preventDefault();cwOk()}});
+
+/* ---------- identikit progresivo ---------- */
+const lockedOf=c=>{const p=routeOf(c).ids.indexOf(c);return p===0?["face","hat"]:p===1?["face"]:[]};
+function startIdk(){const c=save.city,t=target(c),lk=lockedOf(c),v={};FK.forEach(k=>v[k]=lk.includes(k)?t[k]:Math.floor(Math.random()*FL[k].length));const tx=desc(c);show("idk",{v,err:0,won:false,t:tx,lk});speak(tx)}
+function idkStep(s){const [k,d]=s.split(",");if(S.lk.includes(k))return;const n=FL[k].length;S.v[k]=(S.v[k]+(+d)+n)%n;S.err=0;render()}
+function idkHtml(){
+  const rows=FK.map(k=>S.lk.includes(k)?`<div class="idrow"><span class="eyebrow">${FN[k]}</span><span></span><span class="it mute">🔒 ${esc(FL[k][S.v[k]])}</span><span></span></div>`
+    :`<div class="idrow"><span class="eyebrow">${FN[k]}</span><button class="tile" data-idp="${k},-1" aria-label="Anterior">◀</button><span class="it">${esc(FL[k][S.v[k]])}</span><button class="tile" data-idp="${k},1" aria-label="Siguiente">▶</button></div>`).join("");
+  if(S.won)return `<div class="eyebrow">Identikit · il testimone</div><canvas id="face" class="face" width="40" height="44"></canvas><div class="fb ok"><b>IDENTIKIT PERFETTO! +1 PISTA</b><span>${trp("El retrato queda en tu Dossier.","Il ritratto resta nel tuo Dossier.")}</span></div>${btn("CONTINUAR","data-ns")}`;
+  return `<div class="row"><span class="eyebrow">Identikit · il testimone</span>${hp()}</div><p class="mute">${tr("Escucha al testigo y monta el retrato con las flechas. Los rasgos con candado ya los sabes.","Ascolta il testimone e componi il ritratto con le frecce. I dettagli con il lucchetto li conosci già.")}</p><p class="it tip">«${esc(S.t)}»</p>${spk(S.t)}<canvas id="face" class="face" width="40" height="44"></canvas>${rows}`+
+   (S.err?`<div class="fb no"><b>NON È LUI! · -1 ♥</b><span>${tr(`Hay ${S.err} ${S.err>1?"detalles equivocados":"detalle equivocado"}. Vuelve a escuchar al testigo.`,`Ci ${S.err>1?"sono":"è"} ${S.err} ${S.err>1?"dettagli sbagliati":"dettaglio sbagliato"}. Riascolta il testimone.`)}</span></div>`:"")+
+   `<div class="row">${btn("CONFRONTA","data-idok","")}${btn("SALIR","data-close","")}</div>`;
+}
+
+/* ---------- dossier ---------- */
+function dosHtml(){
+  const c=save.city,cs=caseOf(c),r=ROUTES[cs.route];
+  const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+    return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
+  const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz"):"";
+  return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas><table>${rows}</table>${sp}
+   <div class="eyebrow">${trp("Palabra clave del caso","Parola chiave del caso")}</div>${keyBoxes(c)}<p class="mute small">${trp("Cada enigma resuelto revela una letra.","Ogni enigma risolto svela una lettera.")}</p>
+   <div class="eyebrow">Diario delle piste</div>${diary||`<p class='mute'>${trp("Todavía no tienes pistas.","Non hai ancora piste.")}</p>`}${btn("CERRAR","data-close")}`;
+}
+
+/* ---------- render y clics ---------- */
+const EXOV={tut:tutHtml,brief:briefHtml,help:helpHtml,shop:shopHtml,cw:cwHtml,
+  note:()=>S.vocab?vocabHtml():null,
+  text:()=>{if(!save.read[save.city]){save.read[save.city]=1;persist();setTimeout(hud,0)}return null}};
+function postRender(c){
+  if(!ov.querySelector)return;const L=LEVELS[c];
+  const pc=(S.ov==="stop"||S.ov==="rip")&&ov.querySelector("#pic");if(pc){const i=S.ov==="stop"?S.i:S.list[S.n].i;drawPic(pc.getContext("2d"),L.tour.qs[i][2],c)}
+  const it=S.ov==="map"&&ov.querySelector("#italy");if(it)drawItaly(it.getContext("2d"));
+  const tc=S.ov==="trip"&&ov.querySelector("#trip");if(tc)drawTrip(tc.getContext("2d"));
+  const fc=(S.ov==="idk"||S.ov==="dos")&&ov.querySelector("#face");if(fc)drawFaceFor(fc.getContext("2d"));
+  const pp=(S.ov==="help"||S.ov==="tut")&&ov.querySelector("#pippo");if(pp)drawPippo(pp.getContext("2d"));
+  const sc=S.ov==="shop"&&ov.querySelector("#shopc");if(sc)drawShop(sc.getContext("2d"),S.type);
+}
+function exClick(D){
+  if("sq" in D){startQ(+D.sq);return true}
+  if("tutn" in D){if(S.p<TUT.length-1){S.p++;render()}else{save.tut=1;persist();welcome()}return true}
+  if("tutb" in D){S.p=Math.max(0,S.p-1);render();return true}
+  if("tut" in D){save.tut=0;show("tut",{p:0});return true}
+  if("help" in D){show("help",{mode:"menu",hi:pick(LINES.pippo)});return true}
+  if("hnext" in D){S.mode="next";render();return true}
+  if("htopics" in D){S.mode="topics";render();return true}
+  if("htopic" in D){S.mode="topic";S.t=D.htopic;render();return true}
+  if("hptr" in D){const nt=nextTarget();if(nt.ent)ptr={x:nt.ent.x,y:nt.ent.y,t:7000};hide();return true}
+  if("puz" in D||"sopa" in D){startPuzzle();return true}
+  if("shopadd" in D){const i=+D.shopadd;S.cart[i]=(S.cart[i]||0)+1;render();return true}
+  if("shoprm" in D){const i=+D.shoprm;S.cart[i]=Math.max(0,(S.cart[i]||0)-1);render();return true}
+  if("shopok" in D){shopOk();return true}
+  if("shopnew" in D){startShop(S.type);return true}
+  if("cwsel" in D){S.cs=+D.cwsel;S.msg="";render();setTimeout(()=>{const e=$("cwin");if(e&&e.focus)e.focus()},30);return true}
+  if("cwok" in D){cwOk();return true}
+  if("vocab" in D){show("note",{vocab:true});return true}
+  return false;
 }
 
 buildCity();welcome();requestAnimationFrame(frame);
