@@ -170,6 +170,7 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .fcard{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:30px;border:3px solid var(--ink);background:#fff;box-shadow:5px 5px 0 var(--ink);padding:14px}
 .fcard.flip{background:#fff7e0}
 .fces{font-size:20px;color:var(--mute);margin-top:8px}
+.hintw{border-top:2px dashed #c5d3dc;padding-top:6px;display:flex;flex-direction:column;gap:4px;font-size:20px}.hintw .it,.hl .it{font-size:20px}.hintw>b{display:inline}.hintw:first-child{border-top:none}.hl{background:#fff7e0;border-left:4px solid var(--accent);padding:4px 6px;font-size:20px}.pat{font-family:var(--px);font-size:10px;letter-spacing:2px}
 </style>
 </head>
 <body>
@@ -869,7 +870,7 @@ function frame(t){
     if(P.moving){P.t+=dt/150;
       if(P.t>=1){P.x=P.tx;P.y=P.ty;P.fx=P.x;P.fy=P.y;P.moving=false;P.step^=1}
       else{P.fx=P.x+(P.tx-P.x)*P.t;P.fy=P.y+(P.ty-P.y)*P.t}}
-    if(!P.moving){let d=["up","down","left","right"].find(k=>held[k]);
+    if(!P.moving){let d=STEPQ||["up","down","left","right"].find(k=>held[k]&&performance.now()-(HT[k]||0)>260);STEPQ=null;
       if(d)AUTO=null;else if(AUTO){if(AUTO.length){const n=AUTO.shift();d=dirOf(n[0]-P.x,n[1]-P.y)}else{AUTO=null;AUTOD=null;if(AUTOT){P.dir=dirOf(AUTOT.x-P.x,AUTOT.y-P.y);AUTOT=null;interact()}}}
       if(d){P.dir=d;const nx=P.x+DIRS[d][0],ny=P.y+DIRS[d][1];if(walk(nx,ny)){P.tx=nx;P.ty=ny;P.t=0;P.moving=true}else{AUTO=null;AUTOD=null}}}
   }
@@ -1077,7 +1078,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -1136,10 +1137,10 @@ ov.addEventListener("click",ev=>{
     render()}
 });
 const KEYS={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
-addEventListener("keydown",e=>{if(S.ov)return;const k=KEYS[e.key];if(k){held[k]=true;e.preventDefault()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();interact()}});
+addEventListener("keydown",e=>{if(S.ov)return;const k=KEYS[e.key];if(k){if(!held[k]){STEPQ=k;HT[k]=performance.now()}held[k]=true;e.preventDefault()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();interact()}});
 addEventListener("keyup",e=>{const k=KEYS[e.key];if(k)held[k]=false});
 for(const b of $("dpad").querySelectorAll("button")){const d=b.dataset.d;
-  const on=e=>{e.preventDefault();for(const k in held)held[k]=false;held[d]=true;b.classList.add("on")},off=()=>{held[d]=false;b.classList.remove("on")};
+  const on=e=>{e.preventDefault();for(const k in held)held[k]=false;held[d]=true;STEPQ=d;HT[d]=performance.now();b.classList.add("on")},off=()=>{held[d]=false;b.classList.remove("on")};
   b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);
   b.addEventListener("contextmenu",e=>e.preventDefault())}
 $("bA").addEventListener("click",interact);
@@ -1626,7 +1627,7 @@ function capoTalk(){
 function interact(){
   if(S.ov||P.moving||W)return;
   const fx=P.x+DIRS[P.dir][0],fy=P.y+DIRS[P.dir][1],e=entAt(fx,fy);
-  if(!e){const dr=DOORS.find(o=>o.x===fx&&o.y===fy);if(dr)enterDoor(dr);return}
+  if(!e){const dr=houseAt(fx,fy,1);if(dr)enterDoor(dr);return}
   const c=save.city,L=LEVELS[c],d=doneOf(c),np=who=>sayL(who,pick(LINES.noProf),"Primero habla con la Prof, en la escuela (cartel verde).");
   if(e.k==="prof"){save.lesson[c]=1;persist();hud();show("lesson")}
   else if(e.k==="board")show("text");
@@ -2746,21 +2747,21 @@ function tapMap(ev){
   if(S.ov||W)return;const r=cv.getBoundingClientRect();if(!r.width)return;
   const px=(ev.clientX-r.left)/r.width*VW*T+camX,py=(ev.clientY-r.top)/r.height*VH*T+camY,tx=Math.floor(px/T),ty=Math.floor(py/T);
   if(tx<0||ty<0||tx>=MW||ty>=MH)return;
-  const sx=P.moving?P.tx:P.x,sy=P.moving?P.ty:P.y,e=entAt(tx,ty),d=!e&&DOORS.find(o=>o.x===tx&&o.y===ty);
+  const sx=P.moving?P.tx:P.x,sy=P.moving?P.ty:P.y,e=entAt(tx,ty),d=!e&&houseAt(tx,ty);
   let goals;
   if(e)goals=Object.values(DIRS).map(([dx,dy])=>[tx+dx,ty+dy]);
-  else if(d)goals=[[tx,ty+1]];
+  else if(d)goals=[[d.x,d.y+1]];
   else if(walk(tx,ty))goals=[[tx,ty]];
   else return;
   const key=(x,y)=>x+","+y,gs=new Set(goals.map(g=>key(g[0],g[1])));
-  if(!P.moving&&gs.has(key(sx,sy))&&(e||d)){P.dir=dirOf(tx-sx,ty-sy);interact();return}
+  if(!P.moving&&gs.has(key(sx,sy))&&(e||d)){P.dir=d?"up":dirOf(tx-sx,ty-sy);interact();return}
   const prev={[key(sx,sy)]:null},q=[[sx,sy]];let end=null;
   while(q.length){const [x,y]=q.shift();if(gs.has(key(x,y))){end=[x,y];break}
     for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,k=key(nx,ny);if(k in prev||!walk(nx,ny))continue;prev[k]=key(x,y);q.push([nx,ny])}}
   if(!end)return;
   const path=[];let k=key(end[0],end[1]);while(k&&k!==key(sx,sy)){path.unshift(k.split(",").map(Number));k=prev[k]}
   for(const h in held)held[h]=false;
-  AUTO=path;AUTOT=(e||d)?{x:tx,y:ty}:null;AUTOD={x:end[0],y:end[1]};
+  AUTO=path;AUTOT=e?{x:tx,y:ty}:d?{x:d.x,y:d.y}:null;AUTOD={x:end[0],y:end[1]};
 }
 function drawAuto(cx,cy){if(!AUTOD)return;const on=Math.floor(Date.now()/250)%2,x=AUTOD.x*T-cx,y=AUTOD.y*T-cy;R(g,x+3,y+11,10,3,"#1a1c2c");R(g,x+4,y+12,8,1,on?"#ffcd75":"#f4f4e4")}
 function fit(){
@@ -3010,6 +3011,97 @@ function exClick15(D){
   if("fcflip" in D){S.fc.flip=true;speak(S.fc.deck[S.fc.i][0]);render();return true}
   if("fcok" in D||"fcno" in D){if("fcok" in D)S.fc.ok++;S.fc.i++;S.fc.flip=false;render();return true}
   if("fcnew" in D){S.fc=null;render();return true}
+  return false}
+
+/* ================= v16: pasos de a uno, caminos libres, puertas, pistas más claras y ayudas en el enigma ================= */
+let STEPQ=null;const HT={};
+
+/* --- puertas: toda la fachada de una casa cuenta como entrada --- */
+const houseAt=(x,y,front)=>DOORS.find(o=>o.hx!=null?(x>=o.hx&&x<o.hx+o.w&&(front?y===o.y:y>=o.hy&&y<=o.y)):(o.x===x&&o.y===y));
+
+/* --- objetos que tapan el camino: se apartan a un lado --- */
+function clearDoors(){
+  const fronts=new Set(DOORS.map(d=>d.x+","+(d.y+1))),A=LEVELS[save.city].at;
+  const free=(x,y)=>x>0&&y>0&&x<MW-1&&y<MH-1&&!SOLID.includes(MAP[y][x])&&MAP[y][x]!=="="&&!ents.some(e=>e.x===x&&e.y===y)&&!fronts.has(x+","+y)&&!(x===A.start[0]&&y===A.start[1]);
+  for(const d of DOORS){const fx=d.x,fy=d.y+1,e=ents.find(e=>e.x===fx&&e.y===fy);if(!e)continue;
+    const spot=[[fx-1,fy],[fx+1,fy],[fx-2,fy],[fx+2,fy],[fx,fy+1],[fx-1,fy+1],[fx+1,fy+1]].find(([x,y])=>free(x,y));
+    if(spot){e.x=spot[0];e.y=spot[1];if(e.k==="guide")e.home=spot}}
+  if(isLast(save.city)){const cp=ents.find(e=>e.k==="capo");if(cp)cp.o=FP[caseOf(save.city).id].look}
+  fixBlocks();
+}
+function fixBlocks(){
+  const A=LEVELS[save.city].at,fronts=new Set(DOORS.map(d=>d.x+","+(d.y+1))),key=(x,y)=>x+","+y;
+  const open=(x,y)=>x>0&&y>0&&x<MW-1&&y<MH-1&&!SOLID.includes(MAP[y][x]);
+  const reach=skip=>{const occ=new Set(ents.filter(e=>e!==skip).map(e=>key(e.x,e.y))),seen=new Set([key(A.start[0],A.start[1])]),q=[A.start];
+    while(q.length){const [x,y]=q.pop();for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,k=key(nx,ny);if(!seen.has(k)&&open(nx,ny)&&!occ.has(k)){seen.add(k);q.push([nx,ny])}}}return seen};
+  for(const e of ents){if(e.k==="flag")continue;
+    const onPath=",=".includes(MAP[e.y][e.x]),without=reach(e),blocks=reach(null).size<without.size-1;
+    if(!onPath&&!blocks)continue;
+    const cand=[];for(let r=1;r<=3;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.abs(dx)+Math.abs(dy)!==r)continue;const x=e.x+dx,y=e.y+dy;
+      if(!open(x,y)||",=".includes(MAP[y][x])||fronts.has(key(x,y))||(x===A.start[0]&&y===A.start[1])||ents.some(o=>o!==e&&o.x===x&&o.y===y))continue;cand.push([x,y])}
+    const ox=e.x,oy=e.y;let ok=false;
+    for(const [x,y] of cand){e.x=x;e.y=y;const r2=reach(null);
+      if(r2.size>=without.size-1&&Object.values(DIRS).some(([dx,dy])=>r2.has(key(x+dx,y+dy)))){ok=true;if(e.k==="guide")e.home=[x,y];break}}
+    if(!ok){e.x=ox;e.y=oy}}
+}
+
+/* --- pistas más claras en los primeros niveles + traducción --- */
+{const l1=CASES.find(k=>k.id==="l1").cities,a2=CASES.find(k=>k.id==="a2").cities;
+ Object.assign(l1[14].clues,{3:"Ha chiesto un autobus per una città vicina. Il nome comincia con la B.",4:"Vuole camminare sulle mura antiche: le grandi pareti di pietra intorno alla città.",5:"Ha parlato di una funicolare che sale alla parte alta della città.",6:"Va in una città con due parti: Città Alta e Città Bassa."});
+ Object.assign(l1[15].clues,{3:"Ha chiesto un treno per la città di Romeo e Giulietta.",4:"Vuole vedere il balcone di Giulietta: è una famosa storia d'amore.",5:"Vuole vedere l'Arena, un grande anfiteatro romano.",6:"Sul biglietto del treno c'è scritto: «Bergamo → V _ _ _ _ A»."});
+ Object.assign(l1[16].clues,{3:"Ha chiesto un treno per una città piena di studenti universitari.",4:"Vuole bere un caffè al Caffè Pedrocchi, un caffè storico.",5:"Ha parlato di Prato della Valle, una piazza enorme.",6:"Sul biglietto del treno c'è scritto: «Verona → P _ _ _ _ A»."});
+ Object.assign(a2[8].clues,{5:"Ha comprato un libro sul pesto, la salsa verde con il basilico.",6:"Va in una città con un faro famoso, la Lanterna. Il nome comincia con la G."});
+ Object.assign(a2[9].clues,{3:"Ora va in montagna, in Trentino.",4:"Vuole vedere un castello grande e antico.",5:"Vuole fare una passeggiata vicino a un lago.",6:"Va nel capoluogo del Trentino: T _ _ _ _ O."});
+ Object.assign(a2[10].clues,{6:"Ha detto: «Torno nella mia città.» Anche il suo nome comincia con la T, come Trento!"});
+ Object.assign(a2[11].clues,{5:"Le piace molto il cioccolato: vuole comprare i Baci.",6:"Va nella città dei Baci di cioccolato: P _ _ _ _ _ A."});
+ Object.assign(a2[12].clues,{4:"Va in una città sul mare Adriatico, nelle Marche."});}
+const CLES={
+ 14:["El ladrón comió un risotto en la trattoria de Pina.","La camarera lo recuerda: es un hombre, alto y simpático.","En el cuaderno están las recetas secretas de Pina: ¡cien años de cocina!","Preguntó por un autobús a una ciudad cercana. El nombre empieza por B.","Quiere caminar por las murallas antiguas: las grandes paredes de piedra alrededor de la ciudad.","Habló de un funicular que sube a la parte alta de la ciudad.","Va a una ciudad con dos partes: Ciudad Alta y Ciudad Baja."],
+ 15:["El ladrón vino a Bérgamo para comer polenta en la Ciudad Alta.","En el funicular compró el billete: se llama Bruno Galli.","Bruno le dijo al taquillero: «Tengo un cuaderno especial. ¡Estoy muy contento!»","Preguntó por un tren a la ciudad de Romeo y Julieta.","Quiere ver el balcón de Julieta: es una famosa historia de amor.","Quiere ver la Arena, un gran anfiteatro romano.","En el billete de tren pone: «Bergamo → V _ _ _ _ A»."],
+ 16:["Bruno vino a Verona para tomar un helado delante de la Arena.","El heladero lo conoce: Bruno tiene 35 años y es cocinero.","Dijo: «¡Con las recetas de Nonna Pina puedo ganar el concurso de cocina!»","Preguntó por un tren a una ciudad llena de estudiantes universitarios.","Quiere tomar un café en el Caffè Pedrocchi, un café histórico.","Habló de Prato della Valle, una plaza enorme.","En el billete de tren pone: «Verona → P _ _ _ _ A»."],
+ 17:["Bruno está en Padua: esta noche hay un concurso de cocina en un café histórico.","El móvil: Bruno quiere ganar el concurso con las recetas secretas de Nonna Pina.","En el cuaderno hay una nota con el dibujo de un zorro: «Buena suerte. La Volpe»","El concurso empieza a las ocho de la tarde.","Está en un café histórico cerca de la universidad.","Lo llaman «el café sin puertas».","Se llama Caffè Pedrocchi."],
+ 8:["El ladrón comió una fondue enorme en un restaurante cerca del museo.","Una camarera vio bien al ladrón: ¡es una mujer, no un hombre!","En el restaurante miraba el mapa y decía: «¡Abuelo, por fin!»","Preguntó por un tren al mar.","Quiere ver un acuario muy grande.","Compró un libro sobre el pesto, la salsa verde con albahaca.","Va a una ciudad con un faro famoso, la Lanterna. El nombre empieza por G."],
+ 9:["La ladrona vino a Génova por el pesto: comió trofie en el puerto.","En el acuario pagó con tarjeta: se llama Elena Rossi.","En el puerto preguntó: «¿Hay barcos a Istria?» Pero hoy no había.","Ahora va a la montaña, al Trentino.","Quiere ver un castillo grande y antiguo.","Quiere pasear cerca de un lago.","Va a la capital del Trentino: T _ _ _ _ O."],
+ 10:["Elena vino a Trento por los canederli y por las montañas.","En el hotel dejó el documento: Elena tiene 34 años.","En el castillo estudió el mapa tres horas. Marcó un pueblecito con una X.","Va a una ciudad junto al mar, cerca de Eslovenia.","Quiere tomar un café en un café histórico.","Tiene miedo de la bora, un viento muy fuerte.","Dijo: «Vuelvo a mi ciudad.» ¡Su nombre también empieza por T, como Trento!"],
+ 11:["Elena volvió a Trieste, su ciudad: tomó un «nero» en un café histórico.","Una señora del café la conoce: el abuelo de Elena se llamaba Mario y era un pescador nacido en Istria.","La señora cuenta: «Mario dejó su pueblo de niño. Siempre decía que el pueblo estaba en el mapa del museo.»","Ahora quiere estudiar un libro antiguo en la universidad.","Va a una ciudad pequeña, en Umbría.","Le gusta mucho el chocolate: quiere comprar Baci.","Va a la ciudad de los Baci de chocolate: P _ _ _ _ _ A."],
+ 12:["Elena vino a Perugia por los Baci de chocolate y por la biblioteca.","En la universidad dicen que Elena es profesora de geografía.","En la biblioteca encontró el nombre del pueblo del abuelo: estaba en la costa de Istria, pero hoy ya no existe.","Quiere tomar un ferry.","Va a una ciudad en el mar Adriático, en las Marcas.","El ferry va a Croacia.","Dijo: «Salgo del puerto de Ancona.»"],
+ 13:["Elena está en Ancona: quiere tomar el ferry a Croacia esta noche.","El móvil: Elena no quiere vender el mapa. Quiere encontrar el pueblo del abuelo.","Escribió en un mensaje: «Después del viaje devuelvo el mapa al museo. Prometido.»","El ferry sale a las nueve de la noche.","Elena espera en el puerto.","Tiene un billete para Split.","Busca el muelle número tres."]};
+function cardHtml(){
+  const c=save.city,cs=caseOf(c),p=cs.cities[c].prof,es=CLES[c]&&stage()<2?CLES[c][S.k]:"";
+  return `<div class="eyebrow">Nuova pista · ${S.k+1}/7</div><h2>${esc(cs.title)}</h2><p class="it tip">${esc(S.txt)}${es?`<br><span class="mute small">${esc(es)}</span>`:""}</p>${spk(S.txt)}`+
+   (S.k>=3?`<p class="mute small">${trp("📝 Esta pista te servirá para el enigma: queda apuntada en él.","📝 Questa pista ti servirà per l'enigma: resta annotata lì.")}</p>`:"")+
+   (S.k===1?`<div class="fb ok"><b>DOSSIER AGGIORNATO</b><span>${esc(p[0])}: ${esc(p[1])}</span></div>`:"")+btn("CONTINUAR","data-cardok");
+}
+
+/* --- ayudas dentro del enigma --- */
+const WHINT={BERGAMO:["Guarda la mappa: è la seconda città del tuo viaggio.","Mira el mapa: es la segunda ciudad de tu viaje."],MURA:["Le grandi pareti di pietra intorno alla città antica.","Las grandes paredes de piedra alrededor de la ciudad antigua: las murallas."],ALTA:["Il contrario di «bassa».","Lo contrario de «bassa» (baja)."],
+ VERONA:["La città dove vivevano Romeo e Giulietta. Guarda la mappa!","La ciudad donde vivían Romeo y Julieta. ¡Mira el mapa!"],ARENA:["Ha lo stesso nome della sabbia della spiaggia… e dell'anfiteatro.","Se llama igual que en español: el anfiteatro romano de Verona."],AMORE:["Romeo ama Giulietta: è una storia d'…","Romeo ama a Julieta: es una historia de amor."],
+ PADOVA:["La città del Caffè Pedrocchi. Guarda la mappa: è l'ultima del viaggio.","La ciudad del Caffè Pedrocchi. Mira el mapa: es la última del viaje."],STUDENTI:["Le persone che studiano all'università.","Las personas que estudian en la universidad: los estudiantes."],PIAZZA:["Prato della Valle non è una strada: è una…","Prato della Valle no es una calle: es una plaza."],
+ PEDROCCHI:["Il nome del caffè storico è nella pista n. 7.","El nombre del café histórico está en la pista n.º 7."],GARA:["Bruno vuole vincere una competizione di cucina.","Bruno quiere ganar una competición (un concurso) de cocina."],CUCINA:["Il posto della casa dove si prepara da mangiare.","El lugar de la casa donde se prepara la comida: la cocina."],
+ GENOVA:["La città del pesto e della Lanterna. Guarda la mappa!","La ciudad del pesto y de la Lanterna. ¡Mira el mapa!"],MARE:["Acqua salata, con le onde e le spiagge.","Agua salada, con olas y playas: el mar."],PESTO:["La salsa verde con il basilico.","La salsa verde con albahaca."],
+ TRENTO:["Il capoluogo del Trentino, tra le montagne. Guarda la mappa!","La capital del Trentino, entre montañas. ¡Mira el mapa!"],CASTELLO:["Un edificio antico con torri, dove vivevano i principi.","Un edificio antiguo con torres: un castillo."],LAGO:["Acqua dolce tra le montagne.","Agua dulce entre montañas: un lago."],
+ TRIESTE:["La città di Elena, vicino alla Slovenia. Guarda la mappa!","La ciudad de Elena, cerca de Eslovenia. ¡Mira el mapa!"],BORA:["Il vento forte di cui Elena ha paura.","El viento fuerte del que Elena tiene miedo."],CAFFE:["Una bevanda nera, molto italiana.","Una bebida negra, muy italiana: el café."],
+ PERUGIA:["La città dei Baci di cioccolato, in Umbria.","La ciudad de los Baci de chocolate, en Umbría."],UMBRIA:["La regione verde senza mare, nel centro d'Italia.","La región verde sin mar, en el centro de Italia."],BACI:["I cioccolatini di Perugia. «Bacio» al plurale.","Los bombones de Perugia. «Bacio» (beso) en plural."],
+ ANCONA:["Il porto sull'Adriatico da cui parte il traghetto.","El puerto del Adriático de donde sale el ferry."],PORTO:["Dove arrivano e partono le navi.","Donde llegan y salen los barcos: el puerto."],CROAZIA:["Il Paese dall'altra parte dell'Adriatico, dove va il traghetto.","El país al otro lado del Adriático: Croacia."],
+ MOLO:["Elena cerca quello «numero tre».","Elena busca el «número tres»: el muelle."],TRAGHETTO:["Una nave grande per persone e macchine.","Un barco grande para personas y coches: el ferry."],MAPPA:["L'oggetto rubato dal museo di Aosta.","El objeto robado del museo de Aosta: el mapa."]};
+const hintMax=c=>{const l=lvOf(c);return l<=1?3:l<=3?2:1};
+function hintSteps(c,w){const z=save.puz[c]||{};return (z.h||{})[w]||0}
+function hintLines(c,w,n,max){const out=[],wh=WHINT[w],s=stage();
+  const steps=[];if(wh&&max>=3)steps.push(`<span class="it">${esc(wh[0])}</span>${s<2?`<br><span class="mute small">${esc(wh[1])}</span>`:""}`);
+  steps.push(trp("Empieza por","Comincia con")+` <b>${w[0]}</b> · ${w.length} ${trp("letras","lettere")}`);
+  steps.push(`<b class="pat">${[...w].map((ch,i)=>i%2===0?ch:"_").join(" ")}</b>`);
+  return steps.slice(0,Math.min(n,max))}
+function puzHelp(c,words,solved,labels){
+  const cs=caseOf(c),cl=cs.cities[c].clues,k=save.clue[c]||0,max=hintMax(c);
+  const clues=`<details class="pg"${S.helpOpen?" open":""}><summary><b>🔎 ${trp("Tus pistas","Le tue piste")}</b><span class="pgt">${k}/7</span></summary><div class="pgb">${cl.slice(0,k).map((t,i)=>`<p class="tip it"><b>${i+1}.</b> ${esc(t)}${CLES[c]&&stage()<2?`<br><span class="mute small">${esc(CLES[c][i])}</span>`:""}</p>`).join("")}</div></details>`;
+  const rows=words.map((w,wi)=>{if(solved.includes(wi))return "";const n=hintSteps(c,w),ls=hintLines(c,w,n,max),left=Math.min(max,(WHINT[w]&&max>=3?3:2))-n;
+    return `<div class="hintw"><b>${labels?labels[wi]:trp("Palabra","Parola")+" "+(wi+1)}</b> <span class="mute small">(${w.length})</span> ${esc(CWDEF[w]||"")}${ls.map(l=>`<div class="hl">💡 ${l}</div>`).join("")}${left>0?btn("💡 "+trp("PEDIR AYUDA","CHIEDI AIUTO"),`data-phint="${w}"`,""):`<div class="mute small">${trp("No quedan más ayudas para esta palabra.","Non ci sono altri aiuti per questa parola.")}</div>`}</div>`}).join("");
+  return clues+`<details class="pg"><summary><b>💡 ${trp("Ayudas","Aiuti")}</b><span class="pgt">${max===3?trp("hasta 3 por palabra","fino a 3 per parola"):max===2?trp("hasta 2 por palabra","fino a 2 per parola"):trp("1 por palabra","1 per parola")}</span></summary><div class="pgb">${rows}</div></details>`}
+const _insHelp=(h,help)=>{const i=h.lastIndexOf("<button");return i<0?h+help:h.slice(0,i)+help+h.slice(i)};
+EXOV.sopa=()=>{const h=sopaHtml(),c=save.city;return S.found.length===S.words.length?h:_insHelp(h,puzHelp(c,S.words,S.found))};
+EXOV.cw=()=>{const h=cwHtml(),c=save.city;if(S.solved.length===S.cw.words.length)return h;const ws=S.cw.words.map(p=>p.w);return _insHelp(h,puzHelp(c,ws,S.solved,S.cw.words.map(p=>p.num+(p.dir?" ↓":" →"))))};
+function exClick16(D){
+  if("phint" in D&&(S.ov==="sopa"||S.ov==="cw")){const c=save.city,z=save.puz[c]||(save.puz[c]={});z.h=z.h||{};z.h[D.phint]=(z.h[D.phint]||0)+1;persist();render();return true}
   return false}
 
 buildCity();welcome();requestAnimationFrame(frame);
