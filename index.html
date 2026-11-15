@@ -84,6 +84,10 @@ td:first-child{background:var(--accent);white-space:nowrap}
 .pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
 #italy,#trip{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
 .center{text-align:center}
+.wheel{font-size:44px;text-align:center;transition:transform .5s;line-height:1}
+.phrase{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center}.rw{display:inline-flex;gap:3px}
+.rc{width:20px;height:28px;border-bottom:3px solid var(--ink);font-family:var(--px);font-size:12px;display:flex;align-items:flex-end;justify-content:center;color:var(--ink);padding-bottom:2px}
+@media (prefers-reduced-motion:reduce){.wheel{transition:none}}
 .lvcard{background:#fff;border:3px solid var(--ink);padding:12px;display:flex;flex-direction:column;gap:6px}
 .lvcard.cur{outline:3px solid var(--accent);outline-offset:2px}.lvcard.locked{background:#dfe3e8;color:var(--mute)}
 .lvn{font-family:var(--px);font-size:18px;background:var(--ink);color:var(--panel);width:34px;height:34px;display:flex;align-items:center;justify-content:center}
@@ -906,7 +910,7 @@ function render(){
   const xh=EXOV[S.ov]&&EXOV[S.ov]();
   if(xh){h=xh;top=!["brief","help","tut"].includes(S.ov)}
   else if(S.ov==="say"){top=false;h=`<div class="eyebrow">${esc(S.who)}</div><p>${S.txt}</p>${S.extra||btn("OK","data-close")}`}
-  else if(S.ov==="lesson")h=`<div class="eyebrow">La Prof · ${esc(L.city)}</div><h2>${esc(L.tema)}</h2>${lessonHtml(c)}<p class="mute">Esta página queda guardada en tu Quaderno: puedes abrirla en cualquier momento, también durante un reto.</p>${btn("ENTENDIDO","data-close")}`;
+  else if(S.ov==="lesson")h=`<div class="eyebrow">${esc(profOf(c)[0])} · ${esc(L.city)}</div><h2>${esc(L.tema)}</h2>${lessonHtml(c)}<p class="mute">Esta página queda guardada en tu Quaderno: puedes abrirla en cualquier momento, también durante un reto.</p>${btn("ENTENDIDO","data-close")}`;
   else if(S.ov==="q")h=qHtml();
   else if(S.ov==="note"){
     const got=LEVELS.map((_,i)=>i).filter(i=>save.lesson[i]);
@@ -1041,7 +1045,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -1518,7 +1522,7 @@ function drawBG(){
       R(bgx,px-w/2-1,py-6,w+2,12,"#1a1c2c");R(bgx,px-w/2,py-5,w,10,col);bgx.fillStyle="#f4f4e4";bgx.fillText(txt,px,py+1);
       if(d.type==="school"){R(bgx,px-1,d.hy*T-8,2,10,"#5d3a1a");R(bgx,px+1,d.hy*T-8,6,4,"#38b764");R(bgx,px+1,d.hy*T-4,6,0.01,"#000")}
       else{R(bgx,px-5,d.hy*T+2,10,10,"#1a1c2c");R(bgx,px-4,d.hy*T+3,8,8,"#f4f4e4");R(bgx,px,d.hy*T+4,1,4,"#1a1c2c");R(bgx,px,d.hy*T+7,3,1,"#1a1c2c")}}
-    else{R(bgx,px-8,py-8,16,16,"#1a1c2c");R(bgx,px-7,py-7,14,14,"#f4f4e4");bgx.font="10px sans-serif";bgx.fillText(SHOPS[d.type].e,px,py+1)}}
+    else if(SHOPS[d.type].e){R(bgx,px-8,py-8,16,16,"#1a1c2c");R(bgx,px-7,py-7,14,14,"#f4f4e4");bgx.font="10px sans-serif";bgx.fillText(SHOPS[d.type].e,px,py+1)}}
 }
 function buildCity(){
   const c=save.city,L=LEVELS[c],A=L.at;
@@ -2173,9 +2177,9 @@ function drawBG(){
       R(bgx,px-w/2-1,py-6,w+2,12,"#1a1c2c");R(bgx,px-w/2,py-5,w,10,col);bgx.fillStyle="#f4f4e4";bgx.fillText(txt,px,py+1);
       if(d.type==="school"){R(bgx,px-1,d.hy*T-8,2,10,"#5d3a1a");R(bgx,px+1,d.hy*T-8,6,4,"#38b764")}
       else if(fin&&caseOf(c).id==="b1"){for(let i=0;i<3;i++){R(bgx,px-7+i*6,d.hy*T+2,2,2,"#ffcd75")}R(bgx,px-1,d.hy*T-2,3,4,"#ffcd75");R(bgx,px+1,d.hy*T-6,1,4,"#ffcd75");R(bgx,px+1,d.hy*T-6,3,1,"#ffcd75")}
-      else if(fin){R(bgx,px-4,d.hy*T+1,1,10,"#1a1c2c");R(bgx,px-6,d.hy*T+3,5,1,"#1a1c2c");R(bgx,px-7,d.hy*T+9,7,2,"#1a1c2c")}
+      else if(fin&&caseOf(c).id==="a2"){R(bgx,px-4,d.hy*T+1,1,10,"#1a1c2c");R(bgx,px-6,d.hy*T+3,5,1,"#1a1c2c");R(bgx,px-7,d.hy*T+9,7,2,"#1a1c2c")}else if(fin){R(bgx,px-7,d.hy*T+2,14,9,"#f4f4e4");R(bgx,px-1,d.hy*T+2,2,9,"#5d3a1a");R(bgx,px-5,d.hy*T+4,3,1,"#566c86");R(bgx,px+2,d.hy*T+4,3,1,"#566c86")}
       else{R(bgx,px-5,d.hy*T+2,10,10,"#1a1c2c");R(bgx,px-4,d.hy*T+3,8,8,"#f4f4e4");R(bgx,px,d.hy*T+4,1,4,"#1a1c2c");R(bgx,px,d.hy*T+7,3,1,"#1a1c2c")}}
-    else{R(bgx,px-8,py-8,16,16,"#1a1c2c");R(bgx,px-7,py-7,14,14,"#f4f4e4");bgx.font="10px sans-serif";bgx.fillText(SHOPS[d.type].e,px,py+1)}}
+    else if(SHOPS[d.type].e){R(bgx,px-8,py-8,16,16,"#1a1c2c");R(bgx,px-7,py-7,14,14,"#f4f4e4");bgx.font="10px sans-serif";bgx.fillText(SHOPS[d.type].e,px,py+1)}}
 }
 function capoTalk(){
   const c=save.city,L=LEVELS[c],k=save.clue[c]||0,fin=isLast(c)?FP[caseOf(c).id]:null,who=capoName(),hi=pick(fin?fin.hi:LINES.capoHi);
@@ -2244,7 +2248,7 @@ function finStep(dt){
   const cvs=ov.querySelector&&ov.querySelector("#fin");if(cvs)finDraw(cvs.getContext("2d"),S.t,S.cs,ph);
 }
 function finHtml(){
-  const cs=S.cs,id=cs.id,c=S.c,r=ROUTES[cs.route],ph=S.ph,thief=cs.woman?"Elena":"Totò";
+  const cs=S.cs,id=cs.id,c=S.c,r=ROUTES[cs.route],ph=S.ph,thief=cs.thief;
   const skip=ph<5?`<div class="row"><span></span>${btn(trp("SALTAR ▸","SALTA ▸"),"data-finskip","")}</div>`:"";
   let body="";
   if(ph===0)body=`<p class="it center">${esc(FPLACE[id])}</p>${save.vip[c]?`<p class="mute center">${trp("Tienes asiento VIP en primera fila.","Hai un posto VIP in prima fila.")}</p>`:""}`;
@@ -2371,13 +2375,335 @@ function levelsHtml(){
       <p>${esc(trp(l.desc[0],l.desc[1]))}</p>`+(open?`<div class="lvbar"><i style="width:${Math.round(n/r.ids.length*100)}%"></i></div><p class="mute small">${n}/${r.ids.length} ${trp("ciudades superadas","città superate")}</p>`+(k===cur?"":btn(done?trp("REPETIR","RIGIOCA"):trp("JUGAR ESTE NIVEL","GIOCA QUESTO LIVELLO"),"data-lvgo="+k,""))
       :`<p class="mute">${trp("Completa el nivel "+k+" para desbloquearlo.","Completa il livello "+k+" per sbloccarlo.")}</p>`)+`</div>`}).join("");
   return `<div class="eyebrow">Il Viaggio</div><h2>${trp("Niveles","Livelli")}</h2><p class="mute">${trp("Cada nivel es un caso nuevo y un poco más difícil. Se desbloquean al terminar el anterior.","Ogni livello è un caso nuovo e un po' più difficile. Si sbloccano finendo quello prima.")}</p>${cards}
-   <div class="lvcard locked"><div class="row"><b class="lvn">3</b><span class="lvst lock">🔒 ${trp("Próximamente","Prossimamente")}</span></div><h2>${trp("Un caso en el sur","Un caso al sud")}</h2><p class="mute">B2</p></div>${btn(trp("VOLVER AL JUEGO","TORNA AL GIOCO"),"data-close")}`;
+   <div class="lvcard locked"><div class="row"><b class="lvn">${LVL.length+1}</b><span class="lvst lock">🔒 ${trp("Próximamente","Prossimamente")}</span></div><h2>${trp("Un caso en el sur","Un caso al sud")}</h2><p class="mute">B2</p></div>${btn(trp("VOLVER AL JUEGO","TORNA AL GIOCO"),"data-close")}`;
 }
 EXOV.levels=levelsHtml;
 function exClick10(D){
   if("levels" in D){show("levels");return true}
   if("lvgo" in D){const k=+D.lvgo;if(!lvOpen(k))return true;const r=ROUTES[LVL[k].r];travel([...r.ids].reverse().find(isOpen));return true}
   return false;
+}
+
+/* ================= v12: niveles con casos propios + La Volpe + funciones progresivas + lugares nuevos ================= */
+
+/* ---------- niveles y casos ---------- */
+ROUTES.length=0;
+ROUTES.push({n:"Livello 1 · A2",ids:[8,9,10,11,12,13]},{n:"Livello 2 · A2+",ids:[0,1,2,3]},{n:"Livello 3 · B1",ids:[4,5,6,7]});
+LVL.length=0;
+LVL.push({r:0,cefr:"A2",desc:["Presente, artículos, preposiciones, c'è/ci sono, reflexivos y piacere.","Presente, articoli, preposizioni, c'è/ci sono, riflessivi e piacere."]},
+ {r:1,cefr:"A2+",desc:["El pasado (passato prossimo e imperfetto), pronombres y ci/ne.","Il passato (passato prossimo e imperfetto), pronomi e ci/ne."]},
+ {r:2,cefr:"B1",desc:["Futuro, condicional, congiuntivo, imperativo y periodo hipotético.","Futuro, condizionale, congiuntivo, imperativo e periodo ipotetico."]});
+const VEN={0:["order","wordle"],1:["tiro","ruota"],2:["cinema","enigma"]};
+
+const toto=CASES.find(k=>k.id==="b1");
+CASES[0].thief="Elena";CASES[0].intro=CASES[0].intro.replace("Caso n. 1.","Caso n. 1.");
+toto.route=2;toto.thief="Totò";
+toto.intro="Caso n. 3. A Cremona hanno rubato un violino Stradivari, e il ladro ha lasciato una firma: una piccola volpe disegnata. Il ladro è stato visto a Firenze, dove La Volpe ha la sua tana. Seguilo!";
+toto.cities={4:Object.assign({},toto.cities[4],{prof:["Nome","Salvatore Greco, detto Totò, 47 anni"],clues:[
+  "Totò è venuto a Firenze per guardare la cupola di Brunelleschi al tramonto.",
+  "In albergo ha lasciato il nome: Salvatore Greco, detto Totò, 47 anni.",
+  "Ha detto al portiere: «Una signora con un ombrello giallo mi ha detto dov'era il violino.»",
+  ...toto.cities[4].clues.slice(3)]}),
+ 5:Object.assign({},toto.cities[5],{prof:["Lavoro e famiglia","violinista, padre di Rosa (12 anni)"],clues:[
+  toto.cities[5].clues[0],
+  "Ha suonato in Piazza Navona per pagare l'albergo: è violinista. Ha detto che sua figlia Rosa, 12 anni, suona meglio di lui.",
+  "In un archivio scopri chi è suo padre: Nino Greco, liutaio. Nel 1975 ha restaurato lo Stradivari, poi l'hanno accusato di averlo rovinato.",
+  ...toto.cities[5].clues.slice(3)]}),
+ 6:Object.assign({},toto.cities[6],{prof:["Nato a","Palermo, figlio del liutaio Nino Greco"]}),
+ 7:toto.cities[7]};
+CASES.splice(1,0,{id:"lp",route:1,thief:"Marco",title:"Il codice di Leonardo",obj:"Oggetto rubato: il Codice sul volo degli uccelli di Leonardo da Vinci, dalla Biblioteca Reale di Torino.",woman:false,feat:{},
+ intro:"Caso n. 2. Dalla Biblioteca Reale di Torino è sparito il Codice sul volo degli uccelli, scritto da Leonardo da Vinci. Sul tavolo il ladro ha lasciato un piccolo disegno: una volpe. Trova le piste e seguilo!",
+ ending:"Hai scoperto dove studia Marco stasera: nella biblioteca dell'Archiginnasio! Vai alla biblioteca prima che chiuda.",
+ cities:{
+ 0:{prof:["Sesso","uomo, giovane"],sopa:["MILANO","MODA","SCALA"],clues:[
+  "Il ladro ha bevuto un bicerin in un caffè storico: ha detto che il cioccolato lo aiuta a pensare.",
+  "La barista lo ricorda bene: è un uomo giovane, forse di trent'anni.",
+  "Sul tavolo ha dimenticato un disegno: una macchina con le ali, come quelle di Leonardo.",
+  "Ha chiesto un biglietto per la città della moda.","Vuole vedere il Museo della Scienza e della Tecnologia.","Ha parlato di un teatro famosissimo: la Scala.","Va in Lombardia, a un'ora di treno."]},
+ 1:{prof:["Nome","Marco Ferri"],sopa:["VENEZIA","GONDOLA","CANALI"],clues:[
+  "Il ladro è venuto a Milano per vedere l'Ultima Cena di Leonardo.",
+  "Al museo ha scritto il nome sul registro dei visitatori: Marco Ferri.",
+  "Al Museo della Scienza è rimasto ore davanti ai modelli delle macchine volanti.",
+  "Ha chiesto un treno per una città sull'acqua.","Vuole vedere i canali.","Ha comprato una mappa dei vaporetti.","Ha detto: «Lì c'è un disegno famosissimo di Leonardo.»"]},
+ 2:{prof:["Età","29 anni"],sopa:["BOLOGNA","TORRI","PORTICI"],clues:[
+  "Marco è venuto a Venezia per l'Uomo Vitruviano, il disegno di Leonardo conservato qui.",
+  "In albergo il portiere ha visto il documento: Marco ha 29 anni.",
+  "Ha detto al portiere: «Una persona che si firma La Volpe mi ha aiutato a entrare in biblioteca.»",
+  "Ora va in una città con due torri.","Vuole camminare sotto i portici.","Ha detto che è la sua città.","Va nella città dell'università più antica d'Europa."]},
+ 3:{prof:["Movente","costruire la macchina volante di Leonardo"],sopa:["BIBLIOTECA","CODICE","ALI"],clues:[
+  "Marco è tornato a Bologna, la sua città: ha mangiato una mortadella enorme in un mercato.",
+  "Il movente: Marco è un inventore senza lavoro. Vuole studiare il Codice per costruire una macchina volante e vincere un concorso.",
+  "Nel suo telefono c'è un messaggio firmato con una volpe: «Quando hai finito, porta il Codice nella mia tana a Firenze.»",
+  "Marco studia di sera, quando è tutto silenzioso.","È in un palazzo antico vicino a Piazza Maggiore.","Lì ci sono migliaia di libri antichi.","È la biblioteca dell'Archiginnasio."]}
+ }});
+Object.assign(CWDEF,{MODA:"Milano è la capitale della…",SCALA:"Il teatro più famoso di Milano.",BIBLIOTECA:"Luogo pieno di libri, dove si studia in silenzio.",CODICE:"Il libro di Leonardo che Marco ha rubato.",ALI:"Gli uccelli le usano per volare."});
+Object.assign(KEYW,{lp:["TANA","La Volpe ha una tana a Firenze: lì comincia il prossimo caso."],b1:["CODA","Abbiamo preso La Volpe per la coda!"]});
+Object.assign(SEQ,{lp:["hair","face","mole","coat"],b1:["hair","glasses","face","scar"]});
+Object.assign(THV,{lp:{hair:2,face:2,mole:1,coat:1},b1:{hair:0,glasses:1,face:1,scar:1}});
+FP.lp={sign:"BIBLIOTECA",col:"#a7663a",npc:"Bibliotecaria",es:"Ve a la biblioteca (cartel BIBLIOTECA): allí termina el caso.",it:"Vai in biblioteca (cartello BIBLIOTECA): lì finisce il caso.",hi:["Silenzio, per favore! Siamo in biblioteca.","Benvenuto all'Archiginnasio.","Sss… qui si studia!"],look:{shirt:"#a7663a",hair:"#c5d3dc",hat:null}};
+FINCAP.lp=FPLACE.lp="Bologna, biblioteca dell'Archiginnasio. È sera e tutto è silenzioso.";
+FTALK.lp=["Posso sedermi? Sono Marco… il ladro del Codice.","Volevo solo studiare le macchine volanti di Leonardo. Sono un inventore, ma da un anno non ho lavoro.","Una persona, La Volpe, mi ha aiutato a entrare. Voleva il Codice per la sua tana a Firenze.","Il Codice torna a Torino. E tu, detective… cerca La Volpe a Firenze. Ti ho detto tutto. Grazie."];
+FTALK.a2.push("Un'ultima cosa: chi mi ha detto dov'era la mappa firmava i messaggi con un disegno… una volpe.");
+FTALK.b1=["Posso sedermi qui? Sono Totò… il ladro che cercavi.","Ho preso lo Stradivari per mio padre: nel 1975 l'aveva restaurato, ma tutti dicevano che l'aveva rovinato.","Stasera il violino suona di nuovo. Sul palco c'è mia figlia Rosa, e papà è in prima fila.","Ma ascolta: è stata La Volpe a dirmi dov'era il violino. Una signora con un ombrello giallo…","Guarda, è lì in fondo alla sala! È la guida dei free walking tour!","La Volpe è presa! Voleva un museo segreto tutto suo, con i tesori d'Italia. Grazie, detective."];
+const VOLPE=[["a2","Firma i messaggi con il disegno di una volpe e conosce benissimo i musei d'Italia.","Firma con el dibujo de un zorro y conoce muy bien los museos."],
+ ["lp","È una signora e ha una «tana», un nascondiglio, a Firenze.","Es una señora y tiene una «guarida» en Florencia."],
+ ["b1","Porta sempre un ombrello giallo: è la guida dei free walking tour!","Lleva siempre un paraguas amarillo: ¡es la guía de los free walking tour!"]];
+const caseDone=id=>{const k=CASES.find(x=>x.id===id);return k&&routeDone(k.route)};
+if(save.v12!==1){for(let c=0;c<8;c++)delete save.puz[c];save.v12=1;try{localStorage.setItem(K,JSON.stringify(save))}catch(e){}}
+
+function nextCase(){const k=LVL.findIndex(l=>l.r===ROUTES.indexOf(routeOf(S.c)));const n=LVL[k+1];return n&&!routeDone(n.r)?n.r:null}
+function callText(){
+  const id=S.cs.id,o=nextCase();
+  if(id==="b1")return "Pronto, detective? Qui è la Centrale di polizia. Hai preso La Volpe! Hai risolto il caso più grande d'Italia: tutti i tesori tornano ai loro musei. Complimenti! Ti richiameremo presto per una nuova avventura.";
+  if(id==="a2")return "Pronto, detective? Qui è la Centrale di polizia. Ottimo lavoro con la mappa! Ma quella volpe disegnata… non è la prima volta che la vediamo. Qualcuno che si fa chiamare La Volpe aiuta i ladri. E a Torino è appena sparito un codice di Leonardo. Il treno parte tra un'ora!";
+  if(id==="lp")return "Pronto, detective? Qui è la Centrale di polizia. Bravissimo con il Codice! Ora sappiamo che La Volpe ha una tana a Firenze. E a Cremona hanno appena rubato uno Stradivari… Parti per Firenze!";
+  return o===null?"Pronto, detective? Ottimo lavoro! Ti richiameremo presto.":"Pronto, detective? C'è un nuovo caso per te!";
+}
+function volpeHtml(){
+  return `<div class="eyebrow">Il caso della Volpe 🦊</div><table>${VOLPE.map(([id,it,es])=>`<tr><td>${caseDone(id)?"✓":"?"}</td><td>${caseDone(id)?`<span class="it">${esc(it)}</span>${stage()<2?`<br><span class="mute small">${esc(es)}</span>`:""}`:`<span class="mute">${trp("Resuelve el caso "+CASES.find(x=>x.id===id).title+" para descubrirlo.","Risolvi il caso «"+CASES.find(x=>x.id===id).title+"» per scoprirlo.")}</span>`}</td></tr>`).join("")}</table>`;
+}
+function dosHtml(){
+  const c=save.city,cs=caseOf(c),r=ROUTES[cs.route],id=cs.id;
+  const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
+  const marks=SEQ[id].map(k=>`<tr><td>${TR[k][0]}</td><td>${discOf(c).includes(k)?esc(TR[k][1][THV[id][k]]):"???"}</td></tr>`).join("");
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+    return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
+  const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz"):"";
+  return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas>
+   <div class="eyebrow">${trp("Rasgos (identikit)","Segni particolari (identikit)")} · ${discOf(c).filter(k=>SEQ[id].includes(k)).length}/${SEQ[id].length}</div><table>${marks}</table>
+   <div class="eyebrow">${trp("Perfil","Profilo")}</div><table>${rows}</table>${sp}${routeDone(routeIdx(c))?btn(trp("VER EL FINAL DEL CASO","RIVEDI IL FINALE"),"data-fin",""):""}
+   <div class="eyebrow">${trp("Palabra clave del caso","Parola chiave del caso")}</div>${keyBoxes(c)}
+   ${volpeHtml()}
+   <div class="eyebrow">Diario delle piste</div>${diary||`<p class='mute'>${trp("Todavía no tienes pistas.","Non hai ancora piste.")}</p>`}${btn("CERRAR","data-close")}`;
+}
+async function runFin(tok){
+  const id=S.cs.id,r=ROUTES[S.cs.route],lines=FTALK[id];
+  const go=async(state,text,min)=>{if(S.tok!==tok||S.ov!=="fin")throw 0;Object.assign(S,state);render();if(!await stepWait(tok,text,min))throw 0};
+  try{
+    await go({ph:0},FPLACE[id],5000);
+    S.p1=S.t;
+    for(let i=0;i<lines.length;i++)await go({ph:1,line:i},lines[i],i===0?4500:2500);
+    S.conf=[];for(let i=0;i<70;i++)S.conf.push({x:Math.random()*160,y:-Math.random()*60,vy:12+Math.random()*20,vx:-6+Math.random()*12,c:["#b13e53","#ffcd75","#38b764","#3b5dc9","#f4f4e4","#ef7d57"][i%6]});
+    fanfare(id);await go({ph:2},S.cs.woman?"Brava! Bravissimi! Caso risolto!":"Bravo! Bravissimi! Caso risolto!",4500);
+    for(let k=0;k<r.ids.length;k++){const i=r.ids[k];await go({ph:3,th:k},LEVELS[i].tema+": "+TEMAUSE[i][0]+". "+TEMAUSE[i][2],2500)}
+    S.p4=S.t;await go({ph:4},id==="b1"?"Complimenti! Hai preso La Volpe, e il tuo italiano è diventato bravissimo.":"Complimenti! Il tuo italiano è molto migliorato.",6000);
+    ringtone();await go({ph:5,call:false},"",4200);
+    Object.assign(S,{call:true});render();speak(callText());
+  }catch(e){}
+}
+function finDraw(x,t,cs,ph){
+  const P2=(a,b,col)=>R(x,a,b,1,1,col);
+  if(ph===5){
+    R(x,0,0,160,100,"#29366f");R(x,0,0,160,4,"#1a1c2c");for(let i=0;i<5;i++)R(x,8+i*32,10,20,26,"#333c57");
+    R(x,0,70,160,30,"#5d3a1a");R(x,0,70,160,2,"#a7663a");
+    const sh=S.call?0:Math.round(Math.sin(t/35)*2);
+    R(x,62+sh,52,36,18,"#b13e53");R(x,58+sh,46-(S.call?6:0),44,8,"#8a2a3e");R(x,74+sh,55,12,10,"#f4f4e4");R(x,79+sh,57,2,6,"#1a1c2c");
+    if(!S.call&&Math.floor(t/300)%2){x.fillStyle="#ffcd75";x.font="8px 'Press Start 2P', monospace";x.textAlign="center";x.fillText("DRIIN!",80,32)}
+    return;
+  }
+  const me={shirt:"#b13e53",hair:"#5d3a1a",hat:"#b13e53"},seat=(sx,sy)=>{R(x,sx+1,sy+9,14,7,"#8a2a3e");R(x,sx+1,sy+9,14,1,"#b13e53")};
+  const t1=t-(S.p1||0),walkIn=ph>=1?Math.max(0,Math.min(1,t1/4000)):0;
+  if(cs.id==="b1"){
+    R(x,0,0,160,100,"#1a1c2c");R(x,20,8,120,40,"#29366f");
+    x.fillStyle="rgba(255,205,117,0.18)";x.beginPath();x.moveTo(80,0);x.lineTo(62,48);x.lineTo(98,48);x.closePath();x.fill();
+    R(x,14,44,132,6,"#5d3a1a");R(x,14,44,132,1,"#a7663a");
+    R(x,10,0,14,50,"#b13e53");R(x,136,0,14,50,"#b13e53");R(x,10,0,140,6,"#8a2a3e");R(x,10,6,140,1,"#ffcd75");
+    if(ph===4){R(x,24,7,56,37,"#b13e53");R(x,80,7,56,37,"#b13e53")}
+    const rx=72,ry=29;drawChar(x,rx,ry,{shirt:"#f4f4e4",hair:"#a7663a"},"down",0);R(x,rx+2,ry+3,2,8,"#a7663a");R(x,rx+12,ry+3,2,8,"#a7663a");
+    if(ph<2){R(x,rx+11,ry+6,5,4,"#a7663a");const bo=Math.round(Math.sin(t/140)*3);for(let i=0;i<9;i++)P2(rx+7+i,ry+3+Math.round(i*0.6)+bo,"#f4f4e4");
+      for(let i=0;i<4;i++){const y=30-((t/30+i*15)%28),xx=Math.round(92+Math.sin(t/400+i)*5+i*6);if(y>8){R(x,xx,y,2,2,"#ffcd75");R(x,xx+2,y-5,1,6,"#ffcd75")}}}
+    for(let i=0;i<8;i++)if(i!==3&&i!==4){drawChar(x,8+i*19,56,{shirt:"#333c57",hair:"#0d0f1a"},"up",0);seat(8+i*19,56)}
+    drawChar(x,65,56,{shirt:"#7a93a8",hair:"#c5d3dc"},"up",0);seat(65,56);
+    for(let i=0;i<9;i++){const sx=2+i*18;if(i===4)continue;seat(sx,78)}
+    drawChar(x,74,78,me,"up",0);seat(74,78);
+    if(ph>=1){const tx=Math.round(150-walkIn*58),walking=walkIn<1;drawChar(x,tx,78,{shirt:"#333c57",hair:"#1a1c2c"},walking?"left":"up",walking?Math.floor(t/180)%2:0);if(!walking)seat(tx,78)}
+    if((ph===1&&S.line>=4)||ph>=2&&ph<5){drawChar(x,138,62,{shirt:"#ef7d57",hair:"#333c57"},"left",0);R(x,150,48,1,16,"#1a1c2c");R(x,144,46,13,3,"#ffcd75");R(x,147,44,7,2,"#ffcd75");
+      if((ph===1&&S.line>=5)||ph>=2){drawChar(x,122,62,{shirt:"#29366f",hair:"#1a1c2c",hat:"#1a1c2c"},"right",0);R(x,127,63,6,1,"#ffcd75")}}
+    if(ph>=2&&ph<5&&Math.floor(t/250)%2){x.fillStyle="#ffcd75";x.font="7px 'Press Start 2P', monospace";x.textAlign="center";x.fillText(ph===4?"FINE":"BRAVO!",80,ph===4?28:60)}
+  }else if(cs.id==="lp"){
+    R(x,0,0,160,100,"#5d3a1a");for(let s=0;s<3;s++){R(x,6,8+s*18,148,2,"#3a2210");for(let i=0;i<36;i++)R(x,7+i*4,s*18+0+((i*7)%3),3,8-((i*7)%3),["#b13e53","#3b5dc9","#38b764","#ffcd75","#a7663a","#5d275d"][(i+s)%6])}
+    R(x,0,62,160,38,"#a7663a");for(let i=0;i<5;i++)R(x,0,66+i*7,160,1,"#8a5a2a");
+    R(x,30,64,100,6,"#5d3a1a");R(x,34,70,2,10,"#3a2210");R(x,124,70,2,10,"#3a2210");
+    [[48,56],[104,56]].forEach(([lx,ly])=>{R(x,lx,ly,8,2,"#38b764");R(x,lx+3,ly+2,2,6,"#566c86");const glow=Math.floor(t/500)%2?0.22:0.16;x.fillStyle=`rgba(255,205,117,${glow})`;x.fillRect(lx-6,ly+2,20,8)});
+    R(x,62,62,10,3,"#f4f4e4");R(x,66,62,1,3,"#94b0c2");
+    drawChar(x,62,48,me,"down",0);
+    if(ph>=1){const tx=Math.round(150-walkIn*66),walking=walkIn<1;drawChar(x,tx,48,{shirt:"#3b5dc9",hair:"#a7663a"},walking?"left":"down",walking?Math.floor(t/180)%2:0);if(!walking){R(x,tx-2,62,10,4,"#e8c98a")}}
+    if(ph>=2&&ph<5&&Math.floor(t/250)%2){x.fillStyle="#ffcd75";x.font="7px 'Press Start 2P', monospace";x.textAlign="center";x.fillText(ph===4?"FINE":"BRAVO!",80,90)}
+  }else{
+    const night=ph>=2;R(x,0,0,160,60,night?"#1a1c2c":"#ef7d57");if(!night){R(x,0,30,160,30,"#ffcd75");R(x,98,34,18,10,"#f4f4e4")}
+    else[[10,8],[30,20],[52,6],[70,16],[96,9],[112,24],[148,14]].forEach(([sx,sy],i)=>{if((Math.floor(t/400)+i)%3)P2(sx,sy,"#f4f4e4")});
+    R(x,0,58,160,42,"#29366f");for(let i=0;i<8;i++)R(x,((i*23+t/60)%170)-10,64+(i%4)*8,8,1,"#3b5dc9");
+    const fy=Math.round(Math.sin(t/500)),fx=ph===4?Math.round(100+Math.min(60,(t-(S.p4||t))/80)):100;
+    R(x,fx,46+fy,56,13,"#f4f4e4");R(x,fx,54+fy,56,2,"#3b5dc9");R(x,fx+12,36+fy,30,10,"#f4f4e4");R(x,fx+30,28+fy,6,8,"#b13e53");
+    for(let i=0;i<5;i++)R(x,fx+15+i*6,39+fy,3,3,(Math.floor(t/600)+i)%4?"#ffcd75":"#94b0c2");
+    R(x,0,62,96,8,"#a7663a");R(x,0,62,96,1,"#c9a468");for(let i=0;i<5;i++)R(x,6+i*20,70,3,10,"#5d3a1a");
+    R(x,30,56,34,3,"#5d3a1a");R(x,32,59,2,4,"#5d3a1a");R(x,60,59,2,4,"#5d3a1a");
+    drawChar(x,46,46,me,"left",0);
+    if(ph>=1){const ex=Math.round(-16+walkIn*48),walking=walkIn<1;drawChar(x,ex,46,{shirt:"#38b764",hair:"#1a1c2c",hat:"#b13e53"},"right",walking?Math.floor(t/180)%2:0);R(x,ex+3,48,1,8,"#1a1c2c");R(x,ex+12,48,1,8,"#1a1c2c");R(x,ex+4,54,8,1,"#38b764");
+      if(S.line>=3||ph>=2){R(x,52,53,6,4,"#e8c98a");R(x,53,54,4,1,"#a7663a")}else R(x,ex+11,52,6,4,"#e8c98a")}
+    S.fw.forEach(f=>{const r=f.t/40;for(let a=0;a<8;a++){const xx=Math.round(f.x+Math.cos(a*Math.PI/4)*r),yy=Math.round(f.y+Math.sin(a*Math.PI/4)*r);if(f.t<900)R(x,xx,yy,2,2,f.c)}});
+  }
+  if(ph>=2)S.conf.forEach(p=>R(x,Math.round(p.x),Math.round(p.y),2,3,p.c));
+}
+
+/* ---------- funciones que aparecen poco a poco ---------- */
+const GORDER=()=>LVL.flatMap(l=>ROUTES[l.r].ids);
+const gi=c=>GORDER().indexOf(c);
+const FEAT={shop:1,idk:2,arc:2,shop2:3,chest:4};
+const has=(c,f)=>gi(c)>=FEAT[f];
+const PROFS=[["Prof. Bianchi",{shirt:"#5d275d",hair:"#94b0c2"}],["Maestra Lucia",{shirt:"#b13e53",hair:"#a7663a"}],["Prof. Russo",{shirt:"#257179",hair:"#1a1c2c",hat:"#257179"}],["Prof.ssa Conti",{shirt:"#3b5dc9",hair:"#ffcd75"}],["Maestro Gino",{shirt:"#38b764",hair:"#c5d3dc"}],["Prof.ssa Greco",{shirt:"#ef7d57",hair:"#5d3a1a"}]];
+const profOf=c=>PROFS[gi(c)%PROFS.length];
+const CAPOLOOK=[{shirt:"#29366f",hair:"#333c57",hat:"#29366f"},{shirt:"#257179",hair:"#a7663a",hat:"#257179"},{shirt:"#333c57",hair:"#c5d3dc",hat:"#b13e53"},{shirt:"#5d275d",hair:"#1a1c2c",hat:"#5d275d"}];
+function buildCity(){
+  const c=save.city,L=LEVELS[c],A=L.at;
+  MAP=buildMap(L.sp);
+  const at=(k,p,o)=>({k,x:p[0],y:p[1],o});
+  ents=[at("prof",A.prof,profOf(c)[1]),at("board",A.board),at("capo",A.capo,CAPOLOOK[gi(c)%CAPOLOOK.length]),at("talk",A.talk,{shirt:"#f4f4e4",hair:"#1a1c2c",hat:"#f4f4e4"}),at("quest",A.quest,{shirt:"#257179",hair:"#ffcd75"})];
+  if(has(c,"arc"))ents.push(at("arc",A.arc,{shirt:"#ffcd75",hair:"#b13e53"}));
+  if(has(c,"chest"))ents.push(at("chest",A.chest));
+  L.q.forEach((_,i)=>ents.push(Object.assign(at("q",A.q[i],{shirt:SHIRTS[(i+c)%6],hair:HAIRS[(i*2+c)%6]}),{i})));
+  L.quest.items.forEach((id,i)=>ents.push(Object.assign(at("item",A.items[i]),{id})));
+  ents.push(at("guide",L.tour.at.guide,{shirt:"#ef7d57",hair:"#333c57"}));
+  if(has(c,"idk"))placeWit();
+  L.tour.at.stops.forEach((p,i)=>ents.push(Object.assign(at("flag",p),{i})));
+  DOORS=makeDoors(c);clearDoors();drawBG();ptr=null;
+  Object.assign(P,{x:A.start[0],y:A.start[1],fx:A.start[0],fy:A.start[1],dir:"down",moving:false});
+  hud();
+}
+Object.assign(SHOPS,{tiro:{n:"Tiro a segno",e:"🎯"},ruota:{n:"La Ruota delle frasi",e:"🎡"},cinema:{n:"Cinema",e:"🎬"},enigma:{n:"Enigmistica",e:"🧩"},casa:{n:"Casa",e:""}});
+function makeDoors(c){
+  const L=LEVELS[c],pr=ents.find(e=>e.k==="prof"),cp=ents.find(e=>e.k==="capo"),dist=(d,e)=>Math.abs(d.x-e.x)+Math.abs(d.y-e.y);
+  const ds=L.sp.h.map(([x,y,w,s])=>({x:x+(w>>1),y:y+2,hx:x,hy:y,w,big:!!s}));
+  const big=ds.filter(d=>d.big),st=(big.length?big:ds).slice().sort((a,b)=>dist(a,cp)-dist(b,cp))[0];
+  const sc=ds.filter(d=>d!==st).sort((a,b)=>dist(a,pr)-dist(b,pr))[0];
+  const A=L.at,seen=new Set([A.start+""]),q=[A.start];
+  while(q.length){const [x,y]=q.pop();for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,kk=nx+","+ny;if(!seen.has(kk)&&!SOLID.includes(MAP[ny][nx])){seen.add(kk);q.push([nx,ny])}}}
+  const shops=ds.filter(d=>d!==st&&d!==sc).sort((a,b)=>seen.has(b.x+","+(b.y+1))-seen.has(a.x+","+(a.y+1)));
+  st.type="station";sc.type="school";
+  const ven=VEN[ROUTES.indexOf(routeOf(c))]||VEN[0],n=has(c,"shop2")?99:has(c,"shop")?1:0;
+  shops.forEach((d,k)=>{if(k>=n){d.type="casa";d.game=null;return}const gm=ven[k%2];d.game=gm;d.type=(gm==="order"||gm==="wordle")?SHOPK[(c*3+k)%SHOPK.length]:gm});
+  return ds;
+}
+function enterDoor(d){
+  const c=save.city;
+  if(d.type==="school"){save.lesson[c]=1;persist();hud();return show("lesson")}
+  if(d.type==="station")return capoTalk();
+  if(d.type==="casa")return sayL("Toc toc…",pick(["La porta è chiusa. Non c'è nessuno.","Nessuno risponde… forse sono in vacanza!","Qui abita una signora che dorme: meglio non disturbare!"]),"Esta casa está cerrada.");
+  ({order:()=>startShop(d.type),wordle:()=>startWordle(d.type),tiro:startTiro,ruota:startRuota,cinema:startCinema,enigma:startEnigma})[d.game]();
+}
+const NOV=[{g:1,es:"Primera tienda: entra por la puerta que tiene un dibujo en el tejado.",it:"Primo negozio: entra dalla porta con il disegno sul tetto."},
+ {g:2,es:"Nuevo: un testigo te ayuda con el identikit del ladrón, y abre la sala giochi.",it:"Novità: un testimone ti aiuta con l'identikit del ladro, e apre la sala giochi."},
+ {g:3,es:"Nuevo: una segunda tienda con un juego distinto.",it:"Novità: un secondo negozio con un gioco diverso."},
+ {g:4,es:"Nuevo: hay un baúl escondido con una postal.",it:"Novità: c'è un baule nascosto con una cartolina."}];
+const VENNOV={1:["En este nivel las tiendas se convierten en un luna park: tiro al blanco y ruleta de frases.","In questo livello i negozi diventano un luna park: tiro a segno e ruota delle frasi."],2:["En este nivel hay un cine y una tienda de pasatiempos.","In questo livello ci sono un cinema e un negozio di enigmistica."]};
+function novHtml(){const c=save.city,g=gi(c),ri=ROUTES.indexOf(routeOf(c)),out=NOV.filter(n=>n.g===g).map(n=>tr(n.es,n.it));
+  if(routeOf(c).ids[0]===c&&VENNOV[ri]&&has(c,"shop"))out.push(tr(VENNOV[ri][0],VENNOV[ri][1]));
+  return out.length?`<div class="fb ok"><b>${trp("¡NOVEDAD!","NOVITÀ!")}</b>${out.map(t=>`<span>${t}</span>`).join("")}</div>`:""}
+EXOV.brief=()=>novHtml()+briefHtml();
+
+/* ---------- luna park: tiro a segno ---------- */
+const TIRO=[
+ {q:"Colpisci i verbi che usano ESSERE nel passato prossimo",es:"Dispara a los verbos que usan ESSERE",yes:["andare","venire","uscire","partire","arrivare","tornare","nascere","restare","entrare","salire"],no:["mangiare","dormire","vedere","fare","leggere","scrivere","bere","comprare","prendere","dire"]},
+ {q:"Colpisci le forme dell'IMPERFETTO",es:"Dispara a las formas del imperfetto",yes:["andavo","facevi","era","avevamo","dormivate","dicevano","parlavo","stavi","beveva","eravamo"],no:["sono andato","ho fatto","è stato","hai detto","andrò","farei","parlo","bevo","dormito","ho bevuto"]},
+ {q:"Colpisci i PARTICIPI irregolari",es:"Dispara a los participios irregulares",yes:["fatto","visto","detto","preso","messo","scritto","letto","bevuto","rimasto","aperto"],no:["mangiato","parlato","dormito","andato","finito","comprato","giocato","lavorato","capito","guardato"]},
+ {q:"Colpisci i pronomi INDIRETTI",es:"Dispara a los pronombres indirectos",yes:["gli","le (a lei)","mi (a me)","ti (a te)","ci (a noi)","vi (a voi)"],no:["lo","la","li","le (loro, f.)","ne","si"]}];
+function startTiro(){const c=save.city,u=save.usedT||(save.usedT={}),used=u[c]||(u[c]=[]);let k=TIRO.findIndex((_,i)=>!used.includes(i));if(k<0){u[c]=[];k=Math.floor(Math.random()*TIRO.length)}u[c].push(k);persist();
+  show("tiro",{set:TIRO[k],t:0,next:300,tg:[],hits:0,miss:0,end:null,id:0})}
+function tiroStep(dt){
+  if(S.end)return;S.t+=dt;S.next-=dt;
+  if(S.next<=0&&S.t<23000){S.next=900;const yes=Math.random()<0.45,lane=Math.floor(Math.random()*3),dir=lane%2?-1:1;S.tg.push({id:S.id++,w:pick(yes?S.set.yes:S.set.no),yes,lane,dir,x:dir>0?-60:300,sp:38+Math.random()*16,hit:null,ht:0})}
+  S.tg.forEach(t=>{if(t.hit)t.ht+=dt;else t.x+=t.dir*t.sp*dt/1000});S.tg=S.tg.filter(t=>t.hit?t.ht<500:t.x>-80&&t.x<320);
+  if(S.t>=25000){const ok=S.hits>=5&&S.miss<=2;S.end={ok,life:false};if(ok){if(save.hearts<3){save.hearts++;S.end.life=true}persist();hud()}render();return}
+  const cv=ov.querySelector&&ov.querySelector("#tiroc");if(cv)tiroDraw(cv.getContext("2d"));
+}
+function tiroDraw(x){
+  R(x,0,0,240,150,"#29366f");for(let i=0;i<12;i++)R(x,i*20,0,10,8,i%2?"#b13e53":"#f4f4e4");
+  [32,72,112].forEach(y=>R(x,0,y+18,240,3,"#5d3a1a"));
+  x.textAlign="center";x.textBaseline="middle";x.font="7px 'Press Start 2P', monospace";
+  S.tg.forEach(t=>{const y=[32,72,112][t.lane],w=Math.max(36,t.w.length*7+10);t.w2=w;
+    const col=t.hit===null?"#e8c98a":t.hit?"#38b764":"#b13e53";R(x,t.x-1,y-1,w+2,20,"#1a1c2c");R(x,t.x,y,w,18,col);R(x,t.x+w/2-1,y+18,2,4,"#1a1c2c");
+    x.fillStyle="#1a1c2c";x.fillText(t.w,t.x+w/2,y+9)});
+  x.fillStyle="#ffcd75";x.textAlign="left";x.fillText("✓"+S.hits+"  ✗"+S.miss,6,144);x.textAlign="right";x.fillText(Math.max(0,Math.ceil((25000-S.t)/1000))+"s",234,144);
+}
+function tiroHitAt(px,py){if(S.end)return;const t=S.tg.find(t=>t.hit===null&&px>=t.x&&px<=t.x+(t.w2||40)&&py>=[32,72,112][t.lane]&&py<=[32,72,112][t.lane]+18);
+  if(!t)return;t.hit=t.yes;if(t.yes){S.hits++;speak(t.w)}else S.miss++}
+function tiroHtml(){
+  if(S.end)return `<div class="eyebrow">🎯 Tiro a segno</div><div class="fb ${S.end.ok?"ok":"no"}"><b>${S.end.ok?(S.end.life?"CENTRO! +1 ♥":"CENTRO!"):trp("¡OTRA VEZ!","RIPROVA!")}</b><span>${trp("Aciertos","Colpi giusti")}: ${S.hits} · ${trp("Errores","Errori")}: ${S.miss}</span><span>${tr("Para ganar: 5 aciertos y como mucho 2 errores.","Per vincere: 5 colpi giusti e al massimo 2 errori.")}</span></div><p class="mute">${trp("Las respuestas buenas eran","Le risposte giuste erano")}: <span class="it">${esc(S.set.yes.join(", "))}</span></p>${btn(trp("OTRA RONDA","UN ALTRO GIRO"),"data-tironew")}${btn(trp("SALIR","ESCI"),"data-close","")}`;
+  return `<div class="row"><span class="eyebrow">🎯 Tiro a segno · luna park</span>${hp()}</div><p class="it tip"><b>${esc(S.set.q)}</b>${stage()<2?`<br><span class="mute small">${esc(S.set.es)}</span>`:""}</p><canvas id="tiroc" class="pic" width="240" height="150"></canvas><p class="mute small">${tr("Toca los carteles correctos antes de que se vayan. 25 segundos.","Tocca i cartelli giusti prima che spariscano. 25 secondi.")}</p>${btn(trp("SALIR","ESCI"),"data-close","")}`;
+}
+ov.addEventListener("pointerdown",ev=>{if(S.ov!=="tiro"||!ev.target||ev.target.id!=="tiroc")return;const r=ev.target.getBoundingClientRect();tiroHitAt((ev.clientX-r.left)/r.width*240,(ev.clientY-r.top)/r.height*150)});
+
+/* ---------- luna park: la ruota delle frasi ---------- */
+const RUOTA=[["IN BOCCA AL LUPO","¡Mucha suerte!"],["CHI VA PIANO VA SANO E VA LONTANO","Despacio se llega lejos"],["TUTTE LE STRADE PORTANO A ROMA","Todos los caminos llevan a Roma"],["MEGLIO TARDI CHE MAI","Más vale tarde que nunca"],["L'APPETITO VIEN MANGIANDO","El apetito viene comiendo"],["NON VEDO L'ORA","Tengo muchísimas ganas"],["ROSSO DI SERA BEL TEMPO SI SPERA","Cielo rojo al atardecer, buen tiempo"],["CHI DORME NON PIGLIA PESCI","Camarón que se duerme se lo lleva la corriente"]];
+function startRuota(){const c=save.city,u=save.usedR||(save.usedR={}),used=u[c]||(u[c]=[]);let k=RUOTA.findIndex((_,i)=>!used.includes(i));if(k<0){u[c]=[];k=Math.floor(Math.random()*RUOTA.length)}u[c].push(k);persist();
+  show("ruota",{p:RUOTA[k][0],es:RUOTA[k][1],g:[],bad:0,end:null,spin:0})}
+function ruotaKey(k){if(S.end||S.g.includes(k))return;S.g.push(k);S.spin++;if(!S.p.includes(k))S.bad++;
+  const done=[...S.p].every(ch=>!/[A-Z]/.test(ch)||S.g.includes(ch));
+  if(done||S.bad>=6){S.end={ok:done,life:false};if(done){save.vocab[S.p.toLowerCase()]=S.es;if(save.hearts<3){save.hearts++;S.end.life=true}persist();hud()}speak(S.p.toLowerCase())}
+  render()}
+function ruotaHtml(){
+  const shown=S.p.split(" ").map(w=>`<span class="rw">${[...w].map(ch=>/[A-Z]/.test(ch)?`<span class="rc">${S.g.includes(ch)||S.end?ch:""}</span>`:`<span class="rc on">${ch}</span>`).join("")}</span>`).join("");
+  const kb=["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].map(row=>`<div class="kr">${[...row].map(k=>`<button class="key ${S.g.includes(k)?(S.p.includes(k)?"g":"x"):""}" data-rk="${k}" ${S.g.includes(k)||S.end?"disabled":""}>${k}</button>`).join("")}</div>`).join("");
+  return `<div class="row"><span class="eyebrow">🎡 La Ruota delle frasi · luna park</span>${hp()}</div><p class="mute">${tr("Adivina el refrán italiano letra a letra. Tienes 6 fallos.","Indovina il proverbio italiano lettera per lettera. Hai 6 errori.")}</p>
+   <div class="wheel" style="transform:rotate(${S.spin*67}deg)">🎡</div><div class="phrase">${shown}</div><p class="mute center">${trp("Fallos","Errori")}: ${"✗".repeat(S.bad)}${"·".repeat(6-S.bad)}</p>`+
+   (S.end?`<div class="fb ${S.end.ok?"ok":"no"}"><b>${S.end.ok?(S.end.life?"BRAVO! +1 ♥":"BRAVO!"):trp("¡CASI!","PECCATO!")}</b><span class="it">${esc(S.p)}</span><span>= ${esc(S.es)}</span></div>${btn(trp("OTRO REFRÁN","UN ALTRO PROVERBIO"),"data-ruotanew")}`:`<div class="kb">${kb}</div>`)+btn(trp("SALIR","ESCI"),"data-close","");
+}
+
+/* ---------- cine: doblaje ---------- */
+const CINE=[
+ {t:"Al cinema",a:"Luca",b:"Sara",l:[["a","Se ___ tempo, verrei al cinema con te.",["avessi","avrei","ho"]],["b","Credo che il film ___ alle nove.",["cominci","comincia","cominciato"]],["a","Allora dimmi: ti ___ il finale?",["è piaciuto","piacevi","piace a te"]],["b","Andiamoci domani, ___ gli altri sono d'accordo.",["se","che","quale"]]]},
+ {t:"In stazione",a:"Turista",b:"Capotreno",l:[["a","Mi scusi, mi ___ dire a che ora parte il treno?",["saprebbe","sapesse","saprà"]],["b","Il treno è in ritardo: arriverà ___ venti minuti.",["tra","da","per"]],["b","Bisogna che lei ___ il biglietto prima di salire.",["convalidi","convalida","convaliderà"]],["a","Se avessi saputo dello sciopero, ___ la macchina!",["avrei preso","prendevo","prenderei"]]]},
+ {t:"Al telefono con la nonna",a:"Nipote",b:"Nonna",l:[["a","Nonna, ti ___ domani, va bene?",["chiamo","chiami","chiamerei"]],["b","Il regalo? ___ porto io domenica.",["Te lo","Ti lo","Lo ti"]],["b","Spero che tu ___ bene, tesoro.",["stia","stai","starai"]],["a","Quando ___ a Napoli, ti porterò una sfogliatella.",["verrò","vengo","verrei"]]]}];
+function startCinema(){const c=save.city,u=save.usedC||(save.usedC={}),used=u[c]||(u[c]=[]);let k=CINE.findIndex((_,i)=>!used.includes(i));if(k<0){u[c]=[];k=Math.floor(Math.random()*CINE.length)}u[c].push(k);persist();
+  show("cinema",{sc:CINE[k],i:0,opts:shuffle([0,1,2]),pick:-1,score:0,end:null});cineSpeak()}
+function cineLine(){const l=S.sc.l[S.i];return l[1].replace("___",l[2][0])}
+function cineSpeak(){speak(cineLine())}
+function cinemaHtml(){
+  const sc=S.sc;
+  if(S.end)return `<div class="eyebrow">🎬 Cinema · «${esc(sc.t)}»</div><canvas id="cinec" class="pic" width="132" height="56"></canvas><div class="fb ${S.end.ok?"ok":"no"}"><b>${S.end.ok?(S.end.life?"CIAK, BUONA LA PRIMA! +1 ♥":"CIAK, BUONA LA PRIMA!"):trp("¡HAY QUE REPETIR LA ESCENA!","SI RIGIRA!")}</b><span>${S.score}/${sc.l.length}</span></div>${btn(trp("OTRA PELÍCULA","UN ALTRO FILM"),"data-cinenew")}${btn(trp("SALIR","ESCI"),"data-close","")}`;
+  const l=sc.l[S.i],who=l[0]==="a"?sc.a:sc.b,ans=S.pick>=0;
+  return `<div class="row"><span class="eyebrow">🎬 Cinema · «${esc(sc.t)}» · ${S.i+1}/${sc.l.length}</span>${hp()}</div><p class="mute">${tr("Escucha la escena y elige la palabra que falta en el subtítulo.","Ascolta la scena e scegli la parola che manca nel sottotitolo.")}</p><canvas id="cinec" class="pic" width="132" height="56"></canvas>
+   <p class="it tip"><b>${esc(who)}:</b> ${esc(l[1]).replace("___",`<span class="blank">${ans?esc(l[2][0]):"&nbsp;"}</span>`)}</p>${btn("🔊 "+trp("ESCUCHAR","ASCOLTA"),"data-cinesp","")}
+   <div class="opts">${S.opts.map(i=>`<button class="opt${ans?(i===0?" ok":i===S.pick?" no":""):""}" data-cine="${i}" ${ans?"disabled":""}>${esc(l[2][i])}</button>`).join("")}</div>${ans?btn(trp("SIGUIENTE","AVANTI"),"data-cinenext"):""}${btn(trp("SALIR","ESCI"),"data-close","")}`;
+}
+function drawCine(x){R(x,0,0,132,56,"#1a1c2c");R(x,8,4,116,40,"#73eff7");R(x,8,34,116,10,"#38b764");
+  const sc=S.sc,sp=S.end?null:sc.l[S.i][0];drawChar(x,36,22,{shirt:"#3b5dc9",hair:"#5d3a1a"},"right",sp==="a"?Math.floor(Date.now()/250)%2:0);drawChar(x,80,22,{shirt:"#b13e53",hair:"#a7663a"},"left",sp==="b"?Math.floor(Date.now()/250)%2:0);
+  for(let i=0;i<10;i++)R(x,4+i*13,48,9,6,"#333c57")}
+
+/* ---------- enigmistica: indovinelli ---------- */
+const ENIG=[["Ha i denti ma non morde. Che cos'è?",["il pettine","il cane","la forchetta","il coltello"],"el peine"],["Più è grande, meno si vede. Che cos'è?",["il buio","la montagna","il mare","il sole"],"la oscuridad"],["Ha le lancette e dice sempre l'ora. Che cos'è?",["l'orologio","la bussola","il calendario","la radio"],"el reloj"],["Ha un letto ma non dorme mai, ha una bocca ma non parla. Che cos'è?",["il fiume","il cuscino","il vulcano","la culla"],"el río"],["Si rompe se dici il suo nome. Che cos'è?",["il silenzio","il vetro","l'uovo","il segreto"],"el silencio"],["Ha i tasti ma non apre nessuna porta. Che cos'è?",["il pianoforte","la chiave","la finestra","il libro"],"el piano"],["Più ne togli, più diventa grande. Che cos'è?",["la buca","la torta","il pane","la casa"],"el agujero"],["Sale e scende ma non si muove mai. Che cos'è?",["la scala","l'ascensore","il treno","l'aereo"],"la escalera"],["Ha un collo ma non ha la testa. Che cos'è?",["la bottiglia","la giraffa","il cappotto","la sedia"],"la botella"]];
+function startEnigma(){const c=save.city,u=save.usedE||(save.usedE={}),used=u[c]||(u[c]=[]);let free=ENIG.map((_,i)=>i).filter(i=>!used.includes(i));if(free.length<3){u[c]=[];free=ENIG.map((_,i)=>i)}const list=shuffle(free).slice(0,3);u[c].push(...list);persist();
+  show("enigma",{list,i:0,opts:shuffle([0,1,2,3]),pick:-1,score:0,end:null});speak(ENIG[list[0]][0])}
+function enigmaHtml(){
+  if(S.end)return `<div class="eyebrow">🧩 Enigmistica</div><div class="fb ${S.end.ok?"ok":"no"}"><b>${S.end.ok?(S.end.life?"GENIALE! +1 ♥":"GENIALE!"):trp("¡CASI!","QUASI!")}</b><span>${S.score}/3 · ${tr("Para ganar: 2 de 3.","Per vincere: 2 su 3.")}</span></div>${btn(trp("MÁS ADIVINANZAS","ALTRI INDOVINELLI"),"data-enignew")}${btn(trp("SALIR","ESCI"),"data-close","")}`;
+  const e=ENIG[S.list[S.i]],ans=S.pick>=0;
+  return `<div class="row"><span class="eyebrow">🧩 Indovinello ${S.i+1}/3</span>${hp()}</div><p class="it tip">${esc(e[0])}</p>${spk(e[0])}
+   <div class="opts">${S.opts.map(i=>`<button class="opt${ans?(i===0?" ok":i===S.pick?" no":""):""}" data-enig="${i}" ${ans?"disabled":""}>${esc(e[1][i])}</button>`).join("")}</div>${ans?`<p class="mute">${esc(e[1][0])} = ${esc(e[2])}</p>`+btn(trp("SIGUIENTE","AVANTI"),"data-enignext"):""}${btn(trp("SALIR","ESCI"),"data-close","")}`;
+}
+Object.assign(EXOV,{tiro:tiroHtml,ruota:ruotaHtml,cinema:cinemaHtml,enigma:enigmaHtml});
+function exClick11(D){
+  if("tironew" in D){startTiro();return true}
+  if("rk" in D){ruotaKey(D.rk);return true}
+  if("ruotanew" in D){startRuota();return true}
+  if("cine" in D){S.pick=+D.cine;if(S.pick===0){S.score++;speak(cineLine())}render();return true}
+  if("cinesp" in D){cineSpeak();return true}
+  if("cinenext" in D){S.i++;S.pick=-1;S.opts=shuffle([0,1,2]);if(S.i>=S.sc.l.length){const ok=S.score>=3;S.end={ok,life:false};if(ok&&save.hearts<3){save.hearts++;S.end.life=true;persist();hud()}}render();if(!S.end)cineSpeak();return true}
+  if("cinenew" in D){startCinema();return true}
+  if("enig" in D){S.pick=+D.enig;if(S.pick===0)S.score++;render();return true}
+  if("enignext" in D){S.i++;S.pick=-1;S.opts=shuffle([0,1,2,3]);if(S.i>=3){const ok=S.score>=2;S.end={ok,life:false};if(ok){ENIG.forEach((e,j)=>{if(S.list.includes(j))save.vocab[e[1][0]]=e[2]});if(save.hearts<3){save.hearts++;S.end.life=true}persist();hud()}}else speak(ENIG[S.list[S.i]][0]);render();return true}
+  if("enignew" in D){startEnigma();return true}
+  if("lvgo" in D){const k=+D.lvgo;if(!lvOpen(k))return true;const r=ROUTES[LVL[k].r];travel([...r.ids].reverse().find(isOpen)??r.ids[0]);return true}
+  return false;
+}
+function drawPtr(cx,cy,dt){
+  if(S.ov==="fin")finStep(dt);
+  if(S.ov==="tiro")tiroStep(dt);
+  if(S.ov==="cinema"){const cv=ov.querySelector&&ov.querySelector("#cinec");if(cv)drawCine(cv.getContext("2d"))}
+  if(!ptr)return;ptr.t-=dt;if(ptr.t<=0){ptr=null;return}
+  const b=Math.round(Math.sin(ptr.t/110)*2),sx=ptr.x*T-cx,sy=ptr.y*T-cy;
+  R(g,sx+4,sy-16+b,8,3,"#1a1c2c");R(g,sx+5,sy-15+b,6,1,"#ffcd75");R(g,sx+6,sy-13+b,4,2,"#ffcd75");R(g,sx+7,sy-11+b,2,2,"#ffcd75");
+  const px=P.fx*T-cx+8,py=P.fy*T-cy+8,dx=ptr.x-P.fx,dy=ptr.y-P.fy,m=Math.hypot(dx,dy)||1;
+  if(m>1.5)[12,17,22].forEach((r,i)=>{R(g,px+dx/m*r-2,py+dy/m*r-2,4+i,4+i,"#1a1c2c");R(g,px+dx/m*r-1,py+dy/m*r-1,2+i,2+i,"#ffcd75")});
 }
 
 buildCity();welcome();requestAnimationFrame(frame);
