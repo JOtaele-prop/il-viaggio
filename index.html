@@ -84,6 +84,7 @@ td:first-child{background:var(--accent);white-space:nowrap}
 .pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
 #italy,#trip{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
 .center{text-align:center}
+.theme{display:flex;flex-direction:column;gap:4px;background:#fff;border:3px solid var(--ink);padding:10px}.theme b{font-family:var(--px);font-size:11px;line-height:1.5}.theme .ex{color:var(--blue)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}.chips span{background:#fff;border:2px solid var(--ink);padding:2px 8px;font-size:19px}
 .ring{font-family:var(--px);font-size:14px;color:var(--bad);animation:ring .25s infinite alternate}
 @keyframes ring{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
@@ -939,7 +940,7 @@ function render(){
   else if(S.ov==="stop"){const f=L.tour.facts[S.i],more=[0,1,2].some(k=>k!==S.i&&!tourOf(c).seen.includes(k));
     h=`<div class="eyebrow">Free walking tour · tappa ${S.i+1}/3</div><canvas id="pic" class="pic" width="132" height="72"></canvas><div class="eyebrow">La guida racconta:</div><p class="it">${esc(f[0])}</p>${spk(f[0])}${S.tr?`<p class="tip">${esc(f[1])}</p>`:btn("VER TRADUCCIÓN","data-tr","")}${btn(S.guided&&more?"SIGUIENTE PARADA →":"CONTINUAR","data-stopok")}`}
   else if(S.ov==="exam"){const Q=L.tour.qs[S.k],ans=S.pick>=0;
-    h=`<div class="row"><span class="eyebrow">Capotreno · domanda ${S.k+1}/3</span><span class="eyebrow">Sul free tour</span></div><p class="it">${esc(Q[0])}</p><div class="opts">${S.opts.map(i=>`<button class="opt${ans?(i===0?" ok":i===S.pick?" no":""):""}" data-ex="${i}" ${ans?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>`+(ans?`<div class="fb ${S.pick===0?"ok":"no"}"><b>${S.pick===0?"GIUSTO!":"SBAGLIATO"}</b>${S.pick===0?"":`<span>${esc(L.tour.facts[S.k][0])}</span>`}</div>${btn("CONTINUAR","data-exnext")}`:"")}
+    h=`<div class="row"><span class="eyebrow">${esc(capoName())} · domanda ${S.k+1}/3</span><span class="eyebrow">Sul free tour</span></div><p class="it">${esc(Q[0])}</p><div class="opts">${S.opts.map(i=>`<button class="opt${ans?(i===0?" ok":i===S.pick?" no":""):""}" data-ex="${i}" ${ans?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>`+(ans?`<div class="fb ${S.pick===0?"ok":"no"}"><b>${S.pick===0?"GIUSTO!":"SBAGLIATO"}</b>${S.pick===0?"":`<span>${esc(L.tour.facts[S.k][0])}</span>`}</div>${btn("CONTINUAR","data-exnext")}`:"")}
   else if(S.ov==="rip"){const it=S.list[S.n],Q=L.tour.qs[it.i];
     h=`<div class="row"><span class="eyebrow">Ripasso · vero o falso</span><span class="eyebrow">${S.n+1}/${S.list.length}</span></div><canvas id="pic" class="pic" width="132" height="72"></canvas><p class="mute">${esc(Q[0])}</p><p class="big">${esc(it.a)}</p>`+(S.res?`<div class="fb ${S.res.ok?"ok":"no"}"><b>${S.res.ok?"GIUSTO!":"SBAGLIATO · volverá a salir"}</b>${S.res.ok?"":`<span class="it">${esc(L.tour.facts[it.i][0])}</span>`}</div>${btn("CONTINUAR","data-rnext")}`:`<div class="duo"><button class="opt" data-rv="1">VERO</button><button class="opt" data-rv="0">FALSO</button></div>`)}
   else if(S.ov==="tourq"){const Q=L.tour.quiz;h=`<div class="eyebrow">La guida · domanda finale</div><p class="it">${esc(Q[0])}</p>`+(S.won?`<div class="fb ok"><b>GIUSTO!</b><span class="it">${esc(Q[1][0])}.</span><span>Tour completado: recuperas tus 3 vidas y los apuntes quedan en tu Quaderno.</span></div>${btn("CERRAR","data-close")}`:`<div class="opts">${S.opts.map(i=>`<button class="opt${S.bad.includes(i)?" no":""}" data-tq="${i}" ${S.bad.includes(i)?"disabled":""}>${esc(Q[1][i])}</button>`).join("")}</div>${S.bad.length?`<p class="mute">No es eso. Puedes volver a leer las banderas: en un free tour no se pierden vidas.</p>`:""}${btn("SALIR","data-close","")}`)}
@@ -1075,7 +1076,7 @@ ov.addEventListener("click",ev=>{
   else if("exnext" in D){S.k++;
     if(S.k<3){S.pick=-1;S.opts=shuffle([0,1,2]);render()}
     else if(!S.wrong.length)board(c,true);
-    else say("Capotreno","Hai sbagliato "+S.wrong.length+(S.wrong.length>1?" domande":" domanda")+": viajarás en <b>clase turista</b>. Antes de subir, un repaso rápido del tour: ¿vero o falso?",btn("EMPEZAR REPASO","data-rip"))}
+    else say(capoName(),"Hai sbagliato "+S.wrong.length+(S.wrong.length>1?" domande":" domanda")+(isLast(c)?": entras, pero sin asiento VIP. Antes, un repaso rápido del tour: ¿vero o falso?":": viajarás en <b>clase turista</b>. Antes de subir, un repaso rápido del tour: ¿vero o falso?"),btn("EMPEZAR REPASO","data-rip"))}
   else if("rip" in D){show("rip",{list:shuffle(LEVELS[c].tour.qs.flatMap((Q,i)=>[{i,a:Q[1][0],v:1},{i,a:Q[1][1+Math.floor(Math.random()*2)],v:0}])),n:0,res:null})}
   else if("rv" in D){const it=S.list[S.n],ok=+D.rv===it.v;if(!ok)S.list.push(Object.assign({},it));S.res={ok};render()}
   else if("rnext" in D){S.n++;S.res=null;if(S.n>=S.list.length)board(c,false);else render()}
@@ -1310,7 +1311,7 @@ function sopaHtml(){
   const grid=`<div class="sopa">${S.g.map((l,i)=>`<button class="cell${fc.has(i)?" f":i===S.sel?" s":""}" data-cell="${i}">${l}</button>`).join("")}</div>`;
   const words=`<p class="words">${S.words.map((w,wi)=>S.found.includes(wi)?`<s>${w}</s>`:"?".repeat(w.length)).join(" · ")}</p>`;
   if(done)return `<div class="eyebrow">Sopa de letras · ${esc(cs.title)}</div>${grid}${words}`+(last
-    ?`<h2>Caso risolto!</h2><p class="it tip">${esc(cs.ending)}</p>${spk(cs.ending)}<p class="mute">Habla con el Capotreno para cerrar la ruta.</p>`
+    ?`<h2>${trp("¡Lo has encontrado!","L'hai trovato!")}</h2><p class="it tip">${esc(cs.ending)}</p>${spk(cs.ending)}<p class="mute">Habla con el Capotreno para cerrar la ruta.</p>`
     :`<h2>${esc(destLine(c))}</h2><p class="mute">Destino descubierto. Haz el free walking tour si te falta y ve a la estación: el Capotreno te espera.</p>`)+btn("CONTINUAR","data-close");
   return `<div class="eyebrow">Sopa de letras · ${S.words.length} palabras</div><p class="mute">Toca la primera y la última letra de cada palabra (horizontal, vertical o diagonal). Las pistas te ayudan a adivinarlas.</p>${grid}${words}${btn("VER DOSSIER","data-dosv","")}${btn("SALIR","data-close","")}`;
 }
@@ -1430,7 +1431,7 @@ function nextTarget(plain){
   }
   if(!save.found[c])return {txt:x("Resuelve el enigma para saber adónde fue el ladrón.","Risolvi l'enigma per scoprire dove è andato il ladro."),act:"puz"};
   if(!tourOf(c).done)return {txt:x("Haz el free walking tour con la guía del paraguas amarillo.","Fai il free walking tour con la guida dall'ombrello giallo."),ent:f(e=>e.k==="guide")};
-  return {txt:x("Ve a la estación (cartel azul STAZIONE): el Capotreno te espera.","Vai in stazione (cartello azzurro STAZIONE): il Capotreno ti aspetta."),ent:f(e=>e.k==="capo")};
+  return {txt:isLast(c)?x(FP[caseOf(c).id].es,FP[caseOf(c).id].it):x("Ve a la estación (cartel azul STAZIONE): el Capotreno te espera.","Vai in stazione (cartello azzurro STAZIONE): il Capotreno ti aspetta."),ent:f(e=>e.k==="capo")};
 }
 function dirTxt(e){const dx=e.x-P.x,dy=e.y-P.y,n=Math.abs(dx)+Math.abs(dy),a=Math.round(Math.atan2(dy,dx)/(Math.PI/4));
   const ar=["→","↘","↓","↙","←","↖","↑","↗"][(a+8)%8];return tr(`Está a ${n} pasos, hacia ${ar}.`,`È a ${n} passi, verso ${ar}.`)}
@@ -1438,7 +1439,7 @@ const puzType=c=>routeOf(c).ids.indexOf(c)%2?"cw":"sopa";
 function briefHtml(){
   const c=save.city,L=LEVELS[c],rt=routeOf(c),cs=caseOf(c),k=Math.min(7,save.clue[c]||0),nt=nextTarget();
   const it=[[save.lesson[c],tr("Clase con la Prof (escuela)","Lezione con la Prof (scuola)")],[save.read[c],tr("Leer el cartel de la plaza","Leggere il cartello in piazza")],[k>=7,tr("Pistas","Piste")+` ${k}/7`],
-    [save.found[c],puzType(c)==="sopa"?tr("Sopa de letras: adónde fue","Crucipuzzle: dove è andato"):tr("Crucigrama: adónde fue","Cruciverba: dove è andato")],[tourOf(c).done,"Free walking tour"],[false,tr("Estación: preguntas y tren","Stazione: domande e treno")]];
+    [save.found[c],puzType(c)==="sopa"?tr("Sopa de letras: adónde fue","Crucipuzzle: dove è andato"):tr("Crucigrama: adónde fue","Cruciverba: dove è andato")],[tourOf(c).done,"Free walking tour"],[false,isLast(c)?tr(FP[caseOf(c).id].es,FP[caseOf(c).id].it):tr("Estación: preguntas y tren","Stazione: domande e treno")]];
   return `<div class="eyebrow">${esc(rt.n)} · ${rt.ids.indexOf(c)+1}/${rt.ids.length} · ${esc(cs.title)}</div><h2>${trp("Estás en","Sei a")} ${esc(L.city)}</h2><p>${trp("Tema de italiano","Tema di italiano")}: <b>${esc(L.tema)}</b></p>
   <ul class="check">${it.map(([ok,t])=>`<li class="${ok?"ok":""}">${ok?"✓":"□"} ${t}</li>`).join("")}</ul>
   <div class="tip"><b>${trp("Ahora","Adesso")}:</b> ${nt.txt}</div><div class="row">${btn("AIUTO 🐦","data-help","")}${btn(trp("¡A JUGAR!","ANDIAMO!"),"data-ns","a")}</div>`;
@@ -1639,7 +1640,7 @@ function puzzleDone(c){save.found[c]=1;persist();hud()}
 function doneHtml(c){
   const cs=caseOf(c),last=nextOf(c)===undefined,kw=KEYW[cs.id];
   return `<div class="fb ok"><b>${trp("LETRA DE LA PALABRA CLAVE","LETTERA DELLA PAROLA CHIAVE")}: ${keyLetter(c)}</b>${keyBoxes(c)}</div>`+(last
-    ?`<h2>Caso risolto!</h2><p class="it tip">${esc(cs.ending)}</p>${spk(cs.ending)}<div class="fb ok"><b>${trp("PALABRA CLAVE","PAROLA CHIAVE")}: ${kw[0]}</b><span class="it">${esc(kw[1])}</span></div><p class="mute">${trp("Habla con el Capotreno para cerrar la ruta.","Parla con il Capotreno per chiudere il percorso.")}</p>`
+    ?`<h2>${trp("¡Lo has encontrado!","L'hai trovato!")}</h2><p class="it tip">${esc(cs.ending)}</p>${spk(cs.ending)}<div class="fb ok"><b>${trp("PALABRA CLAVE","PAROLA CHIAVE")}: ${kw[0]}</b><span class="it">${esc(kw[1])}</span></div><p class="mute">${tr(FP[cs.id].es,FP[cs.id].it)}</p>`
     :`<h2>${esc(destLine(c))}</h2><p class="mute">${tr("Destino descubierto. Haz el free walking tour si te falta y ve a la estación.","Destinazione scoperta. Fai il free walking tour se ti manca e vai in stazione.")}</p>`)+btn("CONTINUAR","data-close");
 }
 const hintsHtml=c=>{const cl=caseOf(c).cities[c].clues,k=save.clue[c]||0;return `<details><summary>${trp("Tus pistas","Le tue piste")}</summary>${cl.slice(0,k).filter((_,i)=>i!==1).map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}</details>`};
@@ -2135,6 +2136,170 @@ function exClick8(D){
   if("finskip" in D){const nb=S.b.find(b=>b>S.t);if(nb!==undefined){S.t=nb;finStep(0)}return true}
   if("fin" in D){const r=routeOf(save.city);startFin(r.ids[r.ids.length-1]);return true}
   return false;
+}
+
+/* ================= v9: final de juego de verdad + teatro/puerto en la última ciudad ================= */
+const isLast=c=>nextOf(c)===undefined;
+const FP={
+ b1:{sign:"TEATRO",col:"#5d275d",npc:"Maschera del teatro",es:"Ve al teatro (cartel morado TEATRO): allí termina el caso.",it:"Vai al teatro (cartello viola TEATRO): lì finisce il caso.",hi:["Biglietto per il concerto, prego!","Benvenuto al Teatro Massimo!","Stasera c'è un concerto speciale…"],look:{shirt:"#5d275d",hair:"#1a1c2c",hat:"#1a1c2c"}},
+ a2:{sign:"PORTO",col:"#257179",npc:"Marinaio",es:"Ve al puerto (cartel PORTO): allí termina el caso.",it:"Vai al porto (cartello PORTO): lì finisce il caso.",hi:["Ehi, detective! Il traghetto parte alle nove.","Benvenuto al porto di Ancona!","Ahoy! Cerchi qualcuno?"],look:{shirt:"#3b5dc9",hair:"#c5d3dc",hat:"#f4f4e4"}}
+};
+const capoName=()=>isLast(save.city)?FP[caseOf(save.city).id].npc:"Capotreno";
+CASES[1].ending="Hai scoperto dove sarà Totò stasera: al Teatro Massimo! Vai al teatro: la maschera ti farà entrare.";
+CASES[0].ending="Hai scoperto dove aspetta Elena: al molo numero tre del porto! Vai al porto prima che parta il traghetto.";
+
+/* el edificio final: teatro o puerto */
+function clearDoors(){
+  const fronts=new Set(DOORS.map(d=>d.x+","+(d.y+1))),A=LEVELS[save.city].at;
+  const free=(x,y)=>x>0&&y>0&&x<MW-1&&y<MH-1&&!SOLID.includes(MAP[y][x])&&MAP[y][x]!=="="&&!ents.some(e=>e.x===x&&e.y===y)&&!fronts.has(x+","+y)&&!(x===A.start[0]&&y===A.start[1]);
+  for(const d of DOORS){const fx=d.x,fy=d.y+1,e=ents.find(e=>e.x===fx&&e.y===fy);if(!e)continue;
+    const spot=[[fx-1,fy],[fx+1,fy],[fx-2,fy],[fx+2,fy],[fx,fy+1],[fx-1,fy+1],[fx+1,fy+1]].find(([x,y])=>free(x,y));
+    if(spot){e.x=spot[0];e.y=spot[1];if(e.k==="guide")e.home=spot}}
+  if(isLast(save.city)){const cp=ents.find(e=>e.k==="capo");if(cp)cp.o=FP[caseOf(save.city).id].look}
+}
+function drawBG(){
+  const c=save.city,L=LEVELS[c],fin=isLast(c)?FP[caseOf(c).id]:null;
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)drawTile(bgx,MAP[y][x],x,y,L);
+  if(L.sp.L)LAND[c](bgx,L.sp.L[0]*T,L.sp.L[1]*T,GROUND[L.g][0]);
+  bgx.textAlign="center";bgx.textBaseline="middle";
+  for(const d of DOORS){const px=d.x*T+8,py=(d.hy+1)*T+8;
+    if(d.type==="school"||d.type==="station"){const txt=d.type==="school"?"SCUOLA":fin?fin.sign:"STAZIONE",col=d.type==="school"?"#257179":fin?fin.col:"#3b5dc9";
+      bgx.font="6px 'Press Start 2P', monospace";const w=Math.ceil(bgx.measureText(txt).width)+6;
+      R(bgx,px-w/2-1,py-6,w+2,12,"#1a1c2c");R(bgx,px-w/2,py-5,w,10,col);bgx.fillStyle="#f4f4e4";bgx.fillText(txt,px,py+1);
+      if(d.type==="school"){R(bgx,px-1,d.hy*T-8,2,10,"#5d3a1a");R(bgx,px+1,d.hy*T-8,6,4,"#38b764")}
+      else if(fin&&caseOf(c).id==="b1"){for(let i=0;i<3;i++){R(bgx,px-7+i*6,d.hy*T+2,2,2,"#ffcd75")}R(bgx,px-1,d.hy*T-2,3,4,"#ffcd75");R(bgx,px+1,d.hy*T-6,1,4,"#ffcd75");R(bgx,px+1,d.hy*T-6,3,1,"#ffcd75")}
+      else if(fin){R(bgx,px-4,d.hy*T+1,1,10,"#1a1c2c");R(bgx,px-6,d.hy*T+3,5,1,"#1a1c2c");R(bgx,px-7,d.hy*T+9,7,2,"#1a1c2c")}
+      else{R(bgx,px-5,d.hy*T+2,10,10,"#1a1c2c");R(bgx,px-4,d.hy*T+3,8,8,"#f4f4e4");R(bgx,px,d.hy*T+4,1,4,"#1a1c2c");R(bgx,px,d.hy*T+7,3,1,"#1a1c2c")}}
+    else{R(bgx,px-8,py-8,16,16,"#1a1c2c");R(bgx,px-7,py-7,14,14,"#f4f4e4");bgx.font="10px sans-serif";bgx.fillText(SHOPS[d.type].e,px,py+1)}}
+}
+function capoTalk(){
+  const c=save.city,L=LEVELS[c],k=save.clue[c]||0,fin=isLast(c)?FP[caseOf(c).id]:null,who=capoName(),hi=pick(fin?fin.hi:LINES.capoHi);
+  if(k<7)return sayL(who,hi+" Ti mancano "+(7-k)+" piste.","Te faltan "+(7-k)+" pistas en "+L.city+".");
+  if(!save.found[c])return sayL(who,hi+(fin?" Ma dov'è il ladro? Prima risolvi l'enigma!":" Dove vuoi andare? Prima risolvi l'enigma!"),fin?"Primero resuelve el enigma: te dirá dónde se esconde.":"Primero resuelve el enigma para saber adónde fue el ladrón.",btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz")+btn("OK","data-close",""));
+  if(!tourOf(c).done)return sayL(who,hi+(fin?" Prima di entrare ti faccio tre domande sul free walking tour.":" Prima di partire ti faccio tre domande sul free walking tour."),"Haz antes el tour con la guía del paraguas amarillo.");
+  show("exam",{k:0,wrong:[],opts:shuffle([0,1,2]),pick:-1});
+}
+
+/* ---------- el final ---------- */
+const TEMAUSE={
+ 0:["per raccontare azioni finite nel passato","para contar acciones terminadas en el pasado","Ieri sono andato a teatro."],
+ 1:["per descrivere il passato e distinguere abitudini e fatti","para describir el pasado y distinguir costumbres y hechos","Mentre camminavo, ho visto Luca."],
+ 2:["per non ripetere persone e cose","para no repetir personas y cosas","La vedo e le parlo."],
+ 3:["per parlare di luoghi e quantità senza ripetere","para hablar de lugares y cantidades sin repetir","Ci vado domani e ne compro due."],
+ 4:["per i piani, le previsioni e le richieste gentili","para los planes, las previsiones y los pedidos amables","Domani visiterò il museo. Vorrei un caffè."],
+ 5:["per opinioni, desideri e dubbi","para opiniones, deseos y dudas","Penso che Roma sia bellissima."],
+ 6:["per dare ordini e consigli","para dar órdenes y consejos","Dimmelo! Si accomodi!"],
+ 7:["per immaginare e per confrontare","para imaginar y para comparar","Se avessi tempo, resterei."],
+ 8:["per parlare di te e della tua giornata","para hablar de ti y de tu día","Sono in Italia e parlo italiano."],
+ 9:["per usare bene il, lo, la, gli e le","para usar bien il, lo, la, gli y le","Lo studente e gli amici."],
+ 10:["per dire dove vai e da dove vieni","para decir adónde vas y de dónde vienes","Vado a Trento, in treno."],
+ 11:["per descrivere i luoghi","para describir los lugares","C'è una piazza bellissima."],
+ 12:["per raccontare la tua routine","para contar tu rutina","Mi sveglio alle sette."],
+ 13:["per dire cosa ti piace e di chi è","para decir qué te gusta y de quién es","Mi piace il mare: è la mia città."]
+};
+const FTALK={
+ b1:["Posso sedermi qui? Sono Totò… il ladro che cercavi.","Ho preso lo Stradivari per mio padre. Nel 1975 l'aveva restaurato, ma tutti dicevano che l'aveva rovinato.","Stasera il museo l'ha prestato al teatro. Sul palco suona mia figlia Rosa, e papà è in prima fila.","Grazie al tuo dossier tutti sanno la verità. Domani il violino torna a Cremona. Grazie, detective."],
+ a2:["Posso sedermi? Sono Elena… la persona che stavi cercando.","Ho preso la mappa perché c'è il paese di mio nonno Mario, in Istria. Oggi non esiste più.","Il museo mi ha dato una copia: stasera parto con il traghetto e vado a vedere dov'era.","La mappa originale torna ad Aosta, promesso. Grazie, detective: senza di te non avrei capito di aver sbagliato."]
+};
+const FPLACE={b1:"Palermo, Teatro Massimo. Sul palco suona Rosa, una violinista di 12 anni.",a2:"Ancona, il porto, al tramonto. Il traghetto per la Croazia è pronto."};
+let AC=null;
+function tone(f,t0,d,type,vol){try{const o=AC.createOscillator(),g2=AC.createGain();o.type=type||"square";o.frequency.value=f;g2.gain.setValueAtTime(vol||0.06,AC.currentTime+t0);g2.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+t0+d);o.connect(g2).connect(AC.destination);o.start(AC.currentTime+t0);o.stop(AC.currentTime+t0+d+0.05)}catch(e){}}
+function fanfare(id){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){return}
+  if(id==="a2"){tone(98,0,1.6,"sawtooth",0.05);tone(147,0,1.6,"sawtooth",0.03)}
+  [[523,0],[659,.15],[784,.3],[1047,.45],[784,.75],[1047,.9]].forEach(([f,t])=>tone(f,(id==="a2"?1.4:0)+t,0.28));
+  [523,659,784,1047].forEach(f=>tone(f,(id==="a2"?1.4:0)+1.2,1.2,"triangle",0.05));}
+function board(c,vip){
+  const L=LEVELS[c],st=Math.max(save.stars[c]||0,Math.max(1,3-(save.miss[c]||0)));save.stars[c]=st;if(vip)save.vip[c]=1;
+  const cls=vip?"<b>Biglietto VIP · prima classe!</b>":"<b>Biglietto turista · seconda classe.</b>",sr="<span style='font-size:28px'>"+stars(st)+"</span>",nx=nextOf(c);
+  if(nx!==undefined){save.open[nx]=1;persist();
+    say("Capotreno",cls+"<br>"+esc(L.city)+" "+trp("superada","superata")+": "+sr+"<br>"+trp("Próxima parada","Prossima fermata")+": <b>"+esc(LEVELS[nx].city)+"</b> ("+esc(LEVELS[nx].tema)+").",btn(trp("SUBIR AL TREN →","SALI SUL TRENO →"),"data-trip="+nx)+btn(trp("QUEDARME AQUÍ","RESTO QUI"),"data-close",""))}
+  else{persist();startFin(c)}
+}
+function startFin(c){
+  const cs=caseOf(c),r=ROUTES[cs.route],n=r.ids.length,b=[];let t=7000;b.push(t);t+=4*6500;b.push(t);t+=7000;b.push(t);t+=n*5200;b.push(t);t+=8000;b.push(t);
+  show("fin",{c,cs,t:0,ph:-1,b,call:false,line:-1,th:-1,conf:[],fw:[]});
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}
+  finStep(0);
+}
+const finPh=()=>{let p=0;while(p<S.b.length&&S.t>=S.b[p])p++;return p};
+function finStep(dt){
+  S.t+=dt;const ph=finPh(),cs=S.cs,id=cs.id,r=ROUTES[cs.route];
+  if(ph!==S.ph){S.ph=ph;
+    if(ph===0)speak(FPLACE[id]);
+    if(ph===2){fanfare(id);speak(caseOf(S.c).woman?"Brava! Bravissimi! Caso risolto!":"Bravo! Bravissimi! Caso risolto!");for(let i=0;i<70;i++)S.conf.push({x:Math.random()*160,y:-Math.random()*60,vy:12+Math.random()*20,vx:-6+Math.random()*12,c:["#b13e53","#ffcd75","#38b764","#3b5dc9","#f4f4e4","#ef7d57"][i%6]})}
+    if(ph===5)S.call=false;
+    render()}
+  if(ph===1){const ln=Math.min(3,Math.floor((S.t-S.b[0])/6500));if(ln!==S.line){S.line=ln;render();speak(FTALK[id][ln])}}
+  if(ph===3){const th=Math.min(r.ids.length-1,Math.floor((S.t-S.b[2])/5200));if(th!==S.th){S.th=th;render();const i=r.ids[th];speak(LEVELS[i].tema+": "+TEMAUSE[i][0]+". "+TEMAUSE[i][2])}}
+  if(ph===4&&S.th!==-2){S.th=-2;speak("Complimenti! Ora sei un vero detective, e il tuo italiano è molto migliorato.")}
+  if(ph===5&&!S.call&&S.t>S.b[4]+2600){S.call=true;render();speak(callText())}
+  if(ph>=2)S.conf.forEach(p=>{p.y+=p.vy*dt/1000;p.x+=p.vx*dt/1000;if(p.y>100&&ph<5){p.y=-4;p.x=Math.random()*160}});
+  if(ph>=2&&id==="a2"&&ph<5&&Math.random()<dt/400)S.fw.push({x:30+Math.random()*100,y:10+Math.random()*30,t:0,c:["#ffcd75","#b13e53","#73eff7","#38b764"][Math.floor(Math.random()*4)]});
+  S.fw.forEach(f=>f.t+=dt);S.fw=S.fw.filter(f=>f.t<1200);
+  const cvs=ov.querySelector&&ov.querySelector("#fin");if(cvs)finDraw(cvs.getContext("2d"),S.t,S.cs,ph);
+}
+function finHtml(){
+  const cs=S.cs,id=cs.id,c=S.c,r=ROUTES[cs.route],ph=S.ph,thief=cs.woman?"Elena":"Totò";
+  const skip=ph<5?`<div class="row"><span></span>${btn(trp("SALTAR ▸","SALTA ▸"),"data-finskip","")}</div>`:"";
+  let body="";
+  if(ph===0)body=`<p class="it center">${esc(FPLACE[id])}</p>${save.vip[c]?`<p class="mute center">${trp("Tienes asiento VIP en primera fila.","Hai un posto VIP in prima fila.")}</p>`:""}`;
+  else if(ph===1)body=`<div class="chat"><div class="bub"><b>${thief}:</b> ${esc(FTALK[id][Math.max(0,S.line)])}</div></div>${stage()<2?`<p class="mute small">${trp(thief+" se sienta a tu lado y te cuenta su historia.","")}</p>`:""}`;
+  else if(ph===2)body=`<h2 class="center">${id==="b1"?"BRAVO! BIS!":"EVVIVA!"}</h2><p class="center it">Caso risolto!</p>`;
+  else if(ph===3){const i=r.ids[Math.max(0,S.th)],done=r.ids.slice(0,Math.max(0,S.th));
+    body=`<div class="eyebrow">${trp("Una voz repasa lo que has aprendido","Una voce ripassa quello che hai imparato")} · ${Math.max(0,S.th)+1}/${r.ids.length}</div>
+     <div class="theme"><b>${esc(LEVELS[i].tema)}</b><span class="it">${esc(TEMAUSE[i][0])}.</span>${stage()<2?`<span class="mute small">${esc(TEMAUSE[i][1])}.</span>`:""}<span class="it ex">«${esc(TEMAUSE[i][2])}»</span><span class="mute small">${esc(LEVELS[i].city)}</span></div>
+     <div class="chips">${done.map(j=>`<span>✓ ${esc(LEVELS[j].tema)}</span>`).join("")}</div>`}
+  else if(ph===4){const tot=r.ids.reduce((n,i)=>n+(save.stars[i]||0),0),vip=r.ids.filter(i=>save.vip[i]).length,kw=KEYW[id];
+    body=`<h2>Complimenti, detective!</h2><table><tr><td>${trp("Ciudades","Città")}</td><td>${r.ids.length}</td></tr><tr><td>${trp("Estrellas","Stelle")}</td><td>★ ${tot}/${r.ids.length*3}</td></tr><tr><td>${trp("Viajes en VIP","Viaggi in VIP")}</td><td>${vip}</td></tr><tr><td>${trp("Palabras en el Quaderno","Parole nel Quaderno")}</td><td>${Object.keys(save.vocab).length}</td></tr><tr><td>${trp("Palabra clave","Parola chiave")}</td><td>${kw[0]}</td></tr></table><p class="it mute">${esc(kw[1])}</p>
+     <p class="center it">FINE</p>`}
+  else body=S.call?`<div class="eyebrow">📞 Centrale di polizia</div><p class="it tip">«${esc(callText())}»</p>${spk(callText())}`+
+     (nextCase()===null?btn(trp("¡HASTA PRONTO!","A PRESTO!"),"data-close"):btn(trp("ACEPTO EL NUEVO CASO →","ACCETTO IL NUOVO CASO →"),"data-go="+ROUTES[nextCase()].ids[0])+btn(trp("MÁS TARDE","PIÙ TARDI"),"data-close",""))
+     :`<p class="ring center">Driiin! Driiin!</p><p class="mute center">${trp("Parece que todo ha terminado… pero suena el teléfono.","Sembra tutto finito… ma squilla il telefono.")}</p>`;
+  return `<div class="eyebrow">${esc(cs.title)} · ${trp("Final","Finale")}</div><canvas id="fin" class="pic" width="160" height="100"></canvas>${body}${skip}`;
+}
+function finDraw(x,t,cs,ph){
+  const P2=(a,b,col)=>R(x,a,b,1,1,col);
+  if(ph===5){
+    R(x,0,0,160,100,"#29366f");R(x,0,0,160,4,"#1a1c2c");for(let i=0;i<5;i++)R(x,8+i*32,10,20,26,"#333c57");
+    R(x,0,70,160,30,"#5d3a1a");R(x,0,70,160,2,"#a7663a");
+    const sh=S.call?0:Math.round(Math.sin(t/35)*2);
+    R(x,62+sh,52,36,18,"#b13e53");R(x,58+sh,46-(S.call?6:0),44,8,"#8a2a3e");R(x,74+sh,55,12,10,"#f4f4e4");R(x,79+sh,57,2,6,"#1a1c2c");
+    if(!S.call&&Math.floor(t/300)%2){x.fillStyle="#ffcd75";x.font="8px 'Press Start 2P', monospace";x.textAlign="center";x.fillText("DRIIN!",80,32)}
+    return;
+  }
+  const me={shirt:"#b13e53",hair:"#5d3a1a",hat:"#b13e53"},seat=(sx,sy)=>{R(x,sx+1,sy+9,14,7,"#8a2a3e");R(x,sx+1,sy+9,14,1,"#b13e53")};
+  const t1=t-S.b[0],walkIn=Math.max(0,Math.min(1,t1/4000));
+  if(cs.id==="b1"){
+    R(x,0,0,160,100,"#1a1c2c");R(x,20,8,120,40,"#29366f");
+    x.fillStyle="rgba(255,205,117,0.18)";x.beginPath();x.moveTo(80,0);x.lineTo(62,48);x.lineTo(98,48);x.closePath();x.fill();
+    R(x,14,44,132,6,"#5d3a1a");R(x,14,44,132,1,"#a7663a");
+    R(x,10,0,14,50,"#b13e53");R(x,136,0,14,50,"#b13e53");R(x,10,0,140,6,"#8a2a3e");R(x,10,6,140,1,"#ffcd75");
+    const open=ph>=2&&ph<5;if(ph===4){R(x,24,7,56,37,"#b13e53");R(x,80,7,56,37,"#b13e53")}
+    const rx=72,ry=29;drawChar(x,rx,ry,{shirt:"#f4f4e4",hair:"#a7663a"},"down",0);R(x,rx+2,ry+3,2,8,"#a7663a");R(x,rx+12,ry+3,2,8,"#a7663a");
+    if(ph<2){R(x,rx+11,ry+6,5,4,"#a7663a");const bo=Math.round(Math.sin(t/140)*3);for(let i=0;i<9;i++)P2(rx+7+i,ry+3+Math.round(i*0.6)+bo,"#f4f4e4");
+      for(let i=0;i<4;i++){const y=30-((t/30+i*15)%28),xx=Math.round(92+Math.sin(t/400+i)*5+i*6);if(y>8){R(x,xx,y,2,2,"#ffcd75");R(x,xx+2,y-5,1,6,"#ffcd75")}}}
+    else if(ph<4){R(x,rx-4,ry+6,3,3,"#f4f4e4");R(x,rx+17,ry+6,3,3,"#f4f4e4")}
+    for(let i=0;i<8;i++)if(i!==3&&i!==4){drawChar(x,8+i*19,56,{shirt:"#333c57",hair:"#0d0f1a"},"up",0);seat(8+i*19,56)}
+    drawChar(x,65,56,{shirt:"#7a93a8",hair:"#c5d3dc"},"up",0);seat(65,56);
+    for(let i=0;i<9;i++){const sx=2+i*18;if(i===4)continue;seat(sx,78)}
+    drawChar(x,74,78,me,"up",0);seat(74,78);
+    if(ph>=1){const tx=Math.round(150-walkIn*58),walking=walkIn<1;drawChar(x,tx,78,{shirt:"#333c57",hair:"#1a1c2c"},walking?"left":"up",walking?Math.floor(t/180)%2:0);if(!walking)seat(tx,78)}
+    if(ph>=2&&ph<5&&Math.floor(t/250)%2){x.fillStyle="#ffcd75";x.font="7px 'Press Start 2P', monospace";x.textAlign="center";x.fillText(ph===4?"FINE":"BRAVO!",80,ph===4?28:60)}
+  }else{
+    const night=ph>=2;R(x,0,0,160,60,night?"#1a1c2c":"#ef7d57");if(!night){R(x,0,30,160,30,"#ffcd75");R(x,98,34,18,10,"#f4f4e4")}
+    else[[10,8],[30,20],[52,6],[70,16],[96,9],[112,24],[148,14]].forEach(([sx,sy],i)=>{if((Math.floor(t/400)+i)%3)P2(sx,sy,"#f4f4e4")});
+    R(x,0,58,160,42,"#29366f");for(let i=0;i<8;i++)R(x,((i*23+t/60)%170)-10,64+(i%4)*8,8,1,"#3b5dc9");
+    const fy=Math.round(Math.sin(t/500)),fx=ph===4?Math.round(100+Math.min(60,(t-S.b[3])/80)):100;
+    R(x,fx,46+fy,56,13,"#f4f4e4");R(x,fx,54+fy,56,2,"#3b5dc9");R(x,fx+12,36+fy,30,10,"#f4f4e4");R(x,fx+30,28+fy,6,8,"#b13e53");
+    for(let i=0;i<5;i++)R(x,fx+15+i*6,39+fy,3,3,(Math.floor(t/600)+i)%4?"#ffcd75":"#94b0c2");
+    R(x,0,62,96,8,"#a7663a");R(x,0,62,96,1,"#c9a468");for(let i=0;i<5;i++)R(x,6+i*20,70,3,10,"#5d3a1a");
+    R(x,30,56,34,3,"#5d3a1a");R(x,32,59,2,4,"#5d3a1a");R(x,60,59,2,4,"#5d3a1a");
+    drawChar(x,46,46,me,"left",0);
+    if(ph>=1){const ex=Math.round(-16+walkIn*48),walking=walkIn<1;drawChar(x,ex,46,{shirt:"#38b764",hair:"#1a1c2c",hat:"#b13e53"},walking?"right":"right",walking?Math.floor(t/180)%2:0);R(x,ex+3,48,1,8,"#1a1c2c");R(x,ex+12,48,1,8,"#1a1c2c");R(x,ex+4,54,8,1,"#38b764");
+      if(S.line>=3||ph>=2){R(x,52,53,6,4,"#e8c98a");R(x,53,54,4,1,"#a7663a")}else R(x,ex+11,52,6,4,"#e8c98a")}
+    S.fw.forEach(f=>{const r=f.t/40;for(let a=0;a<8;a++){const xx=Math.round(f.x+Math.cos(a*Math.PI/4)*r),yy=Math.round(f.y+Math.sin(a*Math.PI/4)*r);if(f.t<900)R(x,xx,yy,2,2,f.c)}});
+  }
+  if(ph>=2)S.conf.forEach(p=>R(x,Math.round(p.x),Math.round(p.y),2,3,p.c));
 }
 
 buildCity();welcome();requestAnimationFrame(frame);
