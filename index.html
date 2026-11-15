@@ -9,11 +9,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Il Viaggio">
-<meta name="description" content="Juego arcade para practicar italiano de A2 a B1 viajando por Italia.">
+<meta name="description" content="Juego arcade para practicar italiano de A1 a B1 viajando por Italia.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
@@ -27,7 +26,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--panel);height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 body{font-family:var(--tx);font-size:22px;line-height:1.15}
-#app{position:relative;max-width:480px;height:100%;margin:0 auto;padding:10px 16px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+#app{position:relative;max-width:480px;height:100%;margin:0 auto;padding:8px 8px 10px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
 #cv{flex:none;align-self:center;width:100%;height:auto}
 button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -39,10 +38,10 @@ canvas{width:100%;height:auto;display:block;image-rendering:pixelated;image-rend
 .menu{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .mbtn{font-family:var(--px);font-size:7px;padding:5px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--panel);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 #000;line-height:1}
 .mbtn .i{font-size:16px;line-height:1}.mbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #000}
-.abtn{width:84px;height:84px;border-radius:50%;background:var(--accent);color:var(--ink);font-family:var(--px);font-size:26px;border:4px solid var(--ink);box-shadow:0 5px 0 #000;flex:none}
+.abtn{width:76px;height:76px;border-radius:50%;background:var(--accent);color:var(--ink);font-family:var(--px);font-size:26px;border:4px solid var(--ink);box-shadow:0 5px 0 #000;flex:none}
 .abtn:active{transform:translateY(3px);box-shadow:0 2px 0 #000}
 .padhint{flex:1;text-align:center;font-size:17px;color:var(--mute);margin:0}
-.dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);flex:none}
+.dpad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);flex:none}
 .dpad button{background:#333c57;border:3px solid #566c86;color:var(--panel);font-family:var(--px);font-size:14px}
 .dpad button:active,.dpad button.on{background:var(--blue)}
 .side{display:flex;flex-direction:column;gap:7px;align-items:stretch;flex:1;max-width:190px}
@@ -145,6 +144,7 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .big{font-size:36px;text-align:center;min-height:44px;line-height:1.1}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .duo .opt{text-align:center;font-family:var(--px);font-size:10px;padding:18px 6px;line-height:1.4}
+.chip{display:inline-block;font-family:var(--px);font-size:8px;padding:3px 6px;background:var(--accent);color:var(--panel);vertical-align:middle}
 </style>
 </head>
 <body>
@@ -157,7 +157,7 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
     <button class="mbtn" id="bHelp"><span class="i">🐦</span>AIUTO</button>
   </nav>
   <div class="goal" id="goal"></div>
-  <canvas id="cv" width="240" height="272" aria-label="Mapa de la ciudad. Toca un lugar para caminar hasta allí."></canvas>
+  <canvas id="cv" width="208" height="272" aria-label="Mapa de la ciudad. Toca un lugar para caminar hasta allí."></canvas>
   <div class="pad">
     <div class="dpad" id="dpad">
       <span></span><button data-d="up" aria-label="Arriba">▲</button><span></span>
@@ -594,7 +594,7 @@ LEVELS.push(...EASY);
 const ROUTES=[{n:"Ruta fácil · A2",ids:[8,9,10,11,12,13]},{n:"Ruta B1",ids:[0,1,2,3,4,5,6,7]}];
 const routeOf=c=>ROUTES.find(r=>r.ids.includes(c));
 const nextOf=c=>{const r=routeOf(c).ids;return r[r.indexOf(c)+1]};
-const isOpen=i=>i===0||i===8||!!save.open[i];
+const isOpen=i=>i===0||i===8||i===14||!!save.open[i];
 const TQ=[
 [["Che cosa ospita oggi la Mole?",["Il Museo del Cinema","Il Parlamento","Una fabbrica di cioccolato"],"land"],["Quando Torino è stata capitale d'Italia?",["Dal 1861 al 1865","Dal 1900 al 1920","Mai"],"book"],["Con che cosa si fa il gianduiotto?",["Con le nocciole","Con le mandorle","Con il caffè"],"choc"]],
 [["Come si chiama la statua dorata sul Duomo?",["La Madonnina","La Gioconda","La Venere"],"land"],["Che cosa si ascolta al Teatro alla Scala?",["L'opera","Il jazz","La radio"],"mask"],["Perché il risotto alla milanese è giallo?",["Per lo zafferano","Per il limone","Per il formaggio"],"plate"]],
@@ -708,14 +708,14 @@ function drawFlag(c,x,y,seen){R(c,x+4,y+14,8,2,"rgba(0,0,0,.25)");R(c,x+5,y+1,2,
 const ITEMS={chiave:["la chiave","la llave"],valigia:["la valigia","la maleta"],libro:["il libro","el libro"],ombrello:["l'ombrello","el paraguas"],mela:["la mela","la manzana"],lettera:["la lettera","la carta"],cappello:["il cappello","el sombrero"],bottiglia:["la bottiglia","la botella"]};
 
 /* ---------- mundo ---------- */
-const T=16,VW=15,VH=17,MW=22,MH=18,SOLID="#~rRhHdDLo";
+const T=16,VW=13,VH=17,MW=22,MH=18,SOLID="#~rRhHdDLo";
 const GROUND={grass:["#38b764","#257179","#a7f070","#e8c98a","#c9a468"],stone:["#94b0c2","#7a93a8","#b4c6d4","#c5d3dc","#a9bccb"],sand:["#e8c98a","#c9a468","#f4e0b0","#f4f4e4","#c5c5b0"]};
 const SHIRTS=["#3b5dc9","#38b764","#ef7d57","#b13e53","#73eff7","#a7f070"];
 const HAIRS=["#5d275d","#333c57","#a7663a","#1a1c2c","#ffcd75","#94b0c2"];
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 
 const K="il-viaggio-arcade-v1";
-let save={city:8,max:0,done:{},lesson:{},stars:{},miss:{},hearts:3,seen:{},cards:{},best:{},carry:null,tour:{},open:{},vip:{},clue:{},found:{},intro:{}};
+let save={city:14,max:0,done:{},lesson:{},stars:{},miss:{},hearts:3,seen:{},cards:{},best:{},carry:null,tour:{},open:{},vip:{},clue:{},found:{},intro:{}};
 try{const s=JSON.parse(localStorage.getItem(K));if(s&&typeof s.city==="number")save=Object.assign(save,s)}catch(e){}
 for(let i=1;i<=Math.min(save.max||0,7);i++)save.open[i]=1;
 const persist=()=>{try{localStorage.setItem(K,JSON.stringify(save))}catch(e){}};
@@ -1158,7 +1158,7 @@ B1:[
 const fill=(s,o)=>s.replace(/\{to\}/g,o.to).replace(/\{from\}/g,o.from);
 function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="it-IT";u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 function startTrip(from,to){
-  const lv=routeOf(to).ids.includes(8)?"A2":"B1",o={to:LEVELS[to].city,from:LEVELS[from].city};
+  const lv=lvOf(to)<=1?"A2":"B1",o={to:LEVELS[to].city,from:LEVELS[from].city};
   const a=ANN[lv][Math.floor(Math.random()*ANN[lv].length)],d=NB[lv][Math.floor(Math.random()*NB[lv].length)];
   show("trip",{from,to,p:0,phase:"run",score:0,annDone:false,nbDone:false,res:null,pick:-1,
     ann:{it:fill(a[0],o),o:a[1].map(x=>fill(x,o)),n:a[2],opts:shuffle([0,1,2])},
@@ -1456,7 +1456,7 @@ function briefHtml(){
   const c=save.city,L=LEVELS[c],rt=routeOf(c),cs=caseOf(c),k=Math.min(7,save.clue[c]||0),nt=nextTarget();
   const it=[[save.lesson[c],tr("Clase con la Prof (escuela)","Lezione con la Prof (scuola)")],[save.read[c],tr("Leer el cartel de la plaza","Leggere il cartello in piazza")],[k>=7,tr("Pistas","Piste")+` ${k}/7`],
     [save.found[c],puzType(c)==="sopa"?tr("Sopa de letras: adónde fue","Crucipuzzle: dove è andato"):tr("Crucigrama: adónde fue","Cruciverba: dove è andato")],[tourOf(c).done,"Free walking tour"],[false,isLast(c)?tr(FP[caseOf(c).id].es,FP[caseOf(c).id].it):tr("Estación: preguntas y tren","Stazione: domande e treno")]];
-  return `<div class="eyebrow">${esc(rt.n)} · ${rt.ids.indexOf(c)+1}/${rt.ids.length} · ${esc(cs.title)}</div><h2>${trp("Estás en","Sei a")} ${esc(L.city)}</h2><p>${trp("Tema de italiano","Tema di italiano")}: <b>${esc(L.tema)}</b></p>
+  return `<div class="eyebrow">${esc(rt.n)} · ${rt.ids.indexOf(c)+1}/${rt.ids.length} · ${esc(cs.title)}</div><h2>${trp("Estás en","Sei a")} ${esc(L.city)}</h2><p>${trp("Tema de italiano","Tema di italiano")}: <b>${esc(L.tema)}</b> <span class="chip">${focusTxt(S.c??save.city)}</span></p>
   <ul class="check">${it.map(([ok,t])=>`<li class="${ok?"ok":""}">${ok?"✓":"□"} ${t}</li>`).join("")}</ul>
   <div class="tip"><b>${trp("Ahora","Adesso")}:</b> ${nt.txt}</div><div class="row">${btn("AIUTO 🐦","data-help","")}${btn(trp("NIVELES","LIVELLI"),"data-levels","")}${btn(trp("¡A JUGAR!","ANDIAMO!"),"data-ns","a")}</div>`;
 }
@@ -1860,7 +1860,7 @@ function qHtml(){
 /* ---------- diálogos que no se repiten ---------- */
 function startDial(){
   const c=save.city,L=LEVELS[c],n=save.usedD[c]||0;save.usedD[c]=n+1;let D=L.dial;
-  if(n>0){const lv=routeOf(c).ids.includes(8)?"A2":"B1",pool=NB[lv],u=save.usedNB[c]||(save.usedNB[c]=[]);let k=pool.findIndex((_,i)=>!u.includes(i));
+  if(n>0){const lv=lvOf(c)<=1?"A2":"B1",pool=NB[lv],u=save.usedNB[c]||(save.usedNB[c]=[]);let k=pool.findIndex((_,i)=>!u.includes(i));
     if(k<0){save.usedNB[c]=[];k=Math.floor(Math.random()*pool.length)}save.usedNB[c].push(k);
     const o={to:LEVELS[pick(routeOf(c).ids.filter(i=>i!==c))].city,from:L.city};
     D={who:L.dial.who,end:pick(["Grazie, è stato un piacere! Ecco la tua pista.","Bravo! Parli già benissimo. Ecco la pista!"]),turns:pool[k].map(t=>[fill(t[0],o),t[1].map(x=>fill(x,o)),t[2]])}}
@@ -2510,7 +2510,7 @@ function finDraw(x,t,cs,ph){
   }
   const me={shirt:"#b13e53",hair:"#5d3a1a",hat:"#b13e53"},seat=(sx,sy)=>{R(x,sx+1,sy+9,14,7,"#8a2a3e");R(x,sx+1,sy+9,14,1,"#b13e53")};
   const t1=t-(S.p1||0),walkIn=ph>=1?Math.max(0,Math.min(1,t1/4000)):0;
-  if(cs.id==="b1"){
+  if(cs.id==="l1"){finL1(x,t,ph,me,walkIn)}else if(cs.id==="b1"){
     R(x,0,0,160,100,"#1a1c2c");R(x,20,8,120,40,"#29366f");
     x.fillStyle="rgba(255,205,117,0.18)";x.beginPath();x.moveTo(80,0);x.lineTo(62,48);x.lineTo(98,48);x.closePath();x.fill();
     R(x,14,44,132,6,"#5d3a1a");R(x,14,44,132,1,"#a7663a");
@@ -2743,11 +2743,193 @@ function fit(){
     const app=$("app"),cs=getComputedStyle(app),pv=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),ph=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight);
     const other=[".hud",".menu",".goal",".pad"].reduce((n,s)=>n+document.querySelector(s).offsetHeight,0),gap=parseFloat(cs.rowGap)||8;
     const h=app.clientHeight-pv-other-gap*5,w0=app.clientWidth-ph;
-    const w=Math.max(160,Math.floor(Math.min(w0,h*240/272)));cv.style.width=w+"px";cv.style.height=Math.floor(w*272/240)+"px";
+    const w=Math.max(160,Math.floor(Math.min(w0,h*VW/VH)));cv.style.width=w+"px";cv.style.height=Math.floor(w*VH/VW)+"px";
     const hint=$("padhint");if(hint)hint.textContent=trp("Toca el mapa para caminar","Tocca la mappa per camminare");
   }catch(e){}
 }
 addEventListener("resize",fit);addEventListener("orientationchange",()=>setTimeout(fit,200));setTimeout(fit,0);try{document.fonts.ready.then(fit)}catch(e){}
+
+/* ================= v14: Nivel 1 (A1) — Como, Bergamo, Verona, Padova ================= */
+const L1=[
+{city:"Como",tema:"Saluti e presentazioni",roof:"#b13e53",g:"grass",tree:"tree",
+ lesson:{intro:"Para saludar en italiano hay formas informales (con amigos) y formales (con personas que no conoces).",
+  tabs:[{h:"Saludos",r:[["Ciao","hola / adiós (informal)"],["Buongiorno","buenos días"],["Buonasera","buenas tardes / buenas noches"],["Arrivederci","adiós (formal)"],["A presto","hasta pronto"]]},
+   {h:"Presentarse",r:[["Come ti chiami?","¿Cómo te llamas?"],["Come si chiama?","¿Cómo se llama (usted)?"],["Mi chiamo…","Me llamo…"],["Di dove sei?","¿De dónde eres?"],["Sono di…","Soy de…"],["Piacere!","¡Encantado!"]]},
+   {h:"Cortesía",r:[["Per favore","por favor"],["Grazie / Prego","gracias / de nada"],["Scusa / Scusi","perdona / perdone"],["Come stai? — Bene!","¿Cómo estás? — ¡Bien!"]]}],
+  tip:"Con un adulto que no conoces usa Lei: «Come si chiama?», «Scusi»."},
+ pairs:[["Ciao","Hola"],["Grazie","Gracias"],["Per favore","Por favor"],["Arrivederci","Adiós"],["Piacere","Encantado"],["Scusi","Perdone"]],
+ text:"Ciao! Mi chiamo Pina e sono di Como. Ho una piccola {trattoria|restaurante familiar} vicino al {lago|lago}. Ogni mattina dico «Buongiorno!» ai clienti. Oggi il mio {quaderno|cuaderno} delle ricette non c'è più! Per favore, aiutami!",
+ q:[{t:"mc",q:"Di dov'è Pina?",o:["Di Como","Di Milano","Di Roma"],e:"«Mi chiamo Pina e sono di Como»."},
+  {t:"gap",s:"___! Come stai?",o:["Ciao","Arrivederci","Prego"],e:"Para saludar a un amigo: ciao."},
+  {t:"gap",s:"Mi ___ Marco.",o:["chiamo","chiami","chiama"],e:"Io → mi chiamo."},
+  {t:"gap",s:"Grazie! — ___!",o:["Prego","Scusa","Ciao"],e:"A «grazie» se responde «prego»."},
+  {t:"order",es:"Buenos días, ¿cómo se llama usted?",a:["buongiorno come si chiama"],e:"Formal (Lei): come si chiama?"}],
+ sp:{L:[8,1,4,4],w:[[16,1,5,11]],h:[[1,1,4],[1,7,4],[9,7,4],[3,12,7,1],[12,12,3]],p:[[1,5,15,1],[6,5,1,11],[6,10,9,1],[14,5,1,11],[1,16,20,1]],t:[[13,1],[15,15],[20,13],[1,11],[11,15]],f:[[12,3],[5,3],[18,13]]},
+ at:{start:[7,5],prof:[4,4],arc:[13,4],board:[9,5],capo:[8,15],talk:[12,6],quest:[15,13],chest:[20,15],q:[[4,6],[10,11],[2,13],[17,14],[7,3]],items:[[1,15],[19,16],[15,2]]},
+ dial:{who:"Nonna Pina",end:"Grazie mille! Ecco la tua prima pista.",turns:[
+  ["Buongiorno! Come ti chiami?",["Mi chiamo Alex, piacere!","Ti chiami Alex, piacere!","Si chiamo Alex, piacere!"],"Io → mi chiamo."],
+  ["Di dove sei?",["Sono di Barcellona.","Ho di Barcellona.","Sono a Barcellona di."],"Origen: sono di + ciudad."],
+  ["Mi aiuti a trovare il mio quaderno?",["Certo, con piacere!","Certo, prego piacere!","Grazie, sono piacere!"],"Con piacere = con mucho gusto."]]},
+ quest:{ask:"Vicino al lago fa freddo! Cerco una cosa da mettere in testa.",want:"cappello",items:["cappello","mela","libro"]},
+ sf:{a:"INFORMALE",b:"FORMALE",q:"¿Con un amigo o con alguien que no conoces?",items:[["Ciao!",0],["Buongiorno!",1],["Come stai?",0],["Come sta?",1],["Scusa!",0],["Scusi!",1],["Come ti chiami?",0],["Come si chiama?",1],["A presto!",0],["Arrivederci!",1]]},
+ chest:{w:"PIACERE",clue:"Lo dices cuando conoces a alguien"},card:"Il lago di Como ha la forma di una Y rovesciata ed è uno dei laghi più profondi d'Europa.",
+ tour:{at:{guide:[8,6],stops:[[13,2],[15,9],[2,16]]},facts:[
+  ["Il Duomo di Como è di marmo bianco. I lavori sono durati più di trecento anni.","La catedral de Como es de mármol blanco. Las obras duraron más de trescientos años."],
+  ["Alessandro Volta, l'inventore della pila elettrica, è nato a Como nel 1745.","Alessandro Volta, inventor de la pila eléctrica, nació en Como en 1745."],
+  ["Sul lago di Como ci sono battelli che portano a Bellagio e ad altri paesi.","En el lago de Como hay barcos que llevan a Bellagio y a otros pueblos."]],
+  quiz:["",[]],qs:[["Di che colore è il marmo del Duomo?",["Bianco","Rosso","Nero"],"land"],["Chi è nato a Como?",["Alessandro Volta","Leonardo da Vinci","Galileo Galilei"],"book"],["Come si va a Bellagio?",["In battello","In aereo","In metropolitana"],"sea"]]}},
+{city:"Bergamo",tema:"Essere e avere",roof:"#a7663a",g:"grass",tree:"cypress",
+ lesson:{intro:"Essere (ser/estar) y avere (tener) son los dos verbos más importantes del italiano.",
+  tabs:[{h:"Essere",r:[["io","sono"],["tu","sei"],["lui / lei / Lei","è"],["noi","siamo"],["voi","siete"],["loro","sono"]]},
+   {h:"Avere",r:[["io","ho"],["tu","hai"],["lui / lei / Lei","ha"],["noi","abbiamo"],["voi","avete"],["loro","hanno"]]},
+   {h:"Con avere (no con essere)",r:[["la edad","ho vent'anni"],["hambre / sed","ho fame, ho sete"],["frío / calor","ho freddo, ho caldo"],["sueño / miedo","ho sonno, ho paura"]]}],
+  tip:"El sujeto se suele omitir: «Sono stanco» = (yo) estoy cansado. La h de ho, hai, ha, hanno no se pronuncia."},
+ pairs:[["io · essere","sono"],["tu · essere","sei"],["noi · essere","siamo"],["io · avere","ho"],["tu · avere","hai"],["loro · avere","hanno"]],
+ text:"Bergamo ha due parti: Città Alta e Città Bassa. Città Alta è antica e ha le {mura|murallas} veneziane. Io sono in Piazza Vecchia: è bellissima! Ho una {cartolina|postal} per Nonna Pina. Il ladro è qui? Non lo so, ma ho un'idea.",
+ q:[{t:"mc",q:"Quante parti ha Bergamo?",o:["Due","Tre","Una"],e:"«Bergamo ha due parti: Città Alta e Città Bassa»."},
+  {t:"gap",s:"Io ___ stanco.",o:["sono","ho","è"],e:"Estar cansado → essere: sono stanco."},
+  {t:"gap",s:"Tu ___ un cane?",o:["hai","sei","ha"],e:"Tener → avere: tu hai."},
+  {t:"gap",s:"Noi ___ in piazza.",o:["siamo","abbiamo","sono"],e:"Estar en un lugar → essere: noi siamo."},
+  {t:"spot",s:"Loro ha una casa grande.",w:1,fix:"hanno",e:"Loro → hanno."}],
+ sp:{L:[9,1,3,4],h:[[1,2,4],[15,2,4],[2,8,3],[13,8,4],[5,13,7,1],[15,13,3]],p:[[1,6,20,1],[10,5,1,7],[1,12,20,1],[8,16,10,1]],t:[[6,2],[13,3],[20,9],[1,15],[19,16]],f:[[7,9],[11,9]]},
+ at:{start:[10,7],prof:[5,5],arc:[16,5],board:[12,6],capo:[10,16],talk:[7,7],quest:[18,7],chest:[20,16],q:[[3,7],[12,4],[18,11],[6,11],[13,14]],items:[[1,10],[20,3],[14,11]]},
+ dial:{who:"Vigile",end:"Buona visita! Ecco una pista.",turns:[
+  ["Buongiorno! Lei è un turista?",["Sì, sono un turista.","Sì, ho un turista.","Sì, è un turista."],"Io → sono."],
+  ["Ha una mappa?",["Sì, ho una mappa.","Sì, sono una mappa.","Sì, hai una mappa."],"Io → ho."],
+  ["Bene! Città Alta è lassù. Lei ha fame?",["Sì, ho molta fame!","Sì, sono molta fame!","Sì, è molta fame!"],"El hambre va con avere: ho fame."]]},
+ quest:{ask:"Ho sete! Cerco una cosa di vetro con l'acqua dentro.",want:"bottiglia",items:["bottiglia","chiave","ombrello"]},
+ sf:{a:"ESSERE",b:"AVERE",q:"¿Essere o avere?",items:[["io ___ stanco",0],["io ___ fame",1],["tu ___ italiano?",0],["tu ___ un gatto?",1],["lei ___ trent'anni",1],["noi ___ amici",0],["voi ___ freddo?",1],["loro ___ a casa",0],["io ___ sete",1],["lui ___ alto",0]]},
+ chest:{w:"SIAMO",clue:"Noi + essere"},card:"Città Alta è circondata da mura veneziane lunghe più di cinque chilometri.",
+ tour:{at:{guide:[9,7],stops:[[8,4],[19,10],[3,16]]},facts:[
+  ["Le mura di Città Alta sono patrimonio UNESCO dal 2017.","Las murallas de la Ciudad Alta son patrimonio de la UNESCO desde 2017."],
+  ["Una funicolare collega Città Bassa e Città Alta.","Un funicular une la Ciudad Baja y la Ciudad Alta."],
+  ["La polenta è il piatto tipico di Bergamo.","La polenta es el plato típico de Bérgamo."]],
+  quiz:["",[]],qs:[["Da quando le mura sono patrimonio UNESCO?",["Dal 2017","Dal 1917","Dal 2000"],"land"],["Che cosa collega Città Bassa e Città Alta?",["Una funicolare","Un ponte","Una nave"],"mount"],["Qual è il piatto tipico di Bergamo?",["La polenta","La pizza","Il pesto"],"plate"]]}},
+{city:"Verona",tema:"Numeri, età e prezzi",roof:"#ef7d57",g:"stone",tree:"cypress",
+ lesson:{intro:"Con los números dices tu edad, preguntas precios y das tu teléfono.",
+  tabs:[{h:"0 – 10",r:[["0–5","zero, uno, due, tre, quattro, cinque"],["6–10","sei, sette, otto, nove, dieci"]]},
+   {h:"11 – 20",r:[["11–15","undici, dodici, tredici, quattordici, quindici"],["16–20","sedici, diciassette, diciotto, diciannove, venti"]]},
+   {h:"Decenas",r:[["30–60","trenta, quaranta, cinquanta, sessanta"],["70–100","settanta, ottanta, novanta, cento"]]},
+   {h:"Frases",r:[["Quanti anni hai?","Ho trent'anni."],["Quanto costa?","Costa cinque euro."],["Quanto costano?","Costano dieci euro."]]}],
+  tip:"Ventuno, ventotto: la vocal final de venti desaparece delante de uno y otto."},
+ pairs:[["3","tre"],["7","sette"],["11","undici"],["16","sedici"],["40","quaranta"],["100","cento"]],
+ text:"Verona è la città di Romeo e Giulietta. L'Arena ha quasi duemila anni! Un biglietto per l'{opera|ópera} costa trenta euro. Al mercato un gelato costa tre euro e un {caffè|café} un euro e venti. Il ladro ha trentacinque anni? Forse sì!",
+ q:[{t:"mc",q:"Quanto costa un gelato al mercato?",o:["Tre euro","Trenta euro","Un euro"],e:"«Un gelato costa tre euro»."},
+  {t:"gap",s:"Ho ___ anni. (25)",o:["venticinque","ventecinque","venticinco"],e:"25 = venticinque."},
+  {t:"gap",s:"Quanto ___ il caffè?",o:["costa","costano","è"],e:"Un caffè (singular) → costa."},
+  {t:"gap",s:"Il biglietto costa ___ euro. (30)",o:["trenta","tredici","tre"],e:"30 = trenta; 13 = tredici."},
+  {t:"order",es:"Tengo dieciocho años.",a:["ho diciotto anni"],e:"La edad va con avere: ho diciotto anni."}],
+ sp:{L:[7,1,8,4],w:[[1,9,20,2]],b:[[5,9,1,2],[15,9,1,2]],h:[[1,2,4],[16,2,4],[8,5,4],[2,12,3],[13,12,3],[6,12,6,1]],p:[[1,8,20,1],[1,11,20,1],[9,15,9,1]],t:[[6,2],[15,5],[20,14],[1,15]],f:[[12,7],[3,6]]},
+ at:{start:[10,8],prof:[4,6],arc:[17,6],board:[13,8],capo:[12,15],talk:[7,11],quest:[18,12],chest:[20,16],q:[[3,7],[14,7],[1,13],[17,15],[7,16]],items:[[19,1],[1,16],[12,13]]},
+ dial:{who:"Gelataio",end:"Grazie, buona giornata! Ecco una pista.",turns:[
+  ["Ciao! Che gusto vuoi?",["Fragola e limone, per favore.","Fragola e limone, prego.","Fragola e limone, grazie a te."],"Para pedir: per favore."],
+  ["Cono piccolo o grande?",["Piccolo. Quanto costa?","Piccolo. Quanto costano?","Piccolo. Quanti anni?"],"Un cono (singular) → quanto costa?"],
+  ["Due euro e cinquanta.",["Ecco a te, grazie!","Ecco a te, prego!","Ecco a te, anni!"],"Al pagar: ecco (aquí tienes)."]]},
+ quest:{ask:"Ho perso la cosa per aprire la porta di casa!",want:"chiave",items:["chiave","cappello","lettera"]},
+ sf:{a:"MENO DI 50",b:"PIÙ DI 50",q:"¿Menos o más de 50?",items:[["quarantotto",0],["sessanta",1],["trentatré",0],["novantanove",1],["diciassette",0],["settantuno",1],["quarantanove",0],["cinquantuno",1],["dodici",0],["ottanta",1]]},
+ chest:{w:"QUINDICI",clue:"Dieci + cinque"},card:"Ogni estate all'Arena di Verona si canta l'opera davanti a migliaia di persone.",
+ tour:{at:{guide:[6,8],stops:[[6,5],[17,8],[18,16]]},facts:[
+  ["L'Arena di Verona è un anfiteatro romano del primo secolo.","La Arena de Verona es un anfiteatro romano del siglo I."],
+  ["Nel cortile della Casa di Giulietta c'è un balcone famoso.","En el patio de la Casa de Julieta hay un balcón famoso."],
+  ["Il fiume Adige attraversa Verona.","El río Adigio atraviesa Verona."]],
+  quiz:["",[]],qs:[["Che cos'è l'Arena di Verona?",["Un anfiteatro romano","Un castello","Un museo moderno"],"land"],["Che cosa c'è nella Casa di Giulietta?",["Un balcone famoso","Una fontana","Un teatro"],"book"],["Quale fiume attraversa Verona?",["L'Adige","Il Po","L'Arno"],"sea"]]}},
+{city:"Padova",tema:"Al bar",roof:"#c0392b",g:"stone",tree:"tree",
+ lesson:{intro:"En el bar italiano se pide en la barra; a veces se paga antes en la caja.",
+  tabs:[{h:"Pedir",r:[["Vorrei un caffè","quisiera un café"],["Un cappuccino, per favore","un capuchino, por favor"],["Per me un tè","para mí un té"]]},
+   {h:"Preguntar y pagar",r:[["Quanto costa?","¿cuánto cuesta?"],["Posso pagare con la carta?","¿puedo pagar con tarjeta?"],["Il conto, per favore","la cuenta, por favor"],["Lo scontrino","el tique"]]},
+   {h:"¿Barra o mesa?",r:[["al banco","de pie, en la barra (más barato)"],["al tavolo","sentado, con servicio"]]}],
+  tip:"Vorrei (quisiera) es la forma más educada de pedir."},
+ pairs:[["Vorrei","Quisiera"],["Il conto","La cuenta"],["Al banco","En la barra"],["Lo scontrino","El tique"],["La cassa","La caja"],["Lo zucchero","El azúcar"]],
+ text:"Il Caffè Pedrocchi è un caffè storico di Padova. Qui gli studenti bevono un {caffè|café} al banco. Il cameriere dice: «Prego, desidera?». Io rispondo: «Vorrei un cappuccino, per favore». Stasera qui c'è una {gara|competición} di cucina. Il ladro è qui?",
+ q:[{t:"mc",q:"Dove bevono il caffè gli studenti?",o:["Al banco","Al tavolo","A casa"],e:"«Gli studenti bevono un caffè al banco»."},
+  {t:"gap",s:"___ un caffè, per favore.",o:["Vorrei","Voglio io","Ho"],e:"Para pedir con educación: vorrei."},
+  {t:"gap",s:"Il ___, per favore.",o:["conto","banco","cassa"],e:"La cuenta = il conto."},
+  {t:"gap",s:"Posso pagare con la ___?",o:["carta","conto","cassa"],e:"Pagar con tarjeta = con la carta."},
+  {t:"order",es:"Quisiera un té, por favor.",a:["vorrei un tè per favore"],e:"Vorrei + lo que pides + per favore."}],
+ sp:{L:[14,1,6,4],w:[[6,7,8,1],[6,12,8,1],[6,8,1,4],[13,8,1,4]],b:[[9,7,1,1],[9,12,1,1],[6,10,1,1],[13,10,1,1]],h:[[1,1,4],[8,1,4],[1,13,4],[15,7,4],[7,13,6,1],[16,13,3]],p:[[1,5,20,1],[5,6,1,10],[14,6,1,10],[5,16,10,1]],t:[[13,2],[20,10],[1,10],[20,16]],f:[[8,9],[11,9],[8,10],[11,10]]},
+ at:{start:[9,5],prof:[5,4],arc:[2,8],board:[12,5],capo:[12,16],talk:[9,9],quest:[19,12],chest:[20,1],q:[[7,4],[16,11],[3,11],[11,11],[17,6]],items:[[1,16],[20,8],[12,9]]},
+ dial:{who:"Barista",end:"Certo! Ecco lo scontrino… e una pista!",turns:[
+  ["Buonasera! Al banco o al tavolo?",["Al banco, grazie.","Al banco, prego.","Al banco, scusi tavolo."],"Para responder con educación: grazie."],
+  ["Che cosa prende?",["Vorrei un cappuccino e un cornetto.","Voglio io cappuccino cornetto.","Ho un cappuccino e un cornetto."],"Vorrei = quisiera."],
+  ["Sono tre euro.",["Posso pagare con la carta?","Posso pagare con il conto?","Posso pagare la cassa?"],"Con tarjeta = con la carta."]]},
+ quest:{ask:"Il cuoco ha perso il libro con il menù di stasera!",want:"libro",items:["libro","mela","bottiglia"]},
+ sf:{a:"BAR",b:"RISTORANTE",q:"¿Dónde lo pides normalmente?",items:[["un caffè",0],["una pizza",1],["un cornetto",0],["la lasagna",1],["un cappuccino",0],["il risotto",1],["uno spritz",0],["la bistecca",1],["un succo",0],["il tiramisù",1]]},
+ chest:{w:"CORNETTO",clue:"El dulce del desayuno italiano"},card:"Il Caffè Pedrocchi era chiamato «il caffè senza porte», perché un tempo era aperto giorno e notte.",
+ tour:{at:{guide:[6,6],stops:[[13,4],[8,11],[19,16]]},facts:[
+  ["L'Università di Padova è del 1222. Qui ha insegnato Galileo Galilei.","La Universidad de Padua es de 1222. Aquí enseñó Galileo Galilei."],
+  ["Prato della Valle è una delle piazze più grandi d'Europa.","Prato della Valle es una de las plazas más grandes de Europa."],
+  ["La Basilica di Sant'Antonio ha otto cupole.","La basílica de San Antonio tiene ocho cúpulas."]],
+  quiz:["",[]],qs:[["Chi ha insegnato a Padova?",["Galileo Galilei","Dante Alighieri","Leonardo da Vinci"],"book"],["Com'è Prato della Valle?",["Una piazza enorme","Un piccolo bar","Un fiume"],"fount"],["Quante cupole ha la Basilica di Sant'Antonio?",["Otto","Due","Venti"],"land"]]}}
+];
+LEVELS.push(...L1);
+CITYLL.push([9.08,45.81],[9.67,45.70],[10.99,45.44],[11.88,45.41]);
+LAND.push(
+ (c,X,Y)=>{R(c,X+22,Y+4,20,10,"#94b0c2");R(c,X+27,Y,10,5,"#94b0c2");R(c,X+30,Y-2,4,3,"#ffcd75");pyr(c,X+6,Y+26,52,14,4,"#f4f4e4");R(c,X+6,Y+26,52,38,"#f4f4e4");R(c,X+28,Y+28,8,8,"#3b5dc9");R(c,X+30,Y+30,4,4,"#73eff7");R(c,X+28,Y+48,8,16,"#5d3a1a");R(c,X+14,Y+34,4,9,"#566c86");R(c,X+46,Y+34,4,9,"#566c86");R(c,X+6,Y+62,52,2,"#94b0c2")},
+ (c,X,Y)=>{R(c,X,Y+50,48,14,"#a7663a");for(let i=0;i<6;i++)R(c,X+i*8,Y+46,5,4,"#a7663a");R(c,X+14,Y+8,20,44,"#c9a468");R(c,X+12,Y+4,24,6,"#a7663a");for(let i=0;i<3;i++)R(c,X+13+i*8,Y,5,4,"#a7663a");R(c,X+19,Y+14,10,10,"#f4f4e4");R(c,X+23,Y+16,2,5,"#1a1c2c");R(c,X+23,Y+20,4,1,"#1a1c2c");R(c,X+21,Y+32,6,9,"#5d3a1a")},
+ (c,X,Y)=>{R(c,X+4,Y+12,120,4,"#c9a468");R(c,X+4,Y+16,120,48,"#d9a441");for(let r=0;r<3;r++)for(let i=0;i<14;i++)R(c,X+8+i*8,Y+20+r*14,4,9,"#8a5a2a");R(c,X+4,Y+62,120,2,"#a7663a")},
+ (c,X,Y)=>{R(c,X+8,Y+30,80,34,"#c9a468");for(let i=0;i<4;i++){R(c,X+14+i*20,Y+20,14,10,"#7a93a8");R(c,X+17+i*20,Y+16,8,4,"#7a93a8");R(c,X+20+i*20,Y+13,2,3,"#ffcd75")}R(c,X+2,Y+8,6,56,"#c9a468");R(c,X+88,Y+8,6,56,"#c9a468");R(c,X+3,Y+4,4,4,"#7a93a8");R(c,X+89,Y+4,4,4,"#7a93a8");R(c,X+42,Y+46,12,18,"#5d3a1a");R(c,X+8,Y+62,80,2,"#a7663a")}
+);
+L1.forEach(L=>{const i=LEVELS.indexOf(L);(XQ[i]=XQ[i]||[])});
+Object.assign(XQ,{
+ 14:[{s:"Scusi, come si ___?",o:["chiama","chiamo","chiami"],e:"Lei → si chiama."},{s:"Sono ___ Barcellona.",o:["di","in","a"],e:"Origen: sono di + ciudad."},{s:"Come ___? — Bene, grazie!",o:["stai","sei","hai"],e:"Come stai? = ¿cómo estás?"},{s:"___, a domani!",o:["Ciao","Piacere","Prego"],e:"Para despedirte de un amigo: ciao."}],
+ 15:[{s:"Lei ___ di Bergamo.",o:["è","ha","sono"],e:"Lei → è."},{s:"Voi ___ fame?",o:["avete","siete","hanno"],e:"El hambre va con avere: voi avete."},{s:"Io ___ vent'anni.",o:["ho","sono","ha"],e:"La edad va con avere."},{s:"Marco e Anna ___ amici.",o:["sono","hanno","siamo"],e:"Loro → sono."}],
+ 16:[{s:"Sette più tre fa ___.",o:["dieci","nove","undici"],e:"7 + 3 = 10 (dieci)."},{s:"Quanti anni ___? — Ho vent'anni.",o:["hai","sei","costa"],e:"La edad: quanti anni hai?"},{s:"I gelati ___ due euro.",o:["costano","costa","costi"],e:"Plural → costano."},{s:"Dopo diciannove viene ___.",o:["venti","ventuno","diciotto"],e:"19 → 20 (venti)."}],
+ 17:[{s:"Prego, ___? — Un cappuccino.",o:["desidera","desideri","desidero"],e:"Formal (Lei): desidera?"},{s:"Quanto ___ un cornetto?",o:["costa","costano","è costa"],e:"Un cornetto → costa."},{s:"Ecco lo ___.",o:["scontrino","scontrina","sconto"],e:"El tique = lo scontrino."},{s:"Vorrei un caffè ___ zucchero.",o:["senza","con il no","non"],e:"Sin azúcar = senza zucchero."}]});
+Object.assign(TEMAUSE,{14:["per salutare e presentarti","para saludar y presentarte","Ciao, mi chiamo Alex. Piacere!"],15:["per dire chi sei e che cosa hai","para decir quién eres y qué tienes","Sono stanco e ho fame."],16:["per contare, dire l'età e i prezzi","para contar, decir la edad y los precios","Ho trent'anni. Quanto costa?"],17:["per ordinare al bar","para pedir en el bar","Vorrei un cappuccino, per favore."]});
+
+/* el caso del nivel 1 */
+CASES.push({id:"l1",route:3,thief:"Bruno",title:"La ricetta della nonna",woman:false,feat:{},
+ obj:"Oggetto rubato: il quaderno delle ricette segrete di Nonna Pina, dalla sua trattoria di Como.",
+ intro:"Caso n. 1. A Como qualcuno ha preso il quaderno delle ricette segrete di Nonna Pina: sono ricette di cento anni! Parla con la gente, trova le piste e segui il ladro.",
+ ending:"Hai scoperto dove sarà Bruno stasera: al Caffè Pedrocchi, per la gara di cucina! Vai al caffè.",
+ cities:{
+ 14:{prof:["Sesso","uomo"],sopa:["BERGAMO","MURA","ALTA"],clues:["Il ladro ha mangiato un risotto nella trattoria di Pina.","La cameriera lo ricorda: è un uomo, alto e simpatico.","Nel quaderno ci sono le ricette segrete di Pina: cento anni di cucina!","Ha chiesto un autobus per una città vicina.","Vuole vedere una città con le mura antiche.","Ha parlato di una funicolare.","Va in una città con una parte alta e una parte bassa."]},
+ 15:{prof:["Nome","Bruno Galli"],sopa:["VERONA","ARENA","AMORE"],clues:["Il ladro è venuto a Bergamo per mangiare la polenta in Città Alta.","Sulla funicolare ha comprato il biglietto: si chiama Bruno Galli.","Bruno ha detto al bigliettaio: «Ho un quaderno speciale. Sono molto felice!»","Ha chiesto un treno per una città romantica.","Vuole vedere il balcone di Giulietta.","Ha parlato di un'arena antica.","Va nella città di Romeo e Giulietta."]},
+ 16:{prof:["Età e lavoro","35 anni, cuoco"],sopa:["PADOVA","STUDENTI","PIAZZA"],clues:["Bruno è venuto a Verona per mangiare un gelato davanti all'Arena.","Il gelataio lo conosce: Bruno ha 35 anni ed è cuoco.","Ha detto: «Con le ricette di Nonna Pina posso vincere la gara di cucina!»","Ha chiesto un treno per una città universitaria.","Vuole bere un caffè in un caffè storico.","Ha parlato di una piazza enorme.","Va nella città di Sant'Antonio."]},
+ 17:{prof:["Movente","vincere una gara di cucina"],sopa:["PEDROCCHI","GARA","CUCINA"],clues:["Bruno è a Padova: stasera c'è una gara di cucina in un caffè storico.","Il movente: Bruno vuole vincere la gara con le ricette segrete di Nonna Pina.","Nel quaderno c'è un biglietto con il disegno di una volpe: «Buona fortuna. La Volpe»","La gara comincia alle otto di sera.","È in un caffè storico vicino all'università.","Lo chiamano «il caffè senza porte».","Si chiama Caffè Pedrocchi."]}}});
+Object.assign(CWDEF,{BERGAMO:"Città con una parte alta e una parte bassa.",MURA:"Le antiche pareti intorno a Città Alta.",ALTA:"Bergamo ha una città bassa e una città…",VERONA:"La città di Romeo e Giulietta.",ARENA:"Il grande anfiteatro romano di Verona.",AMORE:"Romeo e Giulietta: una storia d'…",
+ PADOVA:"Città con un'università antica e il Caffè Pedrocchi.",STUDENTI:"Padova è piena di… universitari.",PIAZZA:"Prato della Valle è una grande…",PEDROCCHI:"Il caffè storico di Padova.",GARA:"Bruno vuole vincere una… di cucina.",CUCINA:"L'arte di preparare da mangiare."});
+KEYW.l1=["SALE","Il segreto di ogni ricetta è un pizzico di sale."];
+SEQ.l1=["hair","glasses","face","hat"];THV.l1={hair:1,glasses:0,face:2,hat:1};
+FP.l1={sign:"PEDROCCHI",col:"#38b764",npc:"Cameriere",es:"Ve al Caffè Pedrocchi (cartel PEDROCCHI): allí termina el caso.",it:"Vai al Caffè Pedrocchi (cartello PEDROCCHI): lì finisce il caso.",hi:["Buonasera! Benvenuto al Pedrocchi.","Prego, si accomodi!","Stasera c'è la gara di cucina!"],look:{shirt:"#f4f4e4",hair:"#1a1c2c"}};
+FINCAP.l1=FPLACE.l1="Padova, Caffè Pedrocchi. Stasera c'è una gara di cucina.";
+FTALK.l1=["Ciao… posso sedermi? Sono Bruno, il cuoco.","Ho preso il quaderno di Nonna Pina. Volevo vincere la gara di cucina…","Ma una signora mi ha detto dov'era il quaderno. Ha lasciato questo biglietto con una volpe.","Scusa, Nonna Pina! Ti riporto il quaderno. Grazie, detective!"];
+VOLPE.unshift(["l1","Lascia biglietti firmati con il disegno di una volpe.","Deja notas firmadas con el dibujo de un zorro."]);
+{const a=VOLPE.find(v=>v[0]==="a2");a[1]="Conosce benissimo i musei e le biblioteche d'Italia.";a[2]="Conoce muy bien los museos y las bibliotecas de Italia."}
+CASES.find(k=>k.id==="a2").intro=CASES.find(k=>k.id==="a2").intro.replace("Caso n. 1.","Caso n. 2.");
+CASES.find(k=>k.id==="lp").intro=CASES.find(k=>k.id==="lp").intro.replace("Caso n. 2.","Caso n. 3.");
+CASES.find(k=>k.id==="b1").intro=CASES.find(k=>k.id==="b1").intro.replace("Caso n. 3.","Caso n. 4.");
+
+/* niveles: el nuevo va primero */
+ROUTES.push({n:"Livello 1 · A1",ids:[14,15,16,17]});
+ROUTES[0].n="Livello 2 · A1";ROUTES[1].n="Livello 3 · A2";ROUTES[2].n="Livello 4 · B1";
+LVL.unshift({r:3,cefr:"A1",desc:["Saludar, essere y avere, números y precios, pedir en el bar.","Salutare, essere e avere, numeri e prezzi, ordinare al bar."]});
+LVL[1].cefr="A1";LVL[2].cefr="A2";LVL[3].cefr="B1";
+VEN[3]=["order","order"];
+const FOCUS={14:"V",15:"G",16:"V",17:"C",8:"G",9:"V",10:"G",11:"C",12:"G",13:"V",0:"G",1:"G",2:"V",3:"G",4:"G",5:"G",6:"C",7:"G"};
+const focusTxt=c=>({G:trp("Gramática","Grammatica"),V:trp("Vocabulario","Vocabolario"),C:trp("Conversación","Conversazione")})[FOCUS[c]||"G"];
+save.open[save.city]=1;
+function callText(){
+  const id=S.cs.id;
+  if(id==="l1")return "Pronto, detective? Qui è la Centrale di polizia. Bravo con il quaderno di Nonna Pina! Ma quel biglietto con la volpe ci preoccupa… Ad Aosta è sparita una mappa antica. Vai ad Aosta!";
+  if(id==="b1")return "Pronto, detective? Qui è la Centrale di polizia. Hai preso La Volpe! Hai risolto il caso più grande d'Italia: tutti i tesori tornano ai loro musei. Complimenti! Ti richiameremo presto per una nuova avventura.";
+  if(id==="a2")return "Pronto, detective? Qui è la Centrale di polizia. Ottimo lavoro con la mappa! Ma ancora una volta c'era una volpe disegnata. Qualcuno che si fa chiamare La Volpe aiuta i ladri. E a Torino è appena sparito un codice di Leonardo. Il treno parte tra un'ora!";
+  if(id==="lp")return "Pronto, detective? Qui è la Centrale di polizia. Bravissimo con il Codice! Ora sappiamo che La Volpe ha una tana a Firenze. E a Cremona hanno appena rubato uno Stradivari… Parti per Firenze!";
+  return "Pronto, detective? C'è un nuovo caso per te!";
+}
+function finL1(x,t,ph,me,walkIn){
+  R(x,0,0,160,100,"#5d3a1a");for(let i=0;i<10;i++)R(x,i*16,0,8,62,"#6b4423");
+  R(x,18,10,40,26,"#94b0c2");R(x,20,12,36,22,"#c5d3dc");
+  R(x,79,0,2,8,"#ffcd75");R(x,70,8,20,3,"#ffcd75");const gl=Math.floor(t/500)%2?0.18:0.12;x.fillStyle=`rgba(255,205,117,${gl})`;x.fillRect(60,10,40,20);
+  R(x,104,38,52,26,"#a7663a");R(x,104,36,52,3,"#f4f4e4");R(x,122,24,20,12,"#c5d3dc");R(x,126,20,4,4,"#94b0c2");R(x,134,30,2,4,"#1a1c2c");
+  for(let yy=0;yy<4;yy++)for(let xx=0;xx<16;xx++)R(x,xx*10,62+yy*10,10,10,(xx+yy)%2?"#f4f4e4":"#1a1c2c");
+  R(x,38,70,26,4,"#f4f4e4");R(x,50,74,2,12,"#c5d3dc");R(x,44,66,6,4,"#f4f4e4");R(x,46,64,2,2,"#5d3a1a");
+  drawChar(x,128,22,{shirt:"#f4f4e4",hair:"#1a1c2c"},"down",0);
+  drawChar(x,26,56,me,"right",0);
+  if(ph>=1){const bx=Math.round(150-walkIn*86),walking=walkIn<1;drawChar(x,bx,56,{shirt:"#f4f4e4",hair:"#ffcd75"},walking?"left":"left",walking?Math.floor(t/180)%2:0);R(x,bx+3,51,10,5,"#f4f4e4");R(x,bx+4,50,8,1,"#f4f4e4");R(x,bx+4,62,8,4,"#5d3a1a");
+    if(S.line>=3||ph>=2)R(x,40,66,6,4,"#e8c98a");else R(x,bx-2,64,6,4,"#e8c98a")}
+  if(ph>=2&&ph<5&&Math.floor(t/250)%2){x.fillStyle="#ffcd75";x.font="7px 'Press Start 2P', monospace";x.textAlign="center";x.fillText(ph===4?"FINE":"BRAVO!",80,96)}
+}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
