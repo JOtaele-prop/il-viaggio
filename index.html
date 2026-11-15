@@ -2647,7 +2647,7 @@ function startTiro(){const c=save.city,u=save.usedT||(save.usedT={}),used=u[c]||
 function tiroStep(dt){
   if(S.end)return;S.t+=dt;S.next-=dt;
   if(S.next<=0&&S.t<23000){const lanes=[0,1,2].filter(l=>!S.tg.some(t=>t.lane===l&&t.hit===null&&(l%2?t.x>150:t.x<70)));
-    if(!lanes.length)S.next=150;else{S.next=900;const yes=Math.random()<0.45,lane=pick(lanes),dir=lane%2?-1:1;S.tg.push({id:S.id++,w:pick(yes?S.set.yes:S.set.no),yes,lane,dir,x:dir>0?-60:300,sp:34,hit:null,ht:0})}}
+    if(!lanes.length)S.next=150;else{S.next=900;const yes=Math.random()<0.45||(S.sy||0)>=2;S.sy=yes?0:(S.sy||0)+1;const lane=pick(lanes),dir=lane%2?-1:1;S.tg.push({id:S.id++,w:pick(yes?S.set.yes:S.set.no),yes,lane,dir,x:dir>0?-60:300,sp:34,hit:null,ht:0})}}
   S.tg.forEach(t=>{if(t.hit)t.ht+=dt;else t.x+=t.dir*t.sp*dt/1000});S.tg=S.tg.filter(t=>t.hit?t.ht<500:t.x>-80&&t.x<320);
   if(S.t>=25000){const ok=S.hits>=5&&S.miss<=2;S.end={ok,life:false};if(ok){if(save.hearts<3){save.hearts++;S.end.life=true}persist();hud()}render();return}
   const cv=ov.querySelector&&ov.querySelector("#tiroc");if(cv)tiroDraw(cv.getContext("2d"));
@@ -3286,6 +3286,43 @@ Object.assign(WHINT,{BERGAMO:["Ha Città Alta, Città Bassa, le mura e la funico
  GENOVA:["La città del pesto e della Lanterna. Comincia con la G.","La ciudad del pesto y de la Lanterna. Empieza por G."],
  TRENTO:["Il capoluogo del Trentino, tra le montagne: guarda la pista n. 7.","La capital del Trentino, entre montañas: mira la pista n.º 7."],
  TRIESTE:["La città di Elena, vicino alla Slovenia. Comincia con la T.","La ciudad de Elena, cerca de Eslovenia. Empieza por T."]});
+
+/* ================= v20: banco de productos más grande y estantería que cambia con cada cliente ================= */
+{const add={
+ bar:[["panino","panini","un","🥪","bocadillo"],["succo di frutta","succhi di frutta","un","🧃","zumo de frutas"],["cioccolata calda","cioccolate calde","una","🍫","chocolate caliente"],["brioche","brioche","una","🥯","bollo dulce"],["spritz","spritz","uno","🍹","spritz"],["aranciata","aranciate","un'","🥤","naranjada"],["bicchiere di vino","bicchieri di vino","un","🍷","copa de vino"],["birra","birre","una","🍺","cerveza"],["toast","toast","un","🍞","sándwich tostado"]],
+ gelateria:[["gelato alla vaniglia","gelati alla vaniglia","un","🍦","helado de vainilla"],["gelato al pistacchio","gelati al pistacchio","un","🟢","helado de pistacho"],["gelato al caffè","gelati al caffè","un","☕","helado de café"],["panna","panne","una","🍥","nata montada"],["affogato","affogati","un","🍮","helado con café caliente"],["ghiacciolo","ghiaccioli","un","🍡","polo"],["cannolo","cannoli","un","🥐","cannolo"],["brioche col gelato","brioche col gelato","una","🍔","brioche con helado"]],
+ ferramenta:[["chiodo","chiodi","un","📌","clavo"],["pinza","pinze","una","🗜️","alicate"],["colla","colle","una","🧪","pegamento"],["pennello","pennelli","un","🖌️","pincel"],["secchio","secchi","un","🪣","cubo"],["sega","seghe","una","🪚","sierra"],["batteria","batterie","una","🔋","pila"],["torcia","torce","una","🔦","linterna"],["lucchetto","lucchetti","un","🔒","candado"]],
+ forno:[["cornetto","cornetti","un","🥐","cruasán"],["grissino","grissini","un","🥢","colín"],["crostata","crostate","una","🥧","tarta de mermelada"],["bombolone","bomboloni","un","🟠","berlina rellena"],["tarallo","taralli","un","🥨","tarallo"],["piadina","piadine","una","🌮","piadina"],["sfogliatella","sfogliatelle","una","🐚","sfogliatella"],["panino al latte","panini al latte","un","🥯","panecillo de leche"]],
+ frutta:[["fragola","fragole","una","🍓","fresa"],["grappolo d'uva","grappoli d'uva","un","🍇","racimo de uvas"],["pesca","pesche","una","🍑","melocotón"],["anguria","angurie","un'","🍉","sandía"],["carota","carote","una","🥕","zanahoria"],["cipolla","cipolle","una","🧅","cebolla"],["melanzana","melanzane","una","🍆","berenjena"],["peperone","peperoni","un","🫑","pimiento"],["zucchina","zucchine","una","🥒","calabacín"],["insalata","insalate","un'","🥬","lechuga"]],
+ farmacia:[["dentifricio","dentifrici","un","🦷","pasta de dientes"],["sciroppo","sciroppi","uno","🍯","jarabe"],["fazzoletto","fazzoletti","un","🤧","pañuelo"],["benda","bende","una","🩼","venda"],["shampoo","shampoo","uno","🫧","champú"],["mascherina","mascherine","una","😷","mascarilla"],["vitamina","vitamine","una","🍊","vitamina"],["pettine","pettini","un","🪮","peine"]],
+ edicola:[["fumetto","fumetti","un","📚","cómic"],["francobollo","francobolli","un","📮","sello"],["busta","buste","una","✉️","sobre"],["matita","matite","una","✏️","lápiz"],["quaderno","quaderni","un","📓","cuaderno"],["calendario","calendari","un","📅","calendario"],["guida turistica","guide turistiche","una","📘","guía turística"],["accendino","accendini","un","🔥","mechero"]],
+ vestiti:[["gonna","gonne","una","🩳","falda"],["camicia","camicie","una","👔","camisa"],["guanto","guanti","un","🧤","guante"],["scarpa","scarpe","una","👞","zapato"],["cintura","cinture","una","🪢","cinturón"],["felpa","felpe","una","🥋","sudadera"],["costume da bagno","costumi da bagno","un","🩱","bañador"],["ombrello","ombrelli","un","☂️","paraguas"]]};
+ Object.keys(add).forEach(k=>SHOPS[k].it.push(...add[k]));}
+WORDS.bar.push(["SUCCO","zumo"],["BIRRA","cerveza"],["TOAST","sándwich tostado"]);
+WORDS.edicola.push(["GUIDA","guía"]);WORDS.forno.push(["CREMA","crema"]);WORDS.ferramenta.push(["SEGHE","sierras"]);WORDS.vestiti.push(["CINTA","cinta"]);
+save.shopU=save.shopU||{};
+function newOrder(type){
+  const sh=SHOPS[type],s=stage(),n=s===0?2:3,N=sh.it.length;
+  let u=save.shopU[type]||(save.shopU[type]=[]);let pool=sh.it.map((_,i)=>i).filter(i=>!u.includes(i));if(pool.length<n){u.length=0;pool=sh.it.map((_,i)=>i)}
+  const idx=shuffle(pool).slice(0,n),want={};u.push(...idx);persist();
+  idx.forEach(i=>want[i]=1+Math.floor(Math.random()*(s===0?2:3)));
+  const parts=idx.map(i=>{const it=sh.it[i],q=want[i];return q===1?(it[2]==="un'"?"un'"+it[0]:it[2]+" "+it[0]):(q===2?"due ":"tre ")+it[1]});
+  const list=parts.length>1?parts.slice(0,-1).join(", ")+" e "+parts[parts.length-1]:parts[0];
+  const tpl=pick(s<2?["Buongiorno! Vorrei {L}, per favore.","Mi dà {L}, per favore?","Per me {L}, grazie.","Salve! Prendo {L}."]:["Buongiorno! Mi servirebbero {L}, se possibile.","Avrei bisogno di {L}, grazie.","Mi potrebbe dare {L}?"]);
+  const extra=shuffle(sh.it.map((_,i)=>i).filter(i=>!idx.includes(i))).slice(0,(s===0?6:8)-n);
+  return {want,txt:tpl.replace("{L}",list),shelf:shuffle([...idx,...extra])};
+}
+function shopHtml(){
+  const sh=SHOPS[S.type],s=stage(),cart=Object.keys(S.cart).filter(i=>S.cart[i]>0),shelfIdx=S.o.shelf||sh.it.map((_,i)=>i);
+  const shelf=shelfIdx.map(i=>{const it=sh.it[i];return `<button class="tile shelf" data-shopadd="${i}" ${S.res?"disabled":""}><span class="emo">${it[3]}</span> ${esc(it[0])}${s===0?`<br><span class="mute small">${esc(it[4])}</span>`:""}</button>`}).join("");
+  const counter=cart.length?cart.map(i=>`<button class="tile" data-shoprm="${i}" ${S.res?"disabled":""}>${S.cart[i]}× ${sh.it[i][3]} ${esc(sh.it[i][0])}</button>`).join(""):`<span class="mute">${trp("Toca los productos para ponerlos en el mostrador.","Tocca i prodotti per metterli sul bancone.")}</span>`;
+  const wantTxt=Object.keys(S.o.want).map(i=>`${S.o.want[i]}× ${sh.it[i][3]} ${esc(sh.it[i][0])}`).join(" · ");
+  return `<div class="row"><span class="eyebrow">${sh.e} ${esc(sh.n)}</span>${hp()}</div><canvas id="shopc" class="pic" width="132" height="56"></canvas>
+   <div class="eyebrow">${trp("El cliente dice:","Il cliente dice:")}</div><p class="it tip">«${esc(S.o.txt)}»</p>${spk(S.o.txt)}
+   <div class="eyebrow">${trp("Mostrador","Bancone")}</div><div class="tiles answer">${counter}</div><div class="eyebrow">${trp("Estantería","Scaffale")}</div><div class="tiles">${shelf}</div>`+
+   (S.res?`<div class="fb ${S.res.ok?"ok":"no"}"><b>${S.res.ok?(S.res.life?"PERFETTO! +1 ♥":"PERFETTO!"):"NON PROPRIO"}</b>${S.res.ok?`<span>${trp("Palabras guardadas en el Quaderno.","Parole salvate nel Quaderno.")}</span>`:`<span>${trp("El cliente quería:","Il cliente voleva:")} ${wantTxt}</span>`}</div>${btn(trp("OTRO CLIENTE","PROSSIMO CLIENTE"),"data-shopnew")}`
+   :btn(trp("SERVIR AL CLIENTE","SERVI IL CLIENTE"),"data-shopok"))+btn(trp("SALIR DE LA TIENDA","ESCI DAL NEGOZIO"),"data-close","");
+}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
