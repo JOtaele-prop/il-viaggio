@@ -3325,6 +3325,69 @@ function shopHtml(){
    :btn(trp("SERVIR AL CLIENTE","SERVI IL CLIENTE"),"data-shopok"))+btn(trp("SALIR DE LA TIENDA","ESCI DAL NEGOZIO"),"data-close","");
 }
 
+/* ================= v22: ninguna pista, definición ni ayuda dice la respuesta del enigma ================= */
+{const C=id=>CASES.find(k=>k.id===id).cities,set=(id,c,o)=>Object.assign(C(id)[c].clues,o);
+ set("l1",14,{4:"Vuole camminare sulle antiche pareti di pietra intorno alla città.",5:"Ha parlato di una funicolare che sale in cima alla collina, nella parte più antica della città.",6:"Va in una città divisa in due: una parte su in collina e una parte giù in pianura."});
+ set("l1",15,{4:"Vuole vedere il balcone di Giulietta: Romeo e Giulietta si vogliono tanto bene!",5:"Vuole vedere un grande anfiteatro romano dove oggi si canta l'opera."});
+ set("l1",16,{3:"Ha chiesto un treno per una città con un'università antichissima.",5:"Ha parlato di Prato della Valle, uno spazio enorme in mezzo alla città, con statue e un canale."});
+ set("l1",17,{1:"Il movente: Bruno vuole vendere l'oggetto rubato a un collezionista.",2:"Nella scatola dell'oggetto rubato c'è un biglietto con il disegno di una volpe: «Il collezionista arriverà. La Volpe»",6:"Il nome del caffè comincia con la P e finisce con «-occhi»."});
+ set("a2",8,{3:"Ha chiesto un treno per la costa: vuole vedere le onde e la spiaggia.",5:"Ha comprato un libro su una salsa verde fatta con il basilico."});
+ set("a2",9,{4:"Vuole vedere un edificio antico con le torri, dove vivevano i principi.",5:"Vuole fare una passeggiata vicino all'acqua dolce, tra le montagne."});
+ set("a2",10,{4:"Vuole bere un espresso in un locale storico.",5:"Ha paura di un vento fortissimo che soffia in quella città."});
+ set("a2",11,{4:"Va in una città piccola, in una regione verde e senza mare, nel centro d'Italia.",5:"Le piace molto il cioccolato: vuole comprare dei cioccolatini famosi con un messaggio d'amore dentro.",6:"Va nella città di quei cioccolatini: P _ _ _ _ _ A."});
+ set("a2",12,{5:"Il traghetto va nel Paese di Spalato e Dubrovnik.",6:"Ha detto: «Parto da A…, il capoluogo delle Marche, dove arrivano e partono le navi.»"});
+ set("a2",13,{0:"Elena è nel capoluogo delle Marche: vuole prendere la nave per la Croazia stasera.",1:"Il movente: Elena non vuole vendere la carta antica. Vuole trovare il paese del nonno.",2:"Ha scritto in un messaggio: «Dopo il viaggio riporto la carta al museo. Promesso.»",3:"La nave parte alle nove di sera.",6:"Cerca il punto numero tre del porto, dove si fermano le navi."});
+ set("lp",0,{3:"Ha chiesto un biglietto per la capitale degli stilisti e delle sfilate.",5:"Ha parlato di un teatro d'opera famosissimo, vicino al Duomo."});
+ set("lp",1,{4:"Vuole vedere le strade d'acqua della città."});
+ set("lp",2,{3:"Ora va in una città con due costruzioni antiche altissime in centro.",4:"Vuole camminare sotto le strade coperte, anche quando piove."});
+ set("lp",3,{1:"Il movente: Marco è un inventore senza lavoro. Vuole studiare il quaderno di Leonardo per costruire una macchina volante e vincere un concorso.",2:"Nel suo telefono c'è un messaggio firmato con una volpe: «Quando hai finito, porta il quaderno nella mia tana a Firenze.»",6:"Si chiama Archiginnasio: ci sono migliaia di volumi antichi."});
+ set("b1",4,{3:"Ha detto che vuole lanciare una moneta nell'acqua di Trevi, per tornare un giorno.",4:"Ha chiesto informazioni sull'anfiteatro dei gladiatori."});
+ set("b1",5,{3:"Ha detto che voleva mangiare una vera margherita, con pomodoro e mozzarella.",6:"Va verso sud, vicino a un vulcano famoso."});
+ set("b1",6,{1:"Il pizzaiolo ha riconosciuto il suo accento: Totò non è napoletano, viene da più a sud, oltre il mare.",3:"Ha preso un traghetto di notte verso una terra circondata dal mare.",5:"Va a casa, nella regione più grande d'Italia, in mezzo al Mediterraneo."});
+ set("b1",7,{1:"Il movente: Totò non vuole vendere lo strumento. Vuole suonarlo per suo padre e dimostrare che non l'aveva rovinato.",2:"La vicina di Nino dice: «Nino ha sempre detto che quello strumento suonava meglio dopo il suo restauro.»",3:"Totò ha prenotato una sala per un concerto stasera.",4:"È la sala d'opera più grande d'Italia."});}
+Object.assign(CLES[14],{4:"Quiere caminar por las antiguas paredes de piedra que rodean la ciudad.",5:"Habló de un funicular que sube a lo alto de la colina, a la parte más antigua de la ciudad.",6:"Va a una ciudad dividida en dos: una parte arriba en la colina y otra abajo en la llanura."});
+Object.assign(CLES[15],{4:"Quiere ver el balcón de Julieta: ¡Romeo y Julieta se quieren muchísimo!",5:"Quiere ver un gran anfiteatro romano donde hoy se canta ópera."});
+Object.assign(CLES[16],{3:"Preguntó por un tren a una ciudad con una universidad antiquísima.",5:"Habló de Prato della Valle, un espacio enorme en medio de la ciudad, con estatuas y un canal."});
+Object.assign(CLES[17],{1:"El móvil: Bruno quiere vender el objeto robado a un coleccionista.",2:"En la caja del objeto robado hay una nota con el dibujo de un zorro: «El coleccionista vendrá. La Volpe»",6:"El nombre del café empieza por P y termina en «-occhi»."});
+Object.assign(CLES[8],{3:"Preguntó por un tren a la costa: quiere ver las olas y la playa.",5:"Compró un libro sobre una salsa verde hecha con albahaca."});
+Object.assign(CLES[9],{4:"Quiere ver un edificio antiguo con torres, donde vivían los príncipes.",5:"Quiere pasear cerca del agua dulce, entre las montañas."});
+Object.assign(CLES[10],{4:"Quiere tomar un espresso en un local histórico.",5:"Tiene miedo de un viento fortísimo que sopla en esa ciudad."});
+Object.assign(CLES[11],{4:"Va a una ciudad pequeña, en una región verde y sin mar, en el centro de Italia.",5:"Le gusta mucho el chocolate: quiere comprar unos bombones famosos con un mensaje de amor dentro.",6:"Va a la ciudad de esos bombones: P _ _ _ _ _ A."});
+Object.assign(CLES[12],{5:"El ferry va al país de Split y Dubrovnik.",6:"Dijo: «Salgo de A…, la capital de las Marcas, donde llegan y salen los barcos.»"});
+Object.assign(CLES[13],{0:"Elena está en la capital de las Marcas: quiere tomar el barco a Croacia esta noche.",1:"El móvil: Elena no quiere vender la carta antigua. Quiere encontrar el pueblo del abuelo.",2:"Escribió en un mensaje: «Después del viaje devuelvo la carta al museo. Prometido.»",3:"El barco sale a las nueve de la noche.",6:"Busca el punto número tres del puerto, donde se paran los barcos."});
+Object.assign(CWDEF,{BERGAMO:"Città divisa in due: una parte in collina e una in pianura.",MURA:"Le antiche pareti di pietra intorno alla città vecchia.",ALTA:"Il contrario di «bassa»: così si chiama la parte antica in collina.",
+ ARENA:"Il grande anfiteatro romano della città di Giulietta.",AMORE:"Il sentimento tra Romeo e Giulietta.",
+ STUDENTI:"Le persone che vanno all'università.",PIAZZA:"Prato della Valle è una delle più grandi d'Europa: è una…",
+ PEDROCCHI:"Il caffè storico «senza porte».",VOLTA:"Il cognome dello scienziato nato a Como nel 1745.",
+ MARE:"Elena vuole vedere le onde e la spiaggia: va al…",TRENTO:"Il capoluogo del Trentino.",BORA:"Il vento fortissimo della città di Elena.",
+ PERUGIA:"Capoluogo di una regione verde senza mare, città di cioccolatini famosi.",MOLO:"Il punto del porto dove si fermano le navi.",TRAGHETTO:"Nave grande che porta persone e macchine.",MAPPA:"L'oggetto rubato dal museo di Aosta: una carta.",
+ MILANO:"La città del Duomo con le guglie e del Cenacolo.",MODA:"Vestiti, stilisti e sfilate: il mondo della…",SCALA:"Il teatro d'opera più famoso d'Italia (ma anche un oggetto per salire).",
+ GONDOLA:"Barca nera e lunga, guidata con un solo remo.",CANALI:"Le «strade» d'acqua della città senza macchine.",
+ BOLOGNA:"La città dell'università più antica d'Europa.",TORRI:"Costruzioni alte e strette: la città ne ha due, famose.",PORTICI:"Strade coperte, lunghe quasi quaranta chilometri.",
+ CODICE:"Il quaderno antico di Leonardo che Marco ha rubato.",
+ NAPOLI:"La città della margherita e del caffè sospeso.",VESUVIO:"Il vulcano famoso del golfo, ancora attivo.",
+ PALERMO:"La città dove è nato Totò: il capoluogo della regione.",SICILIA:"La regione più grande d'Italia, in mezzo al Mediterraneo.",
+ MASSIMO:"Vuol dire «il più grande»: è il nome della sala d'opera di Totò."});
+Object.assign(WHINT,{BERGAMO:["Ha una parte in collina, una in pianura e una funicolare. Comincia con la B.","Tiene una parte en la colina, otra en la llanura y un funicular. Empieza por B."],
+ ARENA:["Il nome dell'anfiteatro romano: in spagnolo è la stessa parola.","El nombre del anfiteatro romano: en español es la misma palabra."],
+ AMORE:["Romeo e Giulietta: una storia d'…","Romeo y Julieta: una historia de… (en italiano)."],
+ PIAZZA:["Prato della Valle non è una strada: è una…","Prato della Valle no es una calle: ¿qué es?"],
+ PILA:["L'ha inventata lo scienziato di Como nel 1799: è la prima batteria.","La inventó el científico de Como en 1799: es la primera batería."],
+ GENOVA:["La città della salsa verde e della Lanterna. Comincia con la G.","La ciudad de la salsa verde y de la Lanterna. Empieza por G."],
+ LAGO:["Acqua dolce tra le montagne.","Agua dulce entre montañas (en español empieza por L)."],
+ PERUGIA:["La città dei cioccolatini, nel centro d'Italia.","La ciudad de los bombones, en el centro de Italia."],
+ BACI:["I cioccolatini più famosi d'Italia: «bacio» al plurale.","Los bombones más famosos de Italia: «bacio» (beso) en plural."],
+ ANCONA:["Il capoluogo delle Marche, sull'Adriatico.","La capital de las Marcas, en el Adriático."],
+ PORTO:["Dove arrivano e partono le navi.","Donde llegan y salen los barcos."],
+ MOLO:["Elena cerca quello «numero tre».","Elena busca el «número tres»."],TRAGHETTO:["Una nave grande per persone e macchine.","Un barco grande para personas y coches."],MAPPA:["L'oggetto rubato dal museo di Aosta.","El objeto robado del museo de Aosta."]});
+
+LEVELS[7].text=LEVELS[7].text.replace("e il Teatro Massimo è il teatro d'opera più grande d'Italia","e la sua sala d'opera è la più grande d'Italia");
+LEVELS[17].text=LEVELS[17].text.replace("Il Caffè Pedrocchi è un caffè storico del 1831.","In centro c'è un caffè storico del 1831, famoso in tutta Italia.");
+LEVELS[17].card="A Padova c'è un caffè storico che chiamavano «il caffè senza porte», perché un tempo era aperto giorno e notte.";
+STORY.l1[3]=["Oggi l'unità di misura della tensione elettrica si chiama «volt», in onore dello scienziato. Senza la sua invenzione non avremmo batterie né telefoni. I suoi strumenti si conservano nel Tempio Voltiano di Como.","Hoy la unidad de tensión eléctrica se llama «voltio», en honor del científico. Sin su invento no tendríamos baterías ni teléfonos. Sus instrumentos se conservan en el Tempio Voltiano de Como."];
+STORY.lp[3]=["Nel 1893 il quaderno è stato regalato al re Umberto I ed è arrivato a Torino, dove si conserva ancora oggi. Sotto il testo gli studiosi hanno trovato un disegno: forse un autoritratto di Leonardo.","En 1893 el cuaderno fue regalado al rey Humberto I y llegó a Turín, donde se conserva todavía. Bajo el texto los estudiosos encontraron un dibujo: quizá un autorretrato de Leonardo."];
+STORY.b1[3]=["Uno Stradivari può valere milioni di euro. Al museo di Cremona i musicisti li suonano spesso, perché uno strumento resta vivo solo se qualcuno lo suona.","Un Stradivarius puede valer millones de euros. En el museo de Cremona los músicos los tocan a menudo, porque un instrumento solo sigue vivo si alguien lo toca."];
+
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
