@@ -145,6 +145,31 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .duo .opt{text-align:center;font-family:var(--px);font-size:10px;padding:18px 6px;line-height:1.4}
 .chip{display:inline-block;font-family:var(--px);font-size:8px;padding:3px 6px;background:var(--accent);color:var(--panel);vertical-align:middle}
+.nbhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ntabs{display:flex;gap:3px;padding-left:22px;margin-bottom:-12px;position:relative;z-index:1}
+.ntab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--px);font-size:6px;letter-spacing:-.2px;padding:7px 2px 8px;border:3px solid var(--ink);border-bottom:none;border-radius:8px 8px 0 0;background:var(--c);color:#fff;filter:saturate(.55) brightness(.9);transform:translateY(5px)}
+.ntab span{font-size:15px;line-height:1}
+.ntab.on{filter:none;transform:none;padding-bottom:13px}
+.nbk{position:relative;background:#fffdf3 repeating-linear-gradient(180deg,transparent 0 25px,#dbe6f0 25px 26px);border:3px solid var(--ink);border-top:8px solid var(--c);padding:10px 10px 14px 30px;display:flex;flex-direction:column;gap:6px;min-height:220px}
+.nbk:before{content:"";position:absolute;left:23px;top:0;bottom:0;width:2px;background:#e6a3a3}
+.nbk:after{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:12px;background:radial-gradient(circle at 6px 6px,var(--ink) 3px,#c5d3dc 4px,transparent 5px) 0 0/12px 20px repeat-y}
+.lvh{font-family:var(--px);font-size:7px;color:var(--mute);margin-top:8px;border-bottom:2px dashed var(--mute);padding-bottom:4px}
+.pg{background:#fff;border:2px solid var(--ink);box-shadow:3px 3px 0 rgba(26,28,44,.25)}
+.pg summary{list-style:none;cursor:pointer;padding:9px 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:18px}
+.pg summary::-webkit-details-marker{display:none}
+.pg summary b{font-family:var(--px);font-size:8px}
+.pg summary:after{content:"▸";margin-left:auto;font-family:var(--px);font-size:9px}
+.pg[open] summary{border-bottom:2px dashed #c5d3dc;background:#f4f4e4}
+.pg[open] summary:after{content:"▾"}
+.pgt{color:var(--mute);font-size:16px}
+.pgb{padding:8px;display:flex;flex-direction:column;gap:8px}
+.nbk{font-size:22px;line-height:1.1}.pgb table{width:100%;table-layout:fixed}.pgb td{overflow-wrap:anywhere;font-size:20px;line-height:1.15;padding:5px 6px;vertical-align:middle}.nbk .tip{font-size:20px}.pgb td:first-child{white-space:normal}.nbk .it,.nbk p,.nbk .pc p{font-size:21px;line-height:1.15}.nbk .ex{font-size:22px}
+.fchip{display:inline-block;font-family:var(--px);font-size:6px;color:#fff;padding:3px 5px;vertical-align:middle}
+.spk1{border:2px solid var(--ink);background:var(--accent);font-size:11px;padding:1px 4px;vertical-align:middle;line-height:1.2}
+.pc{background:#fff;border:2px dashed var(--mute);padding:8px 10px;transform:rotate(-1deg)}
+.fcard{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:30px;border:3px solid var(--ink);background:#fff;box-shadow:5px 5px 0 var(--ink);padding:14px}
+.fcard.flip{background:#fff7e0}
+.fces{font-size:20px;color:var(--mute);margin-top:8px}
 </style>
 </head>
 <body>
@@ -1052,7 +1077,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -2930,6 +2955,62 @@ function finL1(x,t,ph,me,walkIn){
     if(S.line>=3||ph>=2)R(x,40,66,6,4,"#e8c98a");else R(x,bx-2,64,6,4,"#e8c98a")}
   if(ph>=2&&ph<5&&Math.floor(t/250)%2){x.fillStyle="#ffcd75";x.font="7px 'Press Start 2P', monospace";x.textAlign="center";x.fillText(ph===4?"FINE":"BRAVO!",80,96)}
 }
+
+/* ================= v15: Quaderno con solapas ================= */
+const NTABS=[["lez","📖","LEZIONI","#3b5dc9"],["par","🔤","PAROLE","#38b764"],["fra","💬","FRASI","#ef7d57"],["cit","🏛️","CITTÀ","#b13e53"],["rip","🧠","RIPASSO","#a7663a"]];
+const FCOL={G:"#3b5dc9",V:"#38b764",C:"#ef7d57"};
+const spk1=t=>`<button class="spk1" data-voice="${String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}" aria-label="Ascolta">🔊</button>`;
+const nbGot=()=>LVL.flatMap(l=>ROUTES[l.r].ids).filter(i=>save.lesson[i]);
+const nbGroups=list=>LVL.map(l=>({n:ROUTES[l.r].n,cefr:l.cefr,ids:ROUTES[l.r].ids.filter(i=>list.includes(i))})).filter(g=>g.ids.length);
+const nbChip=c=>`<span class="fchip" style="background:${FCOL[FOCUS[c]||"G"]}">${esc(focusTxt(c))}</span>`;
+function nbPage(c,title,body,open){return `<details class="pg"${open?" open":""}><summary><b>${esc(LEVELS[c].city)}</b><span class="pgt">${title}</span></summary><div class="pgb">${body}</div></details>`}
+function nbGloss(c){const out=[],re=/\{([^|]+)\|([^}]+)\}/g;let m;while((m=re.exec(LEVELS[c].text)))out.push([m[1],m[2]]);return out}
+function nbLez(got,sel){
+  return nbGroups(got).map(g=>`<div class="lvh">${esc(g.n)}</div>`+g.ids.map(c=>{const T=TEMAUSE[c];
+    return nbPage(c,`${nbChip(c)} ${esc(LEVELS[c].tema)}`,lessonHtml(c)+(T?`<p class="it ex">«${esc(T[2])}» ${spk1(T[2])}</p><p class="mute small">${trp("Sirve "+T[1]+".","Serve "+T[0]+".")}</p>`:""),c===sel)}).join("")).join("")}
+function nbPar(got,sel){
+  const row=(it,es)=>`<tr><td><span class="it">${esc(it)}</span> ${spk1(it)}</td><td>${esc(es)}</td></tr>`;
+  let h=nbGroups(got).map(g=>`<div class="lvh">${esc(g.n)}</div>`+g.ids.map(c=>{const L=LEVELS[c],gl=save.read[c]?nbGloss(c):[];
+    return nbPage(c,`${L.pairs.length+gl.length} ${trp("palabras","parole")}`,`<div class="eyebrow">${trp("De la lección","Dalla lezione")}</div><table>${L.pairs.map(p=>row(p[0],p[1])).join("")}</table>`+
+      (gl.length?`<div class="eyebrow">${trp("Del cartel de la plaza","Dal cartello in piazza")}</div><table>${gl.map(p=>row(p[0],p[1])).join("")}</table>`:`<p class="mute small">${trp("Lee el cartel de la plaza para apuntar más palabras.","Leggi il cartello in piazza per annotare altre parole.")}</p>`),c===sel)}).join("")).join("");
+  const v=Object.keys(save.vocab||{}).sort();
+  h+=`<div class="lvh">${trp("Tiendas y juegos","Negozi e giochi")}</div>`+(v.length?`<details class="pg"${S.vocab?" open":""}><summary><b>🛍️ ${trp("Tiendas y juegos","Negozi e giochi")}</b><span class="pgt">${v.length} ${trp("palabras","parole")}</span></summary><div class="pgb"><table>${v.map(w=>row(w,save.vocab[w])).join("")}</table></div></details>`:`<p class="mute small">${trp("Aquí se apuntan las palabras que usas en las tiendas y en los juegos.","Qui si annotano le parole che usi nei negozi e nei giochi.")}</p>`);
+  return h}
+function nbFra(got,sel){
+  return nbGroups(got).map(g=>`<div class="lvh">${esc(g.n)}</div>`+g.ids.map(c=>{const L=LEVELS[c],T=TEMAUSE[c],d=L.dial;
+    const body=(T?`<p class="it ex">«${esc(T[2])}» ${spk1(T[2])}</p>`:"")+(d?`<div class="eyebrow">${trp("Conversación con","Conversazione con")} ${esc(d.who)}</div><div class="chat">${d.turns.map(t=>`<div class="bub"><b>${esc(d.who)}:</b> <span class="it">${esc(t[0])}</span> ${spk1(t[0])}</div><div class="bub me"><b>${trp("Tú","Tu")}:</b> <span class="it">${esc(t[1][0])}</span> ${spk1(t[1][0])}</div>`).join("")}</div>`:"");
+    return nbPage(c,esc(LEVELS[c].tema),body,c===sel)}).join("")).join("")}
+function nbCit(sel){
+  const list=LVL.flatMap(l=>ROUTES[l.r].ids).filter(i=>save.cards[i]||tourOf(i).done);
+  if(!list.length)return `<p class="mute">${trp("Haz el free walking tour y abre el baúl de cada ciudad: aquí se guardan sus curiosidades y postales.","Fai il free walking tour e apri il baule di ogni città: qui si conservano curiosità e cartoline.")}</p>`;
+  return nbGroups(list).map(g=>`<div class="lvh">${esc(g.n)}</div>`+g.ids.map(c=>{const L=LEVELS[c],t=tourOf(c).done;
+    return nbPage(c,(t?"⚑ ":"")+(save.cards[c]?"✉":""),(save.cards[c]?`<div class="pc"><div class="eyebrow">✉ ${trp("Postal","Cartolina")}</div><p class="it">${esc(L.card)}</p></div>`:"")+(t?`<div class="eyebrow">${trp("Apuntes del tour","Appunti del tour")}</div>`+L.tour.facts.map(f=>`<p class="tip it">${esc(f[0])}${stage()<2?`<br><span class="mute small">${esc(f[1])}</span>`:""}</p>`).join(""):""),(list.includes(sel)?c===sel:c===list[list.length-1]))}).join("")).join("")}
+function nbDeck(got){const d=[];got.forEach(c=>LEVELS[c].pairs.forEach(p=>d.push(p)));Object.keys(save.vocab||{}).forEach(w=>d.push([w,save.vocab[w]]));return shuffle(d).slice(0,10)}
+function nbRip(got){
+  if(!S.fc){const deck=nbDeck(got);S.fc={deck,i:0,flip:false,ok:0}}
+  const f=S.fc;if(!f.deck.length)return `<p class="mute">${trp("Todavía no hay palabras para repasar.","Ancora nessuna parola da ripassare.")}</p>`;
+  if(f.i>=f.deck.length)return `<div class="fcard"><div><div class="eyebrow">${trp("Repaso terminado","Ripasso finito")}</div><h2>${f.ok} / ${f.deck.length}</h2></div></div>${btn(trp("OTRO REPASO","UN ALTRO RIPASSO"),"data-fcnew")}`;
+  const [it,es]=f.deck[f.i];
+  return `<p class="mute small">${trp("Mira la palabra, piensa qué significa y gira la tarjeta.","Guarda la parola, pensa al significato e gira la carta.")} ${f.i+1}/${f.deck.length}</p>
+   <div class="fcard${f.flip?" flip":""}"><div><span class="it">${esc(it)}</span>${f.flip?`<div class="fces">${esc(es)}</div>`:""}</div></div>
+   ${f.flip?`<div class="row">${btn("✗ "+trp("A REPASAR","DA RIPASSARE"),"data-fcno","")}${btn("✓ "+trp("LO SABÍA","LO SAPEVO"),"data-fcok")}</div>`:`<div class="row">${spk(it)}${btn(trp("GIRAR","GIRA"),"data-fcflip")}</div>`}`}
+function noteBook(){
+  const got=nbGot(),tab=S.tab||(S.vocab?"par":"lez"),sel=got.includes(S.sel)?S.sel:got[got.length-1],T=NTABS.find(t=>t[0]===tab);
+  const words=got.reduce((n,c)=>n+LEVELS[c].pairs.length,0)+Object.keys(save.vocab||{}).length;
+  let body;
+  if(!got.length)body=`<p>${trp("Todavía está vacío. Habla con la Prof de "+LEVELS[save.city].city+" para apuntar tu primera lección.","Ancora vuoto. Parla con la Prof di "+LEVELS[save.city].city+" per annotare la tua prima lezione.")}</p>`;
+  else body=tab==="lez"?nbLez(got,sel):tab==="par"?nbPar(got,sel):tab==="fra"?nbFra(got,sel):tab==="cit"?nbCit(sel):nbRip(got);
+  return `<div class="nbhead"><h2>📒 Quaderno</h2><span class="mute small">${got.length} ${trp("lecciones","lezioni")} · ${words} ${trp("palabras","parole")}</span></div>
+  <div class="ntabs">${NTABS.map(t=>`<button class="ntab${t[0]===tab?" on":""}" style="--c:${t[3]}" data-ntab="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join("")}</div>
+  <div class="nbk" style="--c:${T[3]}">${body}</div>${btn(trp("CERRAR","CHIUDI"),"data-back2")}`}
+EXOV.note=()=>noteBook();
+function exClick15(D){
+  if(S.ov!=="note")return false;
+  if("ntab" in D){S.tab=D.ntab;if(D.ntab==="rip")S.fc=null;render();ov.scrollTop=0;return true}
+  if("fcflip" in D){S.fc.flip=true;speak(S.fc.deck[S.fc.i][0]);render();return true}
+  if("fcok" in D||"fcno" in D){if("fcok" in D)S.fc.ok++;S.fc.i++;S.fc.flip=false;render();return true}
+  if("fcnew" in D){S.fc=null;render();return true}
+  return false}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
