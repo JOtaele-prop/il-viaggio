@@ -1036,7 +1036,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -2268,7 +2268,7 @@ function finDraw(x,t,cs,ph){
     return;
   }
   const me={shirt:"#b13e53",hair:"#5d3a1a",hat:"#b13e53"},seat=(sx,sy)=>{R(x,sx+1,sy+9,14,7,"#8a2a3e");R(x,sx+1,sy+9,14,1,"#b13e53")};
-  const t1=t-S.b[0],walkIn=Math.max(0,Math.min(1,t1/4000));
+  const t1=t-(S.p1||0),walkIn=Math.max(0,Math.min(1,t1/4000));
   if(cs.id==="b1"){
     R(x,0,0,160,100,"#1a1c2c");R(x,20,8,120,40,"#29366f");
     x.fillStyle="rgba(255,205,117,0.18)";x.beginPath();x.moveTo(80,0);x.lineTo(62,48);x.lineTo(98,48);x.closePath();x.fill();
@@ -2289,7 +2289,7 @@ function finDraw(x,t,cs,ph){
     const night=ph>=2;R(x,0,0,160,60,night?"#1a1c2c":"#ef7d57");if(!night){R(x,0,30,160,30,"#ffcd75");R(x,98,34,18,10,"#f4f4e4")}
     else[[10,8],[30,20],[52,6],[70,16],[96,9],[112,24],[148,14]].forEach(([sx,sy],i)=>{if((Math.floor(t/400)+i)%3)P2(sx,sy,"#f4f4e4")});
     R(x,0,58,160,42,"#29366f");for(let i=0;i<8;i++)R(x,((i*23+t/60)%170)-10,64+(i%4)*8,8,1,"#3b5dc9");
-    const fy=Math.round(Math.sin(t/500)),fx=ph===4?Math.round(100+Math.min(60,(t-S.b[3])/80)):100;
+    const fy=Math.round(Math.sin(t/500)),fx=ph===4?Math.round(100+Math.min(60,(t-(S.p4||t))/80)):100;
     R(x,fx,46+fy,56,13,"#f4f4e4");R(x,fx,54+fy,56,2,"#3b5dc9");R(x,fx+12,36+fy,30,10,"#f4f4e4");R(x,fx+30,28+fy,6,8,"#b13e53");
     for(let i=0;i<5;i++)R(x,fx+15+i*6,39+fy,3,3,(Math.floor(t/600)+i)%4?"#ffcd75":"#94b0c2");
     R(x,0,62,96,8,"#a7663a");R(x,0,62,96,1,"#c9a468");for(let i=0;i<5;i++)R(x,6+i*20,70,3,10,"#5d3a1a");
@@ -2300,6 +2300,55 @@ function finDraw(x,t,cs,ph){
     S.fw.forEach(f=>{const r=f.t/40;for(let a=0;a<8;a++){const xx=Math.round(f.x+Math.cos(a*Math.PI/4)*r),yy=Math.round(f.y+Math.sin(a*Math.PI/4)*r);if(f.t<900)R(x,xx,yy,2,2,f.c)}});
   }
   if(ph>=2)S.conf.forEach(p=>R(x,Math.round(p.x),Math.round(p.y),2,3,p.c));
+}
+
+/* ================= v10: final al ritmo de la voz + melodía del teléfono ================= */
+function speakDone(t,cb){let called=false;const once=()=>{if(!called){called=true;cb()}};
+  try{const u=new SpeechSynthesisUtterance(t);u.lang="it-IT";u.rate=.9;u.onend=once;u.onerror=once;speechSynthesis.cancel();speechSynthesis.speak(u);setTimeout(once,t.length*110+5000)}
+  catch(e){setTimeout(once,Math.max(1500,t.length*65))}}
+function stepWait(tok,text,min){return new Promise(res=>{let spoken=!text,timed=false,done=false;
+  const end=()=>{if(done)return;done=true;S.next=null;res(S.tok===tok&&S.ov==="fin")};
+  const check=()=>{if(spoken&&timed)setTimeout(end,500)};
+  S.next=()=>{try{speechSynthesis.cancel()}catch(e){}end()};
+  setTimeout(()=>{timed=true;check()},min);
+  if(text)speakDone(text,()=>{spoken=true;check()})})}
+function ringtone(){
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){return}
+  const N={C5:523,D5:587,E5:659,G5:784,A5:880,B5:988,C6:1047},mel=["G5","E5","G5","C6","B5","G5","A5","G5","E5","G5","D5","C5"];
+  for(let rep=0;rep<2;rep++)mel.forEach((n,i)=>tone(N[n],rep*1.9+i*0.13,0.11,"square",0.045));
+}
+function startFin(c){
+  const cs=caseOf(c);S.next&&S.next();
+  show("fin",{c,cs,t:0,ph:0,call:false,line:-1,th:-1,conf:[],fw:[],tok:Math.random(),p1:0,p4:0});
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}
+  runFin(S.tok);
+}
+async function runFin(tok){
+  const id=S.cs.id,r=ROUTES[S.cs.route],thief=S.cs.woman?"Elena":"Totò";
+  const go=async(state,text,min)=>{if(S.tok!==tok||S.ov!=="fin")throw 0;Object.assign(S,state);render();if(!await stepWait(tok,text,min))throw 0};
+  try{
+    await go({ph:0},FPLACE[id],5000);
+    S.p1=S.t;
+    for(let i=0;i<4;i++)await go({ph:1,line:i},FTALK[id][i],i===0?4500:2500);
+    S.conf=[];for(let i=0;i<70;i++)S.conf.push({x:Math.random()*160,y:-Math.random()*60,vy:12+Math.random()*20,vx:-6+Math.random()*12,c:["#b13e53","#ffcd75","#38b764","#3b5dc9","#f4f4e4","#ef7d57"][i%6]});
+    fanfare(id);await go({ph:2},S.cs.woman?"Brava! Bravissimi! Caso risolto!":"Bravo! Bravissimi! Caso risolto!",4500);
+    for(let k=0;k<r.ids.length;k++){const i=r.ids[k];await go({ph:3,th:k},LEVELS[i].tema+": "+TEMAUSE[i][0]+". "+TEMAUSE[i][2],2500)}
+    S.p4=S.t;await go({ph:4},"Complimenti! Ora sei un vero detective, e il tuo italiano è molto migliorato.",6000);
+    ringtone();await go({ph:5,call:false},"",4200);
+    Object.assign(S,{call:true});render();speak(callText());
+  }catch(e){}
+}
+function finStep(dt){
+  S.t+=dt;const ph=S.ph,id=S.cs.id;
+  if(ph>=2)S.conf.forEach(p=>{p.y+=p.vy*dt/1000;p.x+=p.vx*dt/1000;if(p.y>100&&ph<5){p.y=-4;p.x=Math.random()*160}});
+  if(ph>=2&&id==="a2"&&ph<5&&Math.random()<dt/400)S.fw.push({x:30+Math.random()*100,y:10+Math.random()*30,t:0,c:["#ffcd75","#b13e53","#73eff7","#38b764"][Math.floor(Math.random()*4)]});
+  S.fw.forEach(f=>f.t+=dt);S.fw=S.fw.filter(f=>f.t<1200);
+  const cvs=ov.querySelector&&ov.querySelector("#fin");if(cvs)finDraw(cvs.getContext("2d"),S.t,S.cs,ph);
+}
+function exClick9(D){
+  if("finskip" in D){if(S.next)S.next();return true}
+  if(S.ov==="fin"&&("go" in D||"close" in D)){S.tok=null;try{speechSynthesis.cancel()}catch(e){}}
+  return false;
 }
 
 buildCity();welcome();requestAnimationFrame(frame);
