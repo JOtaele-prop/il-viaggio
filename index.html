@@ -84,6 +84,11 @@ td:first-child{background:var(--accent);white-space:nowrap}
 .pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
 #italy,#trip{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
 .center{text-align:center}
+.lvcard{background:#fff;border:3px solid var(--ink);padding:12px;display:flex;flex-direction:column;gap:6px}
+.lvcard.cur{outline:3px solid var(--accent);outline-offset:2px}.lvcard.locked{background:#dfe3e8;color:var(--mute)}
+.lvn{font-family:var(--px);font-size:18px;background:var(--ink);color:var(--panel);width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.lvst{font-family:var(--px);font-size:9px}.lvst.ok{color:var(--good)}.lvst.cur{color:var(--blue)}
+.lvbar{height:10px;border:2px solid var(--ink);background:#fff}.lvbar i{display:block;height:100%;background:var(--good)}
 .theme{display:flex;flex-direction:column;gap:4px;background:#fff;border:3px solid var(--ink);padding:10px}.theme b{font-family:var(--px);font-size:11px;line-height:1.5}.theme .ex{color:var(--blue)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}.chips span{background:#fff;border:2px solid var(--ink);padding:2px 8px;font-size:19px}
 .ring{font-family:var(--px);font-size:14px;color:var(--bad);animation:ring .25s infinite alternate}
@@ -349,8 +354,8 @@ const EXTRA=[
  sf:{a:"TU",b:"LEI",q:"¿A quién le hablas?",items:[["Parla!",0],["Parli!",1],["Prendi!",0],["Prenda!",1],["Vieni!",0],["Venga!",1],["Scusa!",0],["Scusi!",1],["Dimmi!",0],["Mi dica!",1],["Senti!",0],["Senta!",1]]},
  chest:{w:"GLIELO",clue:"gli + lo, en una sola palabra"},card:"La pizza margherita ha i colori della bandiera italiana: pomodoro, mozzarella e basilico."},
 {g:"sand",tree:"palm",
- sp:{L:[6,1,7,4],h:[[1,5,4],[13,5,4],[6,10,3],[10,10,3],[3,13,6,1]],w:[[18,1,3,16]],p:[[1,9,17,1],[9,5,1,4],[14,9,1,8],[7,16,8,1]],b:[[18,8,2,1]],t:[[17,10],[1,16],[13,2]],f:[]},
- at:{start:[9,8],prof:[3,8],arc:[15,8],board:[11,6],capo:[6,16],talk:[10,13],quest:[16,12],chest:[19,8],q:[[5,8],[17,3],[1,11],[12,14],[16,15],[2,2]],items:[[1,1],[17,16],[5,12]]},
+ sp:{L:[6,1,7,4],h:[[1,5,4],[13,5,4],[6,10,3],[10,10,3],[2,13,5,1]],w:[[18,1,3,16]],p:[[1,9,17,1],[9,5,1,4],[14,9,1,8],[7,16,8,1]],b:[[18,8,2,1]],t:[[17,10],[1,16],[13,2]],f:[]},
+ at:{start:[9,8],prof:[3,8],arc:[15,8],board:[11,6],capo:[7,15],talk:[10,13],quest:[16,12],chest:[19,8],q:[[5,8],[17,3],[1,11],[12,14],[16,15],[2,2]],items:[[1,1],[17,16],[5,12]]},
  dial:{who:"Pescatore",end:"Parli come un siciliano! Ecco l'ultimo timbro.",turns:[
   ["Se avessi una barca, che cosa faresti?",["Andrei a pescare ogni mattina.","Andrò a pescare ogni mattina.","Andassi a pescare ogni mattina."],"Se + congiuntivo imperfetto → condizionale: andrei."],
   ["E se domani fa bel tempo?",["Se fa bel tempo, vado al mare.","Se farebbe bel tempo, vado al mare.","Se facesse bel tempo, vado al mare."],"Hipótesis real: se + presente, presente."],
@@ -700,7 +705,7 @@ const HAIRS=["#5d275d","#333c57","#a7663a","#1a1c2c","#ffcd75","#94b0c2"];
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 
 const K="il-viaggio-arcade-v1";
-let save={city:0,max:0,done:{},lesson:{},stars:{},miss:{},hearts:3,seen:{},cards:{},best:{},carry:null,tour:{},open:{},vip:{},clue:{},found:{},intro:{}};
+let save={city:8,max:0,done:{},lesson:{},stars:{},miss:{},hearts:3,seen:{},cards:{},best:{},carry:null,tour:{},open:{},vip:{},clue:{},found:{},intro:{}};
 try{const s=JSON.parse(localStorage.getItem(K));if(s&&typeof s.city==="number")save=Object.assign(save,s)}catch(e){}
 for(let i=1;i<=Math.min(save.max||0,7);i++)save.open[i]=1;
 const persist=()=>{try{localStorage.setItem(K,JSON.stringify(save))}catch(e){}};
@@ -913,7 +918,7 @@ function render(){
     h=`<div class="eyebrow">Mapa del viaje</div><h2>${esc(rt.n)}</h2><canvas id="italy" width="120" height="140"></canvas><p class="legend mute"><span style="color:#e0a100">━</span> hecho · ┅ pendiente · <span style="color:#b13e53">■</span> estás aquí</p>
     ${rt.ids.map((i,k)=>{const x=LEVELS[i];return `<button class="mapbtn" data-go="${i}" ${isOpen(i)?"":"disabled"}><span>${k+1}. ${esc(x.city)}${i===c?" ◀":""}${save.cards[i]?" ✉":""}${tourOf(i).done?" ⚑":""}${save.vip[i]?" VIP":""}</span><span>${isOpen(i)?stars(save.stars[i]||0):"cerrada"}</span></button>`}).join("")}
     <div class="eyebrow">Cartoline · ${cards.length}/${rt.ids.length}</div>${cards.length?cards.map(i=>`<p class="tip"><b>${esc(LEVELS[i].city)}.</b> ${esc(LEVELS[i].card)}</p>`).join(""):`<p class="mute">Abre el baúl de cada ciudad para coleccionar sus postales.</p>`}
-    <div class="eyebrow">Otras rutas</div>${others.map(r=>btn("IR A "+r.n.toUpperCase(),"data-go="+[...r.ids].reverse().find(isOpen),"")).join("")}<p class="mute">Ruta avanzada (B2): próximamente.</p>${btn("CERRAR","data-close")}`}
+    ${btn(trp("VER TODOS LOS NIVELES","VEDI TUTTI I LIVELLI"),"data-levels","")}${btn("CERRAR","data-close")}`}
   else if(S.ov==="arc"){top=false;h=`<div class="eyebrow">Sala giochi</div><p>Scegli un gioco! Cada juego completado te devuelve 1 vida (máximo 3).</p>${btn("COPPIE · UNIR PAREJAS","data-game='pairs'")}${btn("SFIDA VELOCE · CONTRARRELOJ"+(save.best[c]?" ("+save.best[c]+"/10)":""),"data-game='sfida'")}${btn("SALIR","data-close","")}`}
   else if(S.ov==="pairs"){
     const left=S.items.filter(x=>!S.ok.includes(x.id)).length;
@@ -1036,7 +1041,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -1442,7 +1447,7 @@ function briefHtml(){
     [save.found[c],puzType(c)==="sopa"?tr("Sopa de letras: adónde fue","Crucipuzzle: dove è andato"):tr("Crucigrama: adónde fue","Cruciverba: dove è andato")],[tourOf(c).done,"Free walking tour"],[false,isLast(c)?tr(FP[caseOf(c).id].es,FP[caseOf(c).id].it):tr("Estación: preguntas y tren","Stazione: domande e treno")]];
   return `<div class="eyebrow">${esc(rt.n)} · ${rt.ids.indexOf(c)+1}/${rt.ids.length} · ${esc(cs.title)}</div><h2>${trp("Estás en","Sei a")} ${esc(L.city)}</h2><p>${trp("Tema de italiano","Tema di italiano")}: <b>${esc(L.tema)}</b></p>
   <ul class="check">${it.map(([ok,t])=>`<li class="${ok?"ok":""}">${ok?"✓":"□"} ${t}</li>`).join("")}</ul>
-  <div class="tip"><b>${trp("Ahora","Adesso")}:</b> ${nt.txt}</div><div class="row">${btn("AIUTO 🐦","data-help","")}${btn(trp("¡A JUGAR!","ANDIAMO!"),"data-ns","a")}</div>`;
+  <div class="tip"><b>${trp("Ahora","Adesso")}:</b> ${nt.txt}</div><div class="row">${btn("AIUTO 🐦","data-help","")}${btn(trp("NIVELES","LIVELLI"),"data-levels","")}${btn(trp("¡A JUGAR!","ANDIAMO!"),"data-ns","a")}</div>`;
 }
 
 /* ---------- Pippo, el ayudante ---------- */
@@ -1462,7 +1467,7 @@ function helpHtml(){
   else if(S.mode==="topic"){const t=TOPICS[S.t];body=`<h2>${esc(trp(t[0],t[1]))}</h2><p>${tr(esc(t[2]),esc(t[3]))}</p>`}
   else body=`<p class="it">${esc(S.hi)}</p>`;
   return `<div class="eyebrow">Pippo il piccione · aiuto</div><canvas id="pippo" class="pippo" width="32" height="24"></canvas>${body}
-   ${btn(trp("¿QUÉ HAGO AHORA?","COSA FACCIO ADESSO?"),"data-hnext","")}${btn(trp("¿CÓMO FUNCIONA…?","COME FUNZIONA…?"),"data-htopics","")}${btn(trp("VER LA GUÍA DEL JUEGO","GUIDA DEL GIOCO"),"data-tut","")}${btn(trp("CERRAR","CHIUDI"),"data-close")}`;
+   ${btn(trp("¿QUÉ HAGO AHORA?","COSA FACCIO ADESSO?"),"data-hnext","")}${btn(trp("¿CÓMO FUNCIONA…?","COME FUNZIONA…?"),"data-htopics","")}${btn(trp("VER LA GUÍA DEL JUEGO","GUIDA DEL GIOCO"),"data-tut","")}${btn(trp("NIVELES","LIVELLI"),"data-levels","")}${btn(trp("CERRAR","CHIUDI"),"data-close")}`;
 }
 function drawPippo(x){R(x,0,0,32,24,"#73eff7");R(x,0,20,32,4,"#38b764");R(x,9,10,14,9,"#94b0c2");R(x,19,6,7,7,"#7a93a8");R(x,21,8,2,2,"#1a1c2c");R(x,26,9,3,2,"#e0a100");R(x,11,11,8,3,"#566c86");R(x,18,13,4,2,"#38b764");R(x,13,19,2,2,"#e0a100");R(x,18,19,2,2,"#e0a100");R(x,5,11,5,4,"#7a93a8")}
 let ptr=null;
@@ -2348,6 +2353,30 @@ function finStep(dt){
 function exClick9(D){
   if("finskip" in D){if(S.next)S.next();return true}
   if(S.ov==="fin"&&("go" in D||"close" in D)){S.tok=null;try{speechSynthesis.cancel()}catch(e){}}
+  return false;
+}
+
+/* ================= v11: niveles que se desbloquean ================= */
+const LVL=[{r:0,cefr:"A2",desc:["Presente, artículos, preposiciones, c'è/ci sono, reflexivos y piacere.","Presente, articoli, preposizioni, c'è/ci sono, riflessivi e piacere."]},
+           {r:1,cefr:"B1",desc:["Pasados, pronombres, ci/ne, futuro, condicional, congiuntivo, imperativo y periodo hipotético.","Passati, pronomi, ci/ne, futuro, condizionale, congiuntivo, imperativo e periodo ipotetico."]}];
+ROUTES[0].n="Livello 1 · A2";ROUTES[1].n="Livello 2 · B1";
+const lvOf=c=>LVL.findIndex(l=>ROUTES[l.r]===routeOf(c));
+const lvOpen=k=>k===0||routeDone(LVL[k-1].r)||ROUTES[LVL[k].r].ids.some(i=>(save.stars[i]||0)>0||(save.clue[i]||0)>0);
+function levelsHtml(){
+  const cur=lvOf(save.city);
+  const cards=LVL.map((l,k)=>{const r=ROUTES[l.r],cs=CASES.find(x=>x.route===l.r),open=lvOpen(k),done=routeDone(l.r),n=r.ids.filter(i=>(save.stars[i]||0)>0).length;
+    const status=done?`<span class="lvst ok">✓ ${trp("Completado","Completato")}</span>`:k===cur?`<span class="lvst cur">▶ ${trp("Estás aquí","Sei qui")}</span>`:open?`<span class="lvst">${trp("Disponible","Disponibile")}</span>`:`<span class="lvst lock">🔒 ${trp("Bloqueado","Bloccato")}</span>`;
+    return `<div class="lvcard${open?"":" locked"}${k===cur?" cur":""}"><div class="row"><b class="lvn">${k+1}</b>${status}</div>
+      <h2>${esc(cs.title)}</h2><p class="mute">${l.cefr} · ${r.ids.length} ${trp("ciudades","città")}: ${esc(LEVELS[r.ids[0]].city)} → ${esc(LEVELS[r.ids[r.ids.length-1]].city)}</p>
+      <p>${esc(trp(l.desc[0],l.desc[1]))}</p>`+(open?`<div class="lvbar"><i style="width:${Math.round(n/r.ids.length*100)}%"></i></div><p class="mute small">${n}/${r.ids.length} ${trp("ciudades superadas","città superate")}</p>`+(k===cur?"":btn(done?trp("REPETIR","RIGIOCA"):trp("JUGAR ESTE NIVEL","GIOCA QUESTO LIVELLO"),"data-lvgo="+k,""))
+      :`<p class="mute">${trp("Completa el nivel "+k+" para desbloquearlo.","Completa il livello "+k+" per sbloccarlo.")}</p>`)+`</div>`}).join("");
+  return `<div class="eyebrow">Il Viaggio</div><h2>${trp("Niveles","Livelli")}</h2><p class="mute">${trp("Cada nivel es un caso nuevo y un poco más difícil. Se desbloquean al terminar el anterior.","Ogni livello è un caso nuovo e un po' più difficile. Si sbloccano finendo quello prima.")}</p>${cards}
+   <div class="lvcard locked"><div class="row"><b class="lvn">3</b><span class="lvst lock">🔒 ${trp("Próximamente","Prossimamente")}</span></div><h2>${trp("Un caso en el sur","Un caso al sud")}</h2><p class="mute">B2</p></div>${btn(trp("VOLVER AL JUEGO","TORNA AL GIOCO"),"data-close")}`;
+}
+EXOV.levels=levelsHtml;
+function exClick10(D){
+  if("levels" in D){show("levels");return true}
+  if("lvgo" in D){const k=+D.lvgo;if(!lvOpen(k))return true;const r=ROUTES[LVL[k].r];travel([...r.ids].reverse().find(isOpen));return true}
   return false;
 }
 
