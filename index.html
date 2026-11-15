@@ -172,6 +172,7 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .fces{font-size:20px;color:var(--mute);margin-top:8px}
 .hintw{border-top:2px dashed #c5d3dc;padding-top:6px;display:flex;flex-direction:column;gap:4px;font-size:20px}.hintw .it,.hl .it{font-size:20px}.hintw>b{display:inline}.hintw:first-child{border-top:none}.hl{background:#fff7e0;border-left:4px solid var(--accent);padding:4px 6px;font-size:20px}.pat{font-family:var(--px);font-size:10px;letter-spacing:2px}
 .story{background:#fff7e0;border:3px solid var(--ink);border-left:8px solid #a7663a;padding:8px 10px;display:flex;flex-direction:column;gap:6px}.story .it{font-size:21px;line-height:1.15}
+.howto{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}.howi{font-size:44px;line-height:1}
 </style>
 </head>
 <body>
@@ -1079,7 +1080,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -3219,6 +3220,47 @@ const _firstBtn=(h,ins)=>{const i=h.indexOf("<button");return i<0?h+ins:h.slice(
 const _lastBtn=(h,ins)=>{const i=h.lastIndexOf("<button");return i<0?h+ins:h.slice(0,i)+ins+h.slice(i)};
 EXOV.brief=()=>_firstBtn(novHtml()+briefHtml(),storyBox(save.city));
 EXOV.dos=()=>{const s=storyDos();return _lastBtn(dosHtml(),s?`<div class="eyebrow">${trp("La historia de los objetos","La storia degli oggetti")}</div>${s}`:"")};
+
+/* ================= v18: explicación la primera vez de cada actividad; tiendas con 3 clientes y fin ================= */
+save.how=save.how||{};
+const HOW={
+ lesson:["👩‍🏫","La lezione","Clase con la Prof","La Prof te explica el tema de italiano de esta ciudad con tablas y ejemplos. Léelo con calma: después lo vas a necesitar para las preguntas y los juegos. Todo queda guardado en tu Quaderno.","La Prof ti spiega il tema di italiano di questa città con tabelle ed esempi. Leggi con calma: ti servirà per le domande e i giochi. Tutto resta salvato nel Quaderno."],
+ text:["📜","Il cartello","El cartel de la plaza","Es un texto sobre la ciudad. Léelo entero: los vecinos te harán preguntas sobre él. Si no entiendes una palabra subrayada, tócala y verás la traducción. Con 🔊 lo escuchas en voz alta.","È un testo sulla città. Leggilo tutto: i vicini ti faranno domande. Se non capisci una parola sottolineata, toccala e vedrai la traduzione. Con 🔊 lo ascolti."],
+ q:["❓","Le domande dei vicini","Preguntas de los vecinos","Un vecino te hace una pregunta sobre el tema o sobre el cartel. Elige la respuesta correcta (o ordena las palabras). Si aciertas, te da una pista del ladrón. Si fallas, pierdes un corazón ♥.","Un vicino ti fa una domanda sul tema o sul cartello. Scegli la risposta giusta (o metti in ordine le parole). Se rispondi bene ti dà una pista. Se sbagli perdi un cuore ♥."],
+ dial:["💬","Conversazione","Conversación","Vas a hablar con un personaje. En cada turno lee lo que te dice y elige la respuesta correcta en italiano. Si te equivocas, puedes probar otra vez. Al final te da una pista.","Parli con un personaggio. A ogni turno leggi quello che dice e scegli la risposta giusta in italiano. Se sbagli puoi riprovare. Alla fine ti dà una pista."],
+ idk:["🕵️","Identikit","Identikit del ladrón","Un testigo te describe al ladrón. Escucha lo que dice y elige en cada rasgo (pelo, gafas, cara, sombrero…) la opción correcta. Cuando lo tengas, pulsa el botón para comprobarlo.","Un testimone ti descrive il ladro. Ascolta e scegli per ogni tratto (capelli, occhiali, viso, cappello…) l'opzione giusta. Poi premi il pulsante per controllare."],
+ shop:["🛍️","Il negozio","La tienda","Hoy trabajas detrás del mostrador. Un cliente te pide productos en italiano. Toca los productos de la estantería para ponerlos en el mostrador (si te pasas, tócalos en el mostrador para quitarlos) y pulsa SERVIR. Atiendes a 3 clientes y la tienda cierra. Para volver a jugar, sal y entra otra vez.","Oggi lavori dietro il bancone. Un cliente ti chiede dei prodotti in italiano. Tocca i prodotti sullo scaffale per metterli sul bancone (se sbagli, toccali sul bancone per toglierli) e premi SERVI. Servi 3 clienti e poi il negozio chiude. Per giocare di nuovo, esci ed entra."],
+ wordle:["🔤","Parola","Adivina la palabra","Tienes que adivinar una palabra italiana de 5 letras relacionada con la tienda. Escríbela y pulsa ENTER. Las letras se colorean: verde = letra correcta en su sitio; amarillo = la letra está, pero en otro sitio; gris = no está. Tienes 6 intentos. Para volver a jugar, sal y entra.","Devi indovinare una parola italiana di 5 lettere legata al negozio. Scrivila e premi ENTER. Verde = lettera giusta al posto giusto; giallo = c'è ma in un altro posto; grigio = non c'è. Hai 6 tentativi."],
+ tiro:["🎯","Tiro a segno","Tiro al blanco","Arriba verás una consigna (por ejemplo: «verbos en pasado»). Pasarán carteles con palabras: toca solo los que cumplen la consigna, antes de que se vayan. Tienes 25 segundos: necesitas al menos 5 aciertos y como mucho 2 errores. Para volver a jugar, sal y entra.","In alto c'è una consegna. Passano cartelli con delle parole: tocca solo quelli giusti prima che spariscano. Hai 25 secondi: servono almeno 5 centri e al massimo 2 errori."],
+ ruota:["🎡","La ruota delle frasi","La ruleta de frases","Hay un refrán italiano escondido. Toca letras para descubrirlo: si la letra está, aparece en la frase. Puedes fallar 6 veces como máximo. Al final verás qué significa. Para volver a jugar, sal y entra.","C'è un proverbio italiano nascosto. Tocca le lettere per scoprirlo. Puoi sbagliare al massimo 6 volte. Alla fine vedrai che cosa significa."],
+ cinema:["🎬","Cinema · doppiaggio","Cine: doblaje","Eres actor de doblaje. Mira la escena y elige la frase en italiano que dice el personaje en cada momento. Si aciertas las 4 frases, la escena queda doblada. Para volver a jugar, sal y entra.","Sei un doppiatore. Guarda la scena e scegli la frase in italiano che dice il personaggio. Se indovini le 4 frasi, la scena è doppiata."],
+ enigma:["🧩","Enigmistica","Adivinanzas","Te harán 3 adivinanzas en italiano. Lee bien y elige la respuesta. Necesitas acertar al menos 2. Para volver a jugar, sal y entra.","Ti fanno 3 indovinelli in italiano. Leggi bene e scegli la risposta. Devi indovinarne almeno 2."],
+ pairs:["🃏","Coppie","Unir parejas","Toca una casilla y después su pareja (la palabra en italiano y su traducción). Si es correcta, quedan fijas. Cuando las unas todas, recuperas una vida.","Tocca una casella e poi la sua coppia. Quando le unisci tutte recuperi una vita."],
+ sfida:["⏱️","Sfida veloce","Contrarreloj","Aparecen 10 palabras de una en una. Tienes 4 segundos para decidir en qué columna va cada una. Con un 80 % de aciertos recuperas una vida.","Appaiono 10 parole, una alla volta. Hai 4 secondi per scegliere la colonna giusta. Con l'80 % recuperi una vita."],
+ sopa:["🔎","Crucipuzzle","Sopa de letras: el enigma","Con las pistas que juntaste descubrirás adónde fue el ladrón. Lee las definiciones y busca esas 3 palabras en la sopa: toca la primera letra y después la última. Si no te sale, abre «Tus pistas» o pide una ayuda 💡.","Con le piste che hai raccolto scoprirai dove è andato il ladro. Leggi le definizioni e cerca le 3 parole: tocca la prima lettera e poi l'ultima. Se non ci riesci, apri «Le tue piste» o chiedi un aiuto 💡."],
+ cw:["✏️","Cruciverba","Crucigrama: el enigma","Con las pistas que juntaste descubrirás adónde fue el ladrón. Toca una definición, escribe la palabra y pulsa OK. Si no te sale, abre «Tus pistas» o pide una ayuda 💡.","Con le piste che hai raccolto scoprirai dove è andato il ladro. Tocca una definizione, scrivi la parola e premi OK. Se non ci riesci, apri «Le tue piste» o chiedi un aiuto 💡."],
+ exam:["🚉","In stazione","El examen de la estación","Antes de subir al tren, el revisor te hace 3 preguntas sobre el free walking tour. Si aciertas las 3, viajas en clase VIP; si no, viajas en clase turista y haces un repaso.","Prima di salire sul treno, il capotreno ti fa 3 domande sul free walking tour. Se rispondi bene a tutte, viaggi in classe VIP."],
+ rip:["🔁","Ripasso","Repaso del tour","Te leen frases sobre lo que viste en el tour. Di si cada una es verdadera (vero) o falsa (falso).","Ti leggono frasi sul tour. Di' se sono vere o false."],
+ trip:["🚆","In treno","El viaje en tren","Mientras viajas, escucha los anuncios del tren y responde qué dijeron. Después tu vecino de asiento te habla: elige la respuesta correcta en italiano.","Durante il viaggio ascolta gli annunci e rispondi. Poi il tuo vicino ti parla: scegli la risposta giusta."],
+ chest:["🧰","Il baule","El baúl escondido","El baúl está cerrado con una palabra secreta. Lee la pista y toca las letras en orden para formarla. Dentro hay una postal de la ciudad.","Il baule è chiuso con una parola segreta. Leggi l'indizio e tocca le lettere in ordine. Dentro c'è una cartolina."]};
+const HOWRESTART={sfida:()=>startSfida(),tiro:()=>startTiro()};
+const needHow=k=>HOW[k]&&!save.how[k];
+const howHtml=k=>{const h=HOW[k];return `<div class="howto"><div class="howi">${h[0]}</div><div class="eyebrow">${trp("Cómo se juega","Come si gioca")}</div><h2>${esc(trp(h[2],h[1]))}</h2><p>${stage()<2?esc(h[3]):esc(h[4])}</p>${stage()===1?`<p class="mute small it">${esc(h[4])}</p>`:""}</div>${btn(trp("¡ENTENDIDO, A JUGAR!","HO CAPITO, SI GIOCA!"),"data-howok")}`};
+const NOREPLAY=/<button[^>]*data-(wnew|tironew|ruotanew|cinenew|enignew)[^>]*>[\s\S]*?<\/button>/g;
+Object.keys(HOW).forEach(k=>{const f=EXOV[k];EXOV[k]=()=>{if(needHow(k))return howHtml(k);let h=f?f():null;if(h&&["wordle","tiro","ruota","cinema","enigma"].includes(k))h=h.replace(NOREPLAY,"");return h}});
+
+/* --- tienda: 3 clientes y cierra --- */
+function startShop(type,n,okN){n=n||1;const o=newOrder(type);show("shop",{type,o,cart:{},res:null,n,tot:3,okN:okN||0});if(!needHow("shop"))speak(o.txt)}
+{const f=EXOV.shop;EXOV.shop=()=>{if(needHow("shop"))return howHtml("shop");const sh=SHOPS[S.type];
+  if(S.closed)return `<div class="row"><span class="eyebrow">${sh.e} ${esc(sh.n)}</span>${hp()}</div><div class="fb ${S.okN>=2?"ok":"no"}"><b>${trp("¡TIENDA CERRADA!","NEGOZIO CHIUSO!")}</b><span>${trp("Atendiste bien a","Hai servito bene")} ${S.okN} / ${S.tot} ${trp("clientes","clienti")}.</span></div><p class="mute">${trp("Si quieres jugar otra vez, sal de la tienda y vuelve a entrar.","Se vuoi giocare ancora, esci dal negozio e rientra.")}</p>${btn(trp("SALIR DE LA TIENDA","ESCI DAL NEGOZIO"),"data-close")}`;
+  let h=f().replace(`<span class="eyebrow">${sh.e} ${esc(sh.n)}</span>`,`<span class="eyebrow">${sh.e} ${esc(sh.n)} · ${trp("cliente","cliente")} ${S.n}/${S.tot}</span>`);
+  if(S.res&&S.n>=S.tot)h=h.replace(/(data-shopnew>)[^<]*/,"$1"+trp("CERRAR LA TIENDA","CHIUDI IL NEGOZIO"));
+  return h}}
+function exClick18(D){
+  if("howok" in D&&S.ov&&HOW[S.ov]){const k=S.ov;save.how[k]=1;persist();if(HOWRESTART[k])HOWRESTART[k]();else{render();if(k==="shop"&&S.o)speak(S.o.txt)}return true}
+  if(S.ov==="shop"&&"shopok" in D){shopOk();if(S.res&&S.res.ok)S.okN=(S.okN||0)+1;render();return true}
+  if(S.ov==="shop"&&"shopnew" in D){if(S.n<S.tot)startShop(S.type,S.n+1,S.okN);else{S.closed=true;render()}return true}
+  return false}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
