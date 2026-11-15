@@ -1106,7 +1106,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -3430,7 +3430,7 @@ function boardHtml(c){const L=LEVELS[c],l=L.lesson,T=TEMAUSE[c];
    <div class="chtip">⚠ ${esc(l.tip)}</div>${T?`<div class="chex">${trp("Ejemplo","Esempio")}: «${esc(T[2])}» ${spk1(T[2])}</div>`:""}
    <div class="chtray"><i></i><b></b></div></div>`}
 EXOV.lesson=()=>{if(needHow("lesson"))return howHtml("lesson");const c=save.city;
-  return `<div class="row"><span class="eyebrow">👩‍🏫 ${esc(profOf(c)[0])} · ${esc(LEVELS[c].city)}</span></div>${boardHtml(c)}<p class="mute small">${trp("Esta lección queda copiada en tu Quaderno: puedes abrirla en cualquier momento, también durante un reto.","Questa lezione resta copiata nel tuo Quaderno: puoi aprirla quando vuoi, anche durante una sfida.")}</p>${btn(trp("ENTENDIDO","HO CAPITO"),"data-close")}`};
+  return `<div class="row"><span class="eyebrow">👩‍🏫 ${esc(profOf(c)[0])} · ${esc(LEVELS[c].city)}</span></div>${boardHtml(c)}<p class="mute small">${trp("Esta lección queda copiada en tu Quaderno: puedes abrirla en cualquier momento, también durante un reto.","Questa lezione resta copiata nel tuo Quaderno: puoi aprirla quando vuoi, anche durante una sfida.")}</p>${btn("✏️ "+trp("PRACTICAR EN EL AULA","ESERCITATI IN AULA"),"data-gopract","")}${btn(trp("ENTENDIDO","HO CAPITO"),"data-close")}`};
 
 /* ================= v24: cada pista la cuenta un testigo, con su pequeña historia ================= */
 const CSTORY={
