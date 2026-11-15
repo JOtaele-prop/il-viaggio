@@ -84,6 +84,15 @@ td:first-child{background:var(--accent);white-space:nowrap}
 .pic{width:100%;height:auto;display:block;image-rendering:pixelated;border:3px solid var(--ink)}
 #italy,#trip{width:100%;max-width:320px;align-self:center;image-rendering:pixelated;border:3px solid var(--ink)}
 .center{text-align:center}
+.helpbox{border:3px dashed var(--blue);padding:8px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.clues{margin:0;padding-left:24px;display:flex;flex-direction:column;gap:6px;font-size:20px}.clues li.done{color:var(--good)}.clues b{font-family:var(--px);font-size:11px;letter-spacing:1px}
+.cell.s.ok{background:var(--good-bg);border-color:var(--good)}
+.idrow.new{background:#fff3d6;outline:2px dashed var(--accent)}
+.wd{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:230px;width:100%;align-self:center}
+.wc{aspect-ratio:1;border:3px solid var(--ink);background:#fff;font-family:var(--px);font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.wc.g,.key.g{background:#38b764;color:#fff;border-color:#257179}.wc.y,.key.y{background:#ffcd75}.wc.x,.key.x{background:#94b0c2;color:#fff}
+.kb{display:flex;flex-direction:column;gap:4px}.kr{display:flex;gap:3px;justify-content:center}
+.key{flex:1;max-width:32px;padding:11px 0;font-family:var(--px);font-size:10px;border:2px solid var(--ink);background:#fff;color:var(--ink)}.key.wide{max-width:58px;flex:1.7;font-size:8px}
 .small{font-size:17px}
 .check{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;font-size:22px}
 .check li.ok{color:var(--good)}
@@ -916,7 +925,7 @@ function render(){
       <div class="duo">${[f.a,f.b].map((t,k)=>`<button class="opt${fl?(k===it[1]?" ok":fl.k===k?" no":""):""}" data-sf="${k}" ${fl?"disabled":""}>${esc(t)}</button>`).join("")}</div>${btn("SALIR","data-close","")}`}
   }
   else if(S.ov==="dial"){
-    const D=L.dial,turn=D.turns[S.t];
+    const D=S.D||L.dial,turn=D.turns[S.t];
     h=`<div class="row"><span class="eyebrow">Dialogo · ${esc(D.who)}</span>${hp()}</div>
     <div class="chat">${S.log.map(m=>`<div class="bub${m.n?"":" me"}">${esc(m.x)}</div>`).join("")}</div>
     ${S.end?`<div class="fb ok"><b>GIUSTO! +1 PISTA</b></div>${btn("CONTINUAR","data-dend")}`
@@ -1022,7 +1031,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick(D))return;
+  if(exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -1651,7 +1660,7 @@ function sopaHtml(){
   const grid=`<div class="sopa">${S.g.map((l,i)=>`<button class="cell${fc.has(i)?" f":i===S.sel?" s":""}" data-cell="${i}">${l}</button>`).join("")}</div>`;
   const words=`<p class="words">${S.words.map((w,wi)=>S.found.includes(wi)?`<s>${w}</s>`:"_ ".repeat(w.length).trim()).join(" · ")}</p>`;
   if(done)return `<div class="eyebrow">${trp("Sopa de letras","Crucipuzzle")}</div>${grid}${words}${doneHtml(c)}`;
-  return `<div class="eyebrow">${trp("Sopa de letras","Crucipuzzle")} · ${S.found.length}/${S.words.length}</div><p class="mute">${tr("Hay 3 palabras escondidas (en horizontal, vertical o diagonal). Salen de tus pistas, y una es el destino del ladrón. Toca la primera letra y luego la última. Lo que encuentras queda guardado.","Ci sono 3 parole nascoste (in orizzontale, verticale o diagonale). Vengono dalle tue piste e una è la destinazione del ladro. Tocca la prima lettera e poi l'ultima. Quello che trovi resta salvato.")}</p>${grid}${words}${hintsHtml(c)}${btn("SALIR","data-close","")}`;
+  return `<div class="eyebrow">${trp("Sopa de letras","Crucipuzzle")} · ${S.found.length}/${S.words.length}</div><p class="mute">${tr("Hay 3 palabras escondidas (en horizontal, vertical o diagonal). Salen de tus pistas, y una es el destino del ladrón. Toca la primera letra y luego la última. Lo que encuentras queda guardado.","Ci sono 3 parole nascoste (in orizzontale, verticale o diagonale). Vengono dalle tue piste e una è la destinazione del ladro. Tocca la prima lettera e poi l'ultima. Quello che trovi resta salvato.")}</p>${grid}${words}${btn("SALIR","data-close","")}`;
 }
 
 /* crucigrama */
@@ -1699,7 +1708,7 @@ function cwHtml(){
   if(done)return `<div class="eyebrow">${trp("Crucigrama","Cruciverba")}</div>${grid}${doneHtml(c)}`;
   const clues=cw.words.map((p,wi)=>`<button class="opt${S.solved.includes(wi)?" ok":""}" data-cwsel="${wi}" ${S.solved.includes(wi)?"disabled":""} style="${S.cs===wi?"outline:3px solid var(--blue)":""}"><b>${p.num} ${p.dir?"↓":"→"}</b> ${esc(CWDEF[p.w]||"")} (${p.w.length})${S.solved.includes(wi)?" · "+p.w:""}</button>`).join("");
   const inp=S.cs>=0?`<div class="row"><input id="cwin" class="cwin" maxlength="${cw.words[S.cs].w.length}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${"_".repeat(cw.words[S.cs].w.length)}" aria-label="Palabra">${btn("OK","data-cwok","")}</div>${S.msg?`<p class="mute">${S.msg}</p>`:""}`:"";
-  return `<div class="eyebrow">${trp("Crucigrama","Cruciverba")} · ${S.solved.length}/${cw.words.length}</div><p class="mute">${tr("Toca una definición y escribe la palabra. Las respuestas salen de tus pistas; una es el destino del ladrón. Lo que resuelves queda guardado.","Tocca una definizione e scrivi la parola. Le risposte vengono dalle tue piste; una è la destinazione del ladro. Quello che risolvi resta salvato.")}</p>${grid}<div class="opts">${clues}</div>${inp}${hintsHtml(c)}${btn("SALIR","data-close","")}`;
+  return `<div class="eyebrow">${trp("Crucigrama","Cruciverba")} · ${S.solved.length}/${cw.words.length}</div><p class="mute">${tr("Toca una definición y escribe la palabra. Las respuestas salen de tus pistas; una es el destino del ladrón. Lo que resuelves queda guardado.","Tocca una definizione e scrivi la parola. Le risposte vengono dalle tue piste; una è la destinazione del ladro. Quello che risolvi resta salvato.")}</p>${grid}<div class="opts">${clues}</div>${inp}${btn("SALIR","data-close","")}`;
 }
 function cwOk(){
   const el=$("cwin"),v=((el&&el.value)||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z]/g,""),p=S.cw.words[S.cs];
@@ -1766,6 +1775,252 @@ function exClick(D){
   if("cwsel" in D){S.cs=+D.cwsel;S.msg="";render();setTimeout(()=>{const e=$("cwin");if(e&&e.focus)e.focus()},30);return true}
   if("cwok" in D){cwOk();return true}
   if("vocab" in D){show("note",{vocab:true});return true}
+  return false;
+}
+
+/* ================= v7: ejercicios sin repetir, ayuda, identikit incremental, wordle ================= */
+save.usedQ=save.usedQ||{};save.usedD=save.usedD||{};save.usedNB=save.usedNB||{};save.usedW=save.usedW||{};save.traits=save.traits||{};
+
+/* ---------- banco extra de ejercicios (4 por ciudad) ---------- */
+const XQ={
+0:[{s:"Ieri io ___ la pizza.",o:["ho mangiato","sono mangiato","ho mangiata"],e:"Mangiare usa avere: ho mangiato."},{s:"Luca ___ a casa alle dieci.",o:["è tornato","ha tornato","è tornata"],e:"Tornare usa essere; Luca es masculino: è tornato."},{s:"Voi ___ il film?",o:["avete visto","siete visti","avete veduto"],e:"Vedere → visto, con avere."},{s:"Noi ___ tutta la notte.",o:["abbiamo dormito","siamo dormiti","abbiamo dormuto"],e:"Dormire usa avere: abbiamo dormito."}],
+1:[{s:"Quando ero piccolo, ___ sempre al parco.",o:["giocavo","ho giocato","giocherò"],e:"Hábito en el pasado → imperfetto."},{s:"Ieri ___ Marco al supermercato.",o:["ho incontrato","incontravo","incontrerei"],e:"Hecho puntual (ieri) → passato prossimo."},{s:"Mentre leggevo, ___ il telefono.",o:["è squillato","squillava","squilla"],e:"La acción que interrumpe va en passato prossimo."},{s:"La casa dei nonni ___ grande e luminosa.",o:["era","è stata","sarà"],e:"Descripción en el pasado → imperfetto."}],
+2:[{s:"Vedi quei ragazzi? Sì, ___ vedo.",o:["li","gli","le"],e:"Ragazzi: directo masculino plural → li."},{s:"Scrivo a mia madre: ___ scrivo ogni domenica.",o:["le","la","gli"],e:"Scrivere a lei → le (indirecto)."},{s:"Hai chiamato Paolo? No, ___ chiamo stasera.",o:["lo","gli","le"],e:"Chiamare qualcuno → directo: lo."},{s:"Ai bambini piace il gelato: ___ compro un cono.",o:["gli","li","le"],e:"A loro (a los niños) → gli, indirecto."}],
+3:[{s:"Quante mele vuoi? ___ voglio quattro.",o:["Ne","Ci","Le"],e:"Cantidad → ne."},{s:"Sei mai stato a Bologna? Sì, ___ sono stato l'anno scorso.",o:["ci","ne","la"],e:"Lugar → ci."},{s:"Parliamo del viaggio? Sì, ___ parliamo a cena.",o:["ne","ci","lo"],e:"Parlare di qualcosa → ne."},{s:"Pensi ancora all'esame? Sì, ___ penso sempre.",o:["ci","ne","lo"],e:"Pensare a qualcosa → ci."}],
+4:[{s:"Domani ___ bel tempo.",o:["farà","farebbe","faceva"],e:"Previsión → futuro: farà."},{s:"___ aprire la finestra, per favore?",o:["Potrebbe","Potrà","Poteva"],e:"Petición cortés → condizionale."},{s:"Se ho tempo, ___ al museo.",o:["andrò","andrei","andavo"],e:"Hipótesis real (se + presente) → futuro."},{s:"Mi ___ vivere a Firenze.",o:["piacerebbe","piacerà","piaceva"],e:"Deseo → condizionale: mi piacerebbe."}],
+5:[{s:"Voglio che tu ___ con me.",o:["venga","vieni","verrai"],e:"Volere che + congiuntivo: venga."},{s:"Credo che loro ___ già partiti.",o:["siano","sono","saranno"],e:"Credere che + congiuntivo: siano."},{s:"Benché ___ tardi, usciamo.",o:["sia","è","era"],e:"Benché siempre con congiuntivo."},{s:"È meglio che voi ___ un taxi.",o:["prendiate","prendete","prenderete"],e:"È meglio che + congiuntivo."}],
+6:[{s:"(tu) ___ la verità!",o:["Dimmi","Mi dici","Dicimi"],e:"Di' + mi → dimmi (se duplica la m)."},{s:"Il pane? ___ porto io.",o:["Te lo","Ti lo","Lo ti"],e:"Ti + lo → te lo."},{s:"(Lei) ___, prego!",o:["Entri","Entra","Entrare"],e:"Imperativo formal (Lei): entri."},{s:"(voi) Non ___ rumore!",o:["fate","fare","facciate"],e:"Imperativo negativo de voi: non + la forma normal."}],
+7:[{s:"Se ___ in Sicilia, mangerei cannoli ogni giorno.",o:["vivessi","vivrei","vivo"],e:"Se + congiuntivo imperfetto → condizionale."},{s:"Se avessi studiato, ___ l'esame.",o:["avrei passato","avessi passato","passerei"],e:"Irreal en el pasado: condizionale passato."},{s:"Palermo è più grande ___ Catania.",o:["di","che","come"],e:"Comparar dos cosas con un adjetivo → di."},{s:"È più bello viaggiare ___ lavorare.",o:["che","di","come"],e:"Comparar dos verbos → che."}],
+8:[{s:"Tu ___ molto bene.",o:["canti","canta","canto"],e:"Tu → -i: canti."},{s:"Loro ___ in montagna.",o:["vanno","vadono","andano"],e:"Andare es irregular: vanno."},{s:"Io ___ i compiti.",o:["faccio","fo","faco"],e:"Fare: io faccio."},{s:"Voi ___ freddo?",o:["avete","siete","fate"],e:"Tener frío → avere freddo."}],
+9:[{s:"___ zaino è pesante.",o:["Lo","Il","La"],e:"Empieza por z → lo zaino."},{s:"Ho comprato ___ uova.",o:["le","gli","i"],e:"Uova es femenino plural: le uova."},{s:"___ amici di Marta sono qui.",o:["Gli","I","Le"],e:"Masculino plural que empieza por vocal → gli."},{s:"Vorrei ___ espresso.",o:["un","uno","una"],e:"Masculino que empieza por vocal → un (sin apóstrofo)."}],
+10:[{s:"Il libro è ___ tavolo.",o:["sul","nel","al"],e:"Encima de → su + il = sul."},{s:"Vengo ___ Spagna.",o:["dalla","della","alla"],e:"Procedencia → da + la = dalla."},{s:"Vado ___ mare.",o:["al","in","nel"],e:"Expresión fija: andare al mare."},{s:"Le chiavi sono ___ borsa.",o:["nella","sulla","alla"],e:"Dentro de → in + la = nella."}],
+11:[{s:"___ due bar in questa via.",o:["Ci sono","C'è","Sono"],e:"Plural → ci sono."},{s:"Non ___ nessuno in piazza.",o:["c'è","ci sono","è"],e:"Nessuno es singular → c'è."},{s:"Le case sono ___.",o:["vecchie","vecchi","vecchia"],e:"Femenino plural → vecchie."},{s:"Ci sono ___ persone al caffè.",o:["molte","molta","molto"],e:"Molto + nombre concuerda: molte persone."}],
+12:[{s:"La mattina io ___ la faccia.",o:["mi lavo","lavo","si lava"],e:"Lavarsi: io mi lavo."},{s:"Voi ___ presto?",o:["vi alzate","si alzate","alzate"],e:"Voi → vi alzate."},{s:"Sono ___ due e mezza.",o:["le","la","l'"],e:"Las horas: sono le…"},{s:"Marta ___ alle undici.",o:["si addormenta","addormenta","mi addormento"],e:"Lei → si addormenta."}],
+13:[{s:"A Luca ___ i dolci.",o:["piacciono","piace","piacerei"],e:"I dolci (plural) → piacciono."},{s:"___ fratello vive a Roma.",o:["Mio","Il mio","Mia"],e:"Familiar en singular, sin artículo: mio fratello."},{s:"Questa è ___ macchina.",o:["la nostra","nostra","il nostro"],e:"No es un familiar → con artículo: la nostra."},{s:"Non ___ piace il pesce.",o:["mi","io","me"],e:"Non mi piace."}]
+};
+function poolOf(c){
+  const L=LEVELS[c],own=L.q.map((q,i)=>({id:c+":o:"+i,q,from:c})),ext=(XQ[c]||[]).map((q,i)=>({id:c+":x:"+i,q:Object.assign({t:"gap"},q),from:c}));
+  const r=routeOf(c).ids,rev=[];r.slice(0,r.indexOf(c)).forEach(p=>{LEVELS[p].q.forEach((q,i)=>{if(q.t!=="mc")rev.push({id:p+":o:"+i,q,from:p})});(XQ[p]||[]).forEach((q,i)=>rev.push({id:p+":x:"+i,q:Object.assign({t:"gap"},q),from:p}))});
+  return {own,ext,rev};
+}
+function pickQ(c,npc){
+  const used=save.usedQ[c]||(save.usedQ[c]=[]),P0=poolOf(c),mine=P0.own[npc];
+  if(mine&&!used.includes(mine.id)&&!(mine.q.t==="mc"&&!save.read[c]))return mine;
+  const free=a=>a.filter(p=>!used.includes(p.id)&&p.q.t!=="mc");
+  const cand=free(P0.ext).concat(shuffle(free(P0.rev)));if(cand.length)return cand[0];
+  const any=free(P0.own);if(any.length)return any[0];
+  save.usedQ[c]=[];return pick(P0.ext.concat(P0.own.filter(p=>p.q.t!=="mc")));
+}
+function startQ(i){const c=save.city,p=pickQ(c,i),q=p.q;
+  show("q",{i,qq:q,qid:p.id,from:p.from,res:null,pick:-1,help:false,opts:q.o?shuffle(q.o.map((_,k)=>k)):[],bank:q.a?shuffle(q.a[0].split(" ")):[],ans:[]})}
+function answer(ok,sol){
+  const c=save.city,u=save.usedQ[c]||(save.usedQ[c]=[]);if(!u.includes(S.qid))u.push(S.qid);
+  if(ok){if(!doneOf(c).includes(S.i))doneOf(c).push(S.i);persist()}else lose();
+  S.res={ok,sol};render();hud();
+}
+function qHtml(){
+  const q=S.qq,d=S.res,FL0=LEVELS[S.from],rev=S.from!==save.city;let b="";
+  if(q.t==="mc"||q.t==="gap"){
+    b=(q.t==="mc"?`<p class="mute">${trp("Sobre el texto del cartel:","Sul testo del cartello:")}</p><p class="it">${esc(q.q)}</p>`
+      :`<p class="mute">${trp("Completa la frase:","Completa la frase:")}</p><p class="it">${esc(q.s).replace("___",`<span class="blank">${d?esc(q.o[0]):"&nbsp;"}</span>`)}</p>`)
+     +`<div class="opts">${S.opts.map(i=>`<button class="opt${d?(i===0?" ok":i===S.pick?" no":""):""}" data-opt="${i}" ${d?"disabled":""}>${esc(q.o[i])}</button>`).join("")}</div>`;
+  }else if(q.t==="order"){
+    b=`<p class="mute">${trp("Ordena las palabras para decir:","Metti in ordine le parole per dire:")}</p><p class="it">${esc(q.es)}</p>
+    <div class="answer tiles">${S.ans.map((t,k)=>`<button class="tile" data-back="${k}" ${d?"disabled":""}>${esc(t)}</button>`).join("")}</div>
+    <div class="tiles">${S.bank.map((t,k)=>`<button class="tile" data-take="${k}" ${d?"disabled":""}>${esc(t)}</button>`).join("")}</div>
+    ${d?"":btn(trp("COMPROBAR","CONTROLLA"),"data-check "+(S.bank.length?"disabled":""))}`;
+  }else b=`<p class="mute">${trp("Hay una palabra equivocada. Tócala.","C'è una parola sbagliata. Toccala.")}</p><p class="it">${q.s.split(" ").map((w,i)=>`<button class="word${d?(i===q.w?" ok":i===S.pick?" no":""):""}" data-word="${i}" ${d?"disabled":""}>${esc(w)}</button>`).join(" ")}</p>`;
+  const helpBox=S.help?`<div class="helpbox"><div class="eyebrow">${trp("Repaso del tema","Ripasso del tema")}: ${esc(FL0.tema)}</div>${lessonHtml(S.from)}</div>`:"";
+  const fb=d?`<div class="fb ${d.ok?"ok":"no"}"><b>${d.ok?"GIUSTO! +1 PISTA":"SBAGLIATO · -1 ♥"}</b>${d.sol?`<span class="it">${esc(d.sol)}</span>`:""}<span><b>${trp("¿Por qué?","Perché?")}</b> ${esc(q.e)}</span></div>${d.ok?"":btn(S.help?trp("OCULTAR LA EXPLICACIÓN","NASCONDI LA SPIEGAZIONE"):trp("📘 EXPLÍCAMELO MEJOR","📘 SPIEGAMELO MEGLIO"),"data-qhelp","")}${helpBox}${btn("CONTINUAR","data-qnext")}`
+    :`${helpBox}<div class="row">${btn(S.help?trp("OCULTAR AYUDA","NASCONDI"):trp("📘 NO LO ENTIENDO","📘 NON CAPISCO"),"data-qhelp","")}${btn("QUADERNO","data-note","")}${q.t==="mc"?btn(trp("VER CARTEL","VEDI CARTELLO"),"data-text",""):""}${btn("SALIR","data-close","")}</div>`;
+  return `<div class="row"><span class="eyebrow">${rev?"Ripasso · "+esc(FL0.city):"Reto"} · ${esc(FL0.tema)}</span>${hp()}</div>${b}${fb}`;
+}
+
+/* ---------- diálogos que no se repiten ---------- */
+function startDial(){
+  const c=save.city,L=LEVELS[c],n=save.usedD[c]||0;save.usedD[c]=n+1;let D=L.dial;
+  if(n>0){const lv=routeOf(c).ids.includes(8)?"A2":"B1",pool=NB[lv],u=save.usedNB[c]||(save.usedNB[c]=[]);let k=pool.findIndex((_,i)=>!u.includes(i));
+    if(k<0){save.usedNB[c]=[];k=Math.floor(Math.random()*pool.length)}save.usedNB[c].push(k);
+    const o={to:LEVELS[pick(routeOf(c).ids.filter(i=>i!==c))].city,from:L.city};
+    D={who:L.dial.who,end:pick(["Grazie, è stato un piacere! Ecco la tua pista.","Bravo! Parli già benissimo. Ecco la pista!"]),turns:pool[k].map(t=>[fill(t[0],o),t[1].map(x=>fill(x,o)),t[2]])}}
+  persist();show("dial",{D,t:0,log:[{n:1,x:D.turns[0][0]}],opts:shuffle([0,1,2]),bad:[],fb:false,end:false});speak(D.turns[0][0]);
+}
+function dialPick(k){
+  const c=save.city,D=S.D||LEVELS[c].dial,turn=D.turns[S.t];
+  if(k!==0){S.bad.push(k);S.fb=true;lose();if(!dead())render();return}
+  S.log.push({x:turn[1][0]});S.t++;S.bad=[];S.fb=false;S.opts=shuffle([0,1,2]);
+  if(S.t<D.turns.length){S.log.push({n:1,x:D.turns[S.t][0]});speak(D.turns[S.t][0])}
+  else{S.log.push({n:1,x:D.end});speak(D.end);S.end=true;if(!doneOf(c).includes("D"))doneOf(c).push("D");persist()}
+  render();hud();
+}
+
+/* ---------- identikit incremental: un rasgo nuevo por ciudad ---------- */
+const TR={hair:["Capelli",["corti e neri","lunghi e biondi","ricci e castani","lunghi e neri","grigi"]],glasses:["Occhiali",["no","sì"]],face:["Viso",["senza barba","con i baffi","con la barba"]],
+ eyes:["Occhi",["marroni","azzurri","verdi"]],scar:["Cicatrice",["nessuna","sulla guancia sinistra","sulla guancia destra","sulla fronte"]],mole:["Neo",["nessuno","sul naso","sotto l'occhio","sul mento"]],
+ earring:["Orecchini",["nessuno","un orecchino d'oro","due orecchini grandi"]],scarf:["Sciarpa",["nessuna","rossa","blu","verde","gialla"]],hat:["Cappello",["nessuno","rosso","blu","verde","giallo"]],coat:["Giacca",["rossa","blu","verde","gialla","nera"]]};
+const SEQ={b1:["hair","glasses","face","scar","earring","scarf","hat","coat"],a2:["hair","eyes","earring","mole","scarf","hat"]};
+const THV={b1:{hair:0,glasses:1,face:1,scar:1,earring:1,scarf:1,hat:3,coat:4},a2:{hair:3,eyes:2,earring:2,mole:2,scarf:3,hat:1}};
+const discOf=c=>save.traits[caseOf(c).id]||(save.traits[caseOf(c).id]=[]);
+const editable=c=>{const id=caseOf(c).id,p=routeOf(c).ids.indexOf(c);return SEQ[id].slice(0,p+1).filter(k=>!discOf(c).includes(k))};
+function phrase(k,v,w){const o=TR[k][1][v];return {
+ hair:`Era ${w?"una donna":"un uomo"} con i capelli ${o}.`,glasses:v?"Portava gli occhiali, grandi e neri.":"Non portava gli occhiali.",face:["Non aveva né barba né baffi.","Aveva dei baffi neri, molto eleganti.","Aveva una barba lunga."][v],
+ eyes:`Aveva gli occhi ${o}: me li ricordo bene!`,scar:v?`Aveva una cicatrice ${o}.`:"Non aveva cicatrici.",mole:v?`Aveva un neo ${o}.`:"Non aveva nei.",earring:v?`Portava ${o}.`:"Non portava orecchini.",
+ scarf:v?`Al collo portava una sciarpa ${o}.`:"Non portava la sciarpa.",hat:v?`In testa aveva un cappello ${o}.`:"Non aveva il cappello.",coat:`Indossava una giacca ${o}.`}[k]}
+function witnessText(c,ed){const cs=caseOf(c),w=cs.woman,id=cs.id;
+  return pick([`L'ho vist${w?"a":"o"} bene, sai? `,"Mi ricordo un dettaglio importante… ",`Sono sicuro di quello che ho visto. `])+ed.map(k=>phrase(k,THV[id][k],w)).join(" ")}
+function drawFace2(x,v){
+  const HC=["#1a1c2c","#ffcd75","#a7663a","#1a1c2c","#c5d3dc"],CC=["#b13e53","#3b5dc9","#38b764","#ffcd75","#333c57"],SC=[null,"#b13e53","#3b5dc9","#38b764","#ffcd75"],EC=["#5d3a1a","#3b5dc9","#38b764"];
+  const hc=v.hair===undefined?"#566c86":HC[v.hair];
+  R(x,0,0,40,44,"#94b0c2");R(x,8,32,24,12,v.coat===undefined?"#7a93a8":CC[v.coat]);R(x,18,32,4,6,"#f4f4e4");R(x,17,28,6,5,"#f2c9a0");
+  if(v.hair===1||v.hair===3){R(x,9,10,4,20,hc);R(x,27,10,4,20,hc)}
+  R(x,12,10,16,19,"#f2c9a0");
+  if(v.hair===2){R(x,10,5,20,7,hc);R(x,9,8,3,8,hc);R(x,28,8,3,8,hc);R(x,12,11,3,2,hc);R(x,25,11,3,2,hc)}else{R(x,11,7,18,5,hc);R(x,11,10,2,6,hc);R(x,27,10,2,6,hc)}
+  const ec=v.eyes===undefined?"#1a1c2c":EC[v.eyes];R(x,15,17,2,2,ec);R(x,23,17,2,2,ec);
+  if(v.glasses===1){R(x,13,15,6,5,"#333c57");R(x,14,16,4,3,"#73eff7");R(x,21,15,6,5,"#333c57");R(x,22,16,4,3,"#73eff7");R(x,19,17,2,1,"#333c57");R(x,15,17,2,2,ec);R(x,23,17,2,2,ec)}
+  R(x,19,20,2,2,"#d9a07a");
+  const bc=v.hair===4?"#c5d3dc":"#5d3a1a";if(v.face===2)R(x,12,22,16,8,bc);if(v.face===1)R(x,15,23,10,2,bc);
+  R(x,17,25,6,1,"#b13e53");
+  if(v.scar===1){R(x,13,21,1,1,"#b13e53");R(x,14,22,1,1,"#b13e53");R(x,15,23,1,1,"#b13e53")}
+  if(v.scar===2){R(x,26,21,1,1,"#b13e53");R(x,25,22,1,1,"#b13e53");R(x,24,23,1,1,"#b13e53")}
+  if(v.scar===3)R(x,16,12,8,1,"#b13e53");
+  if(v.mole===1)R(x,21,21,1,1,"#1a1c2c");if(v.mole===2)R(x,15,20,1,1,"#1a1c2c");if(v.mole===3)R(x,19,27,1,1,"#1a1c2c");
+  if(v.earring===1)R(x,11,21,2,2,"#ffcd75");if(v.earring===2){R(x,10,21,2,4,"#ffcd75");R(x,28,21,2,4,"#ffcd75")}
+  if(v.scarf>0){R(x,10,29,20,4,SC[v.scarf]);R(x,22,33,4,6,SC[v.scarf])}
+  if(v.hat>0){R(x,10,3,20,6,SC[v.hat]);R(x,7,8,26,2,SC[v.hat]);R(x,10,7,20,1,"#1a1c2c")}
+}
+const knownV=c=>{const id=caseOf(c).id,v={};discOf(c).forEach(k=>v[k]=THV[id][k]);return v};
+function drawFaceFor(x){
+  if(S.ov==="idk"){const v=knownV(save.city);if(S.won)Object.assign(v,...S.ed.map(k=>({[k]:THV[caseOf(save.city).id][k]})));else Object.assign(v,S.v);return drawFace2(x,v)}
+  drawFace2(x,knownV(save.city));
+}
+function startIdk(){const c=save.city,ed=editable(c),v={};
+  ed.forEach(k=>{v[k]=Math.floor(Math.random()*TR[k][1].length)});const tx=witnessText(c,ed);show("idk",{v,ed,err:0,won:false,t:tx});speak(tx)}
+function idkStep(s){const [k,d]=s.split(",");if(!S.ed.includes(k))return;const n=TR[k][1].length;S.v[k]=(S.v[k]+(+d)+n)%n;S.err=0;render()}
+function idkCheck(){
+  const c=save.city,id=caseOf(c).id,bad=S.ed.filter(k=>S.v[k]!==THV[id][k]).length;
+  if(!bad){S.won=true;S.ed.forEach(k=>{if(!discOf(c).includes(k))discOf(c).push(k)});if(!doneOf(c).includes("I"))doneOf(c).push("I");persist();hud();speak(caseOf(c).woman?"Sì, è lei!":"Sì, è lui!");return render()}
+  lose();if(!dead()){S.err=bad;render()}
+}
+function idkHtml(){
+  const c=save.city,id=caseOf(c).id,known=discOf(c).filter(k=>!S.ed.includes(k));
+  const lock=known.map(k=>`<div class="idrow"><span class="eyebrow">${TR[k][0]}</span><span></span><span class="it mute">🔒 ${esc(TR[k][1][THV[id][k]])}</span><span></span></div>`).join("");
+  const rows=S.ed.map(k=>`<div class="idrow new"><span class="eyebrow">${TR[k][0]}</span><button class="tile" data-idp="${k},-1" aria-label="Anterior">◀</button><span class="it">${esc(TR[k][1][S.v[k]])}</span><button class="tile" data-idp="${k},1" aria-label="Siguiente">▶</button></div>`).join("");
+  if(S.won)return `<div class="eyebrow">Identikit · il testimone</div><canvas id="face" class="face" width="40" height="44"></canvas><div class="fb ok"><b>${trp("NUEVO RASGO DEL LADRÓN","NUOVO SEGNO PARTICOLARE")}! +1 PISTA</b>${S.ed.map(k=>`<span class="it">${TR[k][0]}: ${esc(TR[k][1][THV[id][k]])}</span>`).join("")}<span>${trp("El retrato del Dossier crece con cada ciudad.","Il ritratto nel Dossier cresce in ogni città.")}</span></div>${btn("CONTINUAR","data-ns")}`;
+  return `<div class="row"><span class="eyebrow">Identikit · il testimone</span>${hp()}</div><p class="mute">${tr("Cada testigo recuerda un rasgo nuevo del ladrón. Escúchalo y elige ese rasgo con las flechas; lo que ya sabías está con candado.","Ogni testimone ricorda un dettaglio nuovo del ladro. Ascoltalo e scegli quel dettaglio con le frecce; quello che sapevi già ha il lucchetto.")}</p><p class="it tip">«${esc(S.t)}»</p>${spk(S.t)}<canvas id="face" class="face" width="40" height="44"></canvas>${lock}${rows}`+
+   (S.err?`<div class="fb no"><b>${caseOf(c).woman?"NON È LEI!":"NON È LUI!"} · -1 ♥</b><span>${tr("Ese rasgo no coincide. Vuelve a escuchar al testigo.","Quel dettaglio non corrisponde. Riascolta il testimone.")}</span></div>`:"")+
+   `<div class="row">${btn("CONFRONTA","data-idok","")}${btn("SALIR","data-close","")}</div>`;
+}
+function dosHtml(){
+  const c=save.city,cs=caseOf(c),r=ROUTES[cs.route],id=cs.id;
+  const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
+  const marks=SEQ[id].map(k=>`<tr><td>${TR[k][0]}</td><td>${discOf(c).includes(k)?esc(TR[k][1][THV[id][k]]):"???"}</td></tr>`).join("");
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+    return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
+  const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz"):"";
+  return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas>
+   <div class="eyebrow">${trp("Rasgos (identikit)","Segni particolari (identikit)")} · ${discOf(c).length}/${SEQ[id].length}</div><table>${marks}</table>
+   <div class="eyebrow">${trp("Perfil","Profilo")}</div><table>${rows}</table>${sp}
+   <div class="eyebrow">${trp("Palabra clave del caso","Parola chiave del caso")}</div>${keyBoxes(c)}
+   <div class="eyebrow">Diario delle piste</div>${diary||`<p class='mute'>${trp("Todavía no tienes pistas.","Non hai ancora piste.")}</p>`}${btn("CERRAR","data-close")}`;
+}
+
+/* ---------- sopa de letras: cada palabra con su pista ---------- */
+Object.assign(CWDEF,{
+ GENOVA:"Città con il faro della Lanterna.",MARE:"Elena ha chiesto un treno per andare al…",PESTO:"Salsa verde con basilico: Elena ha comprato un libro su di lei.",
+ TRIESTE:"Città vicino alla Slovenia: è la città di Elena.",BORA:"Vento molto forte di Trieste.",CAFFE:"Bevanda che Elena vuole bere in un locale storico.",
+ ANCONA:"Città sull'Adriatico da cui parte Elena.",PORTO:"Luogo dove arrivano e partono le navi.",CROAZIA:"Il Paese dove va il traghetto.",
+ MILANO:"Città della Scala e della moda.",OPERA:"Spettacolo musicale che Totò vuole sentire stasera.",DUOMO:"Grande chiesa bianca con una statua d'oro.",
+ BOLOGNA:"Città dei portici e delle due torri.",TORRI:"Bologna ne ha due, antiche e famose.",PORTICI:"Strade coperte tipiche di Bologna.",
+ ROMA:"La capitale d'Italia.",FONTANA:"Totò vuole lanciarci una moneta.",COLOSSEO:"Antico anfiteatro dei gladiatori.",
+ PALERMO:"La città dove è nato Totò.",SICILIA:"L'isola più grande del Mediterraneo.",ISOLA:"Terra circondata dal mare."});
+function sopaTap(i){
+  if(S.found.length===S.words.length)return;
+  const ends=new Set(S.place.filter((_,wi)=>!S.found.includes(wi)).flatMap(p=>[p[0],p[p.length-1]]));
+  if(S.sel<0||S.sel===i){S.sel=S.sel===i?-1:i;S.selOk=ends.has(i);return render()}
+  const N=9,ax=S.sel%N,ay=Math.floor(S.sel/N),bx=i%N,by=Math.floor(i/N),dx=Math.sign(bx-ax),dy=Math.sign(by-ay),n=Math.max(Math.abs(bx-ax),Math.abs(by-ay));
+  S.sel=-1;S.miss=false;let hit=false;
+  if(ax===bx||ay===by||Math.abs(bx-ax)===Math.abs(by-ay)){const line=[];for(let k=0;k<=n;k++)line.push((ay+dy*k)*N+ax+dx*k);
+    S.place.forEach((p,wi)=>{if(S.found.includes(wi)||p.length!==line.length)return;
+      if(p.every((v,k)=>v===line[k])||p.every((v,k)=>v===line[line.length-1-k])){S.found.push(wi);hit=true;persist();speak(S.words[wi].toLowerCase())}})}
+  if(!hit)S.miss=true;
+  if(S.found.length===S.words.length){const c=save.city;puzzleDone(c);speak(nextOf(c)===undefined?caseOf(c).ending:destLine(c))}
+  render();
+}
+function sopaHtml(){
+  const c=save.city,fc=new Set(S.found.flatMap(wi=>S.place[wi])),done=S.found.length===S.words.length;
+  const grid=`<div class="sopa">${S.g.map((l,i)=>`<button class="cell${fc.has(i)?" f":i===S.sel?(S.selOk?" s ok":" s"):""}" data-cell="${i}">${l}</button>`).join("")}</div>`;
+  const list=`<ol class="clues">${S.words.map((w,wi)=>`<li class="${S.found.includes(wi)?"done":""}"><b>${S.found.includes(wi)?w:"_ ".repeat(w.length).trim()}</b> <span class="mute">(${w.length})</span><br>${esc(CWDEF[w]||"")}</li>`).join("")}</ol>`;
+  if(done)return `<div class="eyebrow">${trp("Sopa de letras","Crucipuzzle")}</div>${grid}${list}${doneHtml(c)}`;
+  const st=S.sel>=0?(S.selOk?tr("¡Bien! Esa letra empieza o termina una palabra. Ahora toca la última letra.","Bene! Quella lettera inizia o finisce una parola. Ora tocca l'ultima lettera."):tr("Esa letra no empieza ninguna palabra. Tócala otra vez para soltarla.","Quella lettera non inizia nessuna parola. Toccala di nuovo per lasciarla.")):S.miss?tr("Ahí no hay ninguna palabra. Prueba otra vez.","Lì non c'è nessuna parola. Riprova."):"";
+  return `<div class="eyebrow">${trp("Sopa de letras","Crucipuzzle")} · ${S.found.length}/${S.words.length}</div><p class="mute">${tr("Busca las 3 palabras de la lista (en horizontal, vertical o diagonal). Toca su primera letra: si es correcta se pone verde. Luego toca la última. Lo que encuentras queda guardado.","Cerca le 3 parole della lista (in orizzontale, verticale o diagonale). Tocca la prima lettera: se è giusta diventa verde. Poi tocca l'ultima. Quello che trovi resta salvato.")}</p>${list}${grid}${st?`<p class="mute">${st}</p>`:""}${btn("SALIR","data-close","")}`;
+}
+
+/* ---------- segunda tienda: Parola (tipo Wordle) ---------- */
+const WORDS={bar:[["LATTE","leche"],["TAZZA","taza"],["DOLCE","dulce"],["CONTO","cuenta"],["PANNA","nata"]],gelateria:[["GUSTO","sabor"],["COPPA","copa"],["MENTA","menta"],["CREMA","crema"],["PESCA","melocotón"]],
+ ferramenta:[["COLLA","pegamento"],["SCALA","escalera"],["PINZA","pinza"],["LEGNO","madera"],["FERRO","hierro"]],forno:[["TORTA","tarta"],["PIZZA","pizza"],["MIELE","miel"],["FORNO","horno"],["DOLCE","dulce"]],
+ frutta:[["PESCA","melocotón"],["MANGO","mango"],["OLIVA","aceituna"],["FICHI","higos"],["CACHI","caquis"]],farmacia:[["CREMA","crema"],["GARZA","gasa"],["TOSSE","tos"],["DENTI","dientes"]],
+ edicola:[["PENNA","bolígrafo"],["LIBRO","libro"],["CARTA","papel"],["BUSTA","sobre"],["STAMPA","prensa"]],vestiti:[["GONNA","falda"],["BORSA","bolso"],["FELPA","sudadera"],["CALZE","medias"],["SCARPA","zapato"]]};
+Object.keys(WORDS).forEach(k=>WORDS[k]=WORDS[k].filter(w=>w[0].length===5));
+function makeDoors(c){
+  const L=LEVELS[c],pr=ents.find(e=>e.k==="prof"),cp=ents.find(e=>e.k==="capo"),dist=(d,e)=>Math.abs(d.x-e.x)+Math.abs(d.y-e.y);
+  const ds=L.sp.h.map(([x,y,w,s])=>({x:x+(w>>1),y:y+2,hx:x,hy:y,w,big:!!s}));
+  const big=ds.filter(d=>d.big),st=(big.length?big:ds).slice().sort((a,b)=>dist(a,cp)-dist(b,cp))[0];
+  const sc=ds.filter(d=>d!==st).sort((a,b)=>dist(a,pr)-dist(b,pr))[0];
+  const A=L.at,seen=new Set([A.start+""]),q=[A.start];
+  while(q.length){const [x,y]=q.pop();for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,kk=nx+","+ny;if(!seen.has(kk)&&!SOLID.includes(MAP[ny][nx])){seen.add(kk);q.push([nx,ny])}}}
+  const shops=ds.filter(d=>d!==st&&d!==sc).sort((a,b)=>seen.has(b.x+","+(b.y+1))-seen.has(a.x+","+(a.y+1)));
+  st.type="station";sc.type="school";shops.forEach((d,k)=>{d.type=SHOPK[(c*3+k)%SHOPK.length];d.game=k%2?"wordle":"order"});
+  return ds;
+}
+function enterDoor(d){
+  const c=save.city;
+  if(d.type==="school"){save.lesson[c]=1;persist();hud();return show("lesson")}
+  if(d.type==="station")return capoTalk();
+  d.game==="wordle"?startWordle(d.type):startShop(d.type);
+}
+function startWordle(type){
+  const c=save.city,u=save.usedW[c]||(save.usedW[c]=[]),list=WORDS[type];let opts=list.filter(w=>!u.includes(w[0]));
+  if(!opts.length){save.usedW[c]=[];opts=list}const w=pick(opts);save.usedW[c].push(w[0]);persist();
+  show("wordle",{type,w:w[0],es:w[1],rows:[],cur:"",msg:"",end:null});
+}
+function wScore(g,w){const r=Array(5).fill("x"),cnt={};for(let i=0;i<5;i++){if(g[i]===w[i])r[i]="g";else cnt[w[i]]=(cnt[w[i]]||0)+1}
+  for(let i=0;i<5;i++)if(r[i]!=="g"&&cnt[g[i]]){r[i]="y";cnt[g[i]]--}return r}
+function wKey(k){
+  if(S.end)return;
+  if(k==="DEL")S.cur=S.cur.slice(0,-1);
+  else if(k==="ENTER"){if(S.cur.length<5){S.msg=tr("Escribe 5 letras.","Scrivi 5 lettere.");return render()}
+    S.rows.push(S.cur);const win=S.cur===S.w;S.cur="";S.msg="";
+    if(win||S.rows.length===6){const c=save.city;S.end={win,life:false};
+      if(win){save.vocab[S.w.toLowerCase()]=S.es;if(save.hearts<3){save.hearts++;S.end.life=true}persist();hud()}speak(S.w.toLowerCase())}}
+  else if(S.cur.length<5)S.cur+=k;
+  render();
+}
+function wordleHtml(){
+  const sh=SHOPS[S.type],st={},rank={g:3,y:2,x:1};
+  S.rows.forEach(r=>{const sc=wScore(r,S.w);[...r].forEach((ch,i)=>{if(!st[ch]||rank[sc[i]]>rank[st[ch]])st[ch]=sc[i]})});
+  let g="";for(let r=0;r<6;r++){const word=r<S.rows.length?S.rows[r]:r===S.rows.length?S.cur:"",sc=r<S.rows.length?wScore(word,S.w):null;
+    for(let i=0;i<5;i++)g+=`<span class="wc ${sc?sc[i]:""}">${word[i]||""}</span>`}
+  const kb=["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].map((row,ri)=>`<div class="kr">${ri===2?`<button class="key wide" data-wk="ENTER">INVIO</button>`:""}${[...row].map(k=>`<button class="key ${st[k]||""}" data-wk="${k}">${k}</button>`).join("")}${ri===2?`<button class="key wide" data-wk="DEL" aria-label="Borrar">⌫</button>`:""}</div>`).join("");
+  const hint=S.rows.length>=3||stage()===0?`<p class="mute">${trp("Pista","Indizio")}: ${S.rows.length>=3?`${trp("en español es","in spagnolo è")} «${esc(S.es)}»`:trp(`una palabra de la tienda ${sh.n}.`,"")}</p>`:"";
+  const end=S.end?`<div class="fb ${S.end.win?"ok":"no"}"><b>${S.end.win?(S.end.life?"BRAVO! +1 ♥":"BRAVO!"):trp("¡CASI!","PECCATO!")}</b><span class="it">${S.w} = ${esc(S.es)}</span></div>${btn(trp("OTRA PALABRA","UN'ALTRA PAROLA"),"data-wnew")}`:"";
+  return `<div class="row"><span class="eyebrow">${sh.e} ${esc(sh.n)} · Parola</span>${hp()}</div><p class="mute">${tr("Adivina la palabra italiana de 5 letras en 6 intentos. Verde: letra en su sitio. Amarillo: está en la palabra pero en otro sitio. Gris: no está.","Indovina la parola italiana di 5 lettere in 6 tentativi. Verde: lettera al posto giusto. Giallo: c'è ma in un altro posto. Grigio: non c'è.")}</p>
+   <div class="wd">${g}</div>${hint}${S.msg?`<p class="mute">${S.msg}</p>`:""}${end}${S.end?"":`<div class="kb">${kb}</div>`}${btn(trp("SALIR DE LA TIENDA","ESCI DAL NEGOZIO"),"data-close","")}`;
+}
+addEventListener("keydown",e=>{if(S.ov!=="wordle")return;const k=e.key;
+  if(/^[a-zA-Z]$/.test(k))wKey(k.toUpperCase());else if(k==="Backspace")wKey("DEL");else if(k==="Enter")wKey("ENTER");else return;e.preventDefault()});
+EXOV.wordle=wordleHtml;
+
+/* ---------- clics nuevos ---------- */
+function exClick7(D){
+  if(S.ov==="q"){const q=S.qq;
+    if("opt" in D){S.pick=+D.opt;answer(S.pick===0,q.t==="mc"?null:q.s.replace("___",q.o[0]));return true}
+    if("take" in D){S.ans.push(S.bank.splice(+D.take,1)[0]);render();return true}
+    if("back" in D){S.bank.push(S.ans.splice(+D.back,1)[0]);render();return true}
+    if("check" in D){const a=q.a[0];answer(q.a.includes(S.ans.join(" ")),a[0].toUpperCase()+a.slice(1)+".");return true}
+    if("word" in D){S.pick=+D.word;const w=q.s.split(" ");w[q.w]=q.fix;answer(S.pick===q.w,w.join(" "));return true}
+    if("qhelp" in D){S.help=!S.help;render();return true}}
+  if("wk" in D){wKey(D.wk);return true}
+  if("wnew" in D){startWordle(S.type);return true}
   return false;
 }
 
