@@ -186,6 +186,19 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .chtray{height:10px;background:#8b5a2b;margin:8px -12px 0;position:relative;box-shadow:0 -2px 0 #5d3a1a}
 .chtray i{position:absolute;left:24px;top:-5px;width:18px;height:5px;background:#fff}.chtray b{position:absolute;left:52px;top:-7px;width:28px;height:7px;background:#566c86;border-top:3px solid #c5d3dc}
 .shopsign{align-self:center;background:#1a1c2c;color:var(--accent);font-family:var(--px);font-size:11px;padding:8px 12px;border:3px solid var(--accent);text-align:center;display:flex;flex-direction:column;gap:4px}.shopsign small{font-family:var(--tx);font-size:18px;color:#f4f4e4}.meas{display:inline-block;background:var(--ink);color:var(--accent);font-family:var(--px);font-size:7px;padding:2px 4px;margin-left:2px;vertical-align:middle}
+.chchips,.chtypes{display:flex;flex-wrap:wrap;gap:6px}
+.chchip{background:transparent;border:2px dashed rgba(244,244,228,.5);color:#f4f4e4;font-family:var(--tx);font-size:19px;padding:5px 8px;text-align:left}
+.chchip small{opacity:.7}.chchip.on{border:2px solid #ffe58a;background:rgba(255,229,138,.15);color:#ffe58a}
+.chtype{flex:1 1 40%;background:rgba(0,0,0,.18);border:2px solid #f4f4e4;color:#f4f4e4;font-family:var(--px);font-size:8px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.chtype span{font-size:22px}
+.chq{font-size:25px;line-height:1.15;color:#fff;margin:6px 0}
+.chopts{display:flex;flex-direction:column;gap:6px}
+.chopt{background:transparent;border:2px solid rgba(244,244,228,.6);color:#f4f4e4;font-family:var(--tx);font-size:22px;padding:6px 10px;text-align:left}
+.chopt.ok{border-color:#8ff0a4;color:#8ff0a4;background:rgba(56,183,100,.2)}.chopt.no{border-color:#ff9aa8;color:#ff9aa8;text-decoration:line-through}
+.chgood{color:#8ff0a4;font-size:22px}.chbad{color:#ff9aa8;font-size:22px}.chgood span,.chbad span{color:#f4f4e4;font-size:19px;display:block}
+.chbar{height:6px;background:rgba(0,0,0,.25)}.chbar i{display:block;height:100%;background:#ffe58a}
+.chans{color:#ffe58a;font-size:26px}
+#wpad{width:100%;height:auto;border:2px dashed rgba(244,244,228,.45);touch-action:none;background:#2a4434}
 </style>
 </head>
 <body>
@@ -1093,7 +1106,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -3623,6 +3636,113 @@ function exClick25(D){
   if(S.ov!=="shop")return false;
   if("shopadd" in D){const k=D.shopadd;S.cart[k]=(S.cart[k]||0)+1;render();return true}
   if("shoprm" in D){const k=D.shoprm;S.cart[k]=Math.max(0,(S.cart[k]||0)-1);render();return true}
+  return false}
+
+/* ================= v26: la escuela como aula de práctica en el pizarrón ================= */
+function enterDoor(d){
+  const c=save.city;
+  if(d.type==="school"){if(!save.lesson[c]){save.lesson[c]=1;persist();hud();return show("lesson")}return show("pract",{step:"menu",sel:null})}
+  if(d.type==="station")return capoTalk();
+  if(d.type==="casa")return sayL("Toc toc…",pick(["La porta è chiusa. Non c'è nessuno.","Nessuno risponde… forse sono in vacanza!","Qui abita una signora che dorme: meglio non disturbare!"]),"Esta casa está cerrada.");
+  ({order:()=>startShop(d.type),wordle:()=>startWordle(d.type),tiro:startTiro,ruota:startRuota,cinema:startCinema,enigma:startEnigma})[d.game]();
+}
+const PTYPES=[["gap","🧩","Completa la frase","Completa la frase"],["tab","📋","Tablas del tema","Tabelle"],["voc","🔤","Vocabulario","Vocabolario"],["dia","💬","Conversación","Conversazione"],["mix","🎲","Un poco de todo","Un po' di tutto"]];
+const learned=()=>LVL.flatMap(l=>ROUTES[l.r].ids).filter(i=>save.lesson[i]);
+const uniq3=(right,pool)=>{const o=[right];shuffle(pool).forEach(x=>{if(o.length<3&&!o.includes(x))o.push(x)});return o.length===3?o:null};
+function pGap(c){const L=LEVELS[c],out=[];
+  L.q.forEach(q=>{if(q.t==="gap")out.push({q:q.s,o:q.o,e:q.e})});(XQ[c]||[]).forEach(q=>out.push({q:q.s,o:q.o,e:q.e}));return out}
+function pTab(c){const out=[];LEVELS[c].lesson.tabs.forEach(t=>{if(t.r.length<3)return;t.r.forEach(r=>{const o=uniq3(r[1],t.r.map(x=>x[1]));if(o)out.push({q:`${t.h}: ${r[0]} → ?`,o,e:`${r[0]} → ${r[1]}`})})});return out}
+function pVoc(c,all){const ps=LEVELS[c].pairs,pool=all.flatMap(i=>LEVELS[i].pairs);return ps.flatMap(p=>{const a=uniq3(p[1],pool.map(x=>x[1])),b=uniq3(p[0],pool.map(x=>x[0]));return [a&&{q:`«${p[0]}» → ?`,o:a,e:`${p[0]} = ${p[1]}`},b&&{q:`«${p[1]}» → ? (in italiano)`,o:b,e:`${p[1]} = ${p[0]}`}].filter(Boolean)})}
+function pDia(c){const d=LEVELS[c].dial;return d?d.turns.map(t=>({q:`${d.who}: «${t[0]}»`,o:t[1],e:t[2]})):[]}
+function buildSet(type,topics){const all=learned(),gen={gap:pGap,tab:pTab,voc:c=>pVoc(c,all),dia:pDia};
+  let qs=[];topics.forEach(c=>{(type==="mix"?Object.keys(gen):[type]).forEach(k=>qs.push(...gen[k](c).map(q=>Object.assign(q,{c}))))});
+  return shuffle(qs).slice(0,8).map(q=>Object.assign(q,{ord:shuffle([0,1,2].slice(0,q.o.length))}))}
+function practMenu(){const all=learned(),sel=S.sel;
+  const chips=all.map(c=>`<button class="chchip${sel===c?" on":""}" data-psel="${c}"><span class="fchip" style="background:${FCOL[FOCUS[c]||"G"]}">${esc(focusTxt(c))}</span> ${esc(LEVELS[c].tema)} <small>· ${esc(LEVELS[c].city)}</small></button>`).join("");
+  return `<div class="chalk"><div class="chhead"><span>🏫 ${trp("Escuela","Scuola")} · ${esc(LEVELS[save.city].city)}</span><span>${all.length} ${trp("temas","temi")}</span></div>
+   <h2 class="chtitle">${trp("Aula de práctica","Aula di esercizi")}</h2>
+   <p class="chintro">${trp("1. Elige qué quieres repasar (o todo). 2. Elige el tipo de ejercicio. Son 8 preguntas en el pizarrón, sin perder vidas.","1. Scegli che cosa ripassare (o tutto). 2. Scegli il tipo di esercizio. Sono 8 domande alla lavagna, senza perdere vite.")}</p>
+   <div class="chh">1 · ${trp("¿Qué repasas?","Che cosa ripassi?")}</div>
+   <div class="chchips"><button class="chchip${sel===null?" on":""}" data-psel="all">📚 ${trp("Todo lo que he estudiado","Tutto quello che ho studiato")}</button>${chips}</div>
+   <div class="chh">2 · ${trp("Tipo de ejercicio","Tipo di esercizio")}</div>
+   <div class="chtypes">${PTYPES.map(t=>`<button class="chtype" data-pgo="${t[0]}"><span>${t[1]}</span>${esc(trp(t[2],t[3]))}</button>`).join("")}</div>
+   ${S.msg?`<p class="chbad">${S.msg}</p>`:""}
+   <div class="chtray"><i></i><b></b></div></div>
+   ${btn("📖 "+trp("VER LA LECCIÓN DE HOY","RIVEDI LA LEZIONE DI OGGI"),"data-plesson","")}${btn(trp("SALIR DE LA ESCUELA","ESCI DALLA SCUOLA"),"data-close","")}`}
+function practRun(){const q=S.set[S.i],d=S.pick>=0;
+  const opts=q.ord.map(k=>{const ok=k===0,me=S.pick===k;return `<button class="chopt${d?(ok?" ok":me?" no":""):""}" data-pans="${k}" ${d?"disabled":""}>${esc(q.o[k])}</button>`}).join("");
+  return `<div class="chalk"><div class="chhead"><span>${esc(LEVELS[q.c].tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
+   <div class="chbar"><i style="width:${Math.round(S.i/S.set.length*100)}%"></i></div>
+   <p class="chq">${esc(q.q)}</p><div class="chopts">${opts}</div>
+   ${d?`<p class="${S.pick===0?"chgood":"chbad"}">${S.pick===0?pick(["Bravo!","Esatto!","Perfetto!","Giusto!"]):trp("Casi…","Quasi…")} <span>${esc(q.e)}</span></p>`:""}
+   <div class="chtray"><i></i><b></b></div></div>
+   ${d?btn(S.i+1<S.set.length?trp("SIGUIENTE ▶","AVANTI ▶"):trp("VER RESULTADO","VEDI IL RISULTATO"),"data-pnext"):""}${btn(trp("VOLVER AL MENÚ","TORNA AL MENU"),"data-pmenu","")}`}
+function practEnd(){const n=S.set.length,ok=S.ok,good=ok>=Math.ceil(n*.8);
+  return `<div class="chalk"><div class="chhead"><span>${trp("Resultado","Risultato")}</span><span>${esc(trp(PTYPES.find(t=>t[0]===S.type)[2],PTYPES.find(t=>t[0]===S.type)[3]))}</span></div>
+   <h2 class="chtitle">${ok} / ${n}</h2><p class="chintro">${good?trp("¡Muy bien! Lo tienes dominado.","Benissimo! Lo sai proprio bene."):ok>=n/2?trp("Bien, pero conviene repasar un poco más.","Bene, ma conviene ripassare ancora un po'."):trp("Vuelve a mirar la lección en el Quaderno y prueba otra vez.","Rileggi la lezione nel Quaderno e riprova.")}</p>
+   ${S.life?`<p class="chgood">+1 ♥</p>`:""}<div class="chtray"><i></i><b></b></div></div>
+   ${btn(trp("OTRA SERIE IGUAL","UN'ALTRA SERIE"),"data-pgo="+S.type)}${btn(trp("ELEGIR OTRO EJERCICIO","SCEGLI UN ALTRO ESERCIZIO"),"data-pmenu","")}${btn(trp("SALIR DE LA ESCUELA","ESCI DALLA SCUOLA"),"data-close","")}`}
+EXOV.pract=()=>S.step==="run"?practRun():S.step==="end"?practEnd():practMenu();
+function exClick26(D){
+  if(S.ov!=="pract")return false;
+  if("psel" in D){S.sel=D.psel==="all"?null:+D.psel;S.msg="";render();return true}
+  if("pgo" in D){const topics=S.sel===null||S.sel===undefined?learned():[S.sel],set=buildSet(D.pgo,topics);
+    if(set.length<3){S.step="menu";S.msg=trp("Todavía no hay bastantes ejercicios de este tipo para ese tema. Prueba otro tipo o «Todo».","Non ci sono ancora abbastanza esercizi di questo tipo per quel tema. Prova un altro tipo o «Tutto».");render();return true}
+    Object.assign(S,{step:"run",type:D.pgo,set,i:0,ok:0,pick:-1,msg:"",life:false});render();ov.scrollTop=0;speak(set[0].q.replace(/→ \?.*$/,""));return true}
+  if("pans" in D){if(S.pick>=0)return true;S.pick=+D.pans;if(S.pick===0)S.ok++;else{} speak(S.set[S.i].o[0]);render();return true}
+  if("pnext" in D){S.i++;S.pick=-1;if(S.i>=S.set.length){S.step="end";if(S.ok>=Math.ceil(S.set.length*.8)&&save.hearts<3){save.hearts++;S.life=true;persist();hud()}}render();ov.scrollTop=0;return true}
+  if("pmenu" in D){Object.assign(S,{step:"menu",msg:""});render();return true}
+  if("plesson" in D){show("lesson");return true}
+  return false}
+HOW.pract=["🏫","Aula di esercizi","Aula de práctica","En la escuela puedes repasar todo lo que ya aprendiste. Elige un tema (o «Todo») y un tipo de ejercicio: completar frases, tablas, vocabulario o conversación. Son 8 preguntas en el pizarrón y no pierdes vidas; si aciertas el 80 %, recuperas un corazón.","A scuola puoi ripassare tutto quello che hai imparato. Scegli un tema (o «Tutto») e un tipo di esercizio. Sono 8 domande alla lavagna e non perdi vite; con l'80 % recuperi un cuore."];
+{const f=EXOV.pract;EXOV.pract=()=>needHow("pract")?howHtml("pract"):f()}
+/* --- escribir con el dedo en el pizarrón --- */
+PTYPES.splice(4,0,["write","✍️","Escribe con el dedo","Scrivi con il dito"]);
+const normW=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z' ]/g,"").replace(/\s+/g," ").trim();
+function pWrite(c){const L=LEVELS[c],out=[];
+  L.pairs.forEach(p=>{if(p[0].length<=14&&!/[·0-9]/.test(p[0]))out.push({q:trp("Escribe en italiano:","Scrivi in italiano:")+" «"+p[1]+"»",a:p[0],e:p[1]+" = "+p[0],c,w:1})});
+  pGap(c).forEach(g=>{if(g.o[0].length<=12)out.push({q:g.q,a:g.o[0],e:g.e,c,w:1})});return out}
+let HWR=null,HWRok=null;
+async function hwInit(){if(HWRok!==null)return HWRok;try{if(!navigator.queryHandwritingRecognizer&&!navigator.createHandwritingRecognizer){HWRok=false;return false}
+  HWR=await navigator.createHandwritingRecognizer({languages:["it"]});HWRok=!!HWR}catch(e){HWRok=false}return HWRok}
+async function hwRead(strokes){try{if(!(await hwInit()))return null;const d=HWR.startDrawing({recognitionType:"text",inputType:"touch",alternatives:3});
+  strokes.forEach(s=>{const st=new HandwritingStroke();s.forEach(p=>st.addPoint(p));d.addStroke(st)});const pr=await d.getPrediction();d.clear();return pr&&pr.length?pr.map(p=>p.text):null}catch(e){return null}}
+function drawPad(){const cv=ov.querySelector&&ov.querySelector("#wpad");if(!cv)return;const x=cv.getContext("2d");
+  x.fillStyle="#2a4434";x.fillRect(0,0,cv.width,cv.height);x.strokeStyle="rgba(244,244,228,.18)";x.lineWidth=1;x.beginPath();x.moveTo(10,cv.height*.72);x.lineTo(cv.width-10,cv.height*.72);x.stroke();
+  x.strokeStyle="#f4f4e4";x.lineWidth=4;x.lineCap="round";x.lineJoin="round";(S.strokes||[]).forEach(s=>{x.beginPath();s.forEach((p,i)=>i?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke()})}
+{let drawing=false;const pos=ev=>{const r=ev.target.getBoundingClientRect();return {x:(ev.clientX-r.left)*ev.target.width/r.width,y:(ev.clientY-r.top)*ev.target.height/r.height,t:Date.now()}};
+ ov.addEventListener("pointerdown",ev=>{if(!ev.target||ev.target.id!=="wpad"||S.wres)return;ev.preventDefault();drawing=true;try{ev.target.setPointerCapture(ev.pointerId)}catch(e){}(S.strokes=S.strokes||[]).push([pos(ev)]);drawPad()});
+ ov.addEventListener("pointermove",ev=>{if(!drawing||!ev.target||ev.target.id!=="wpad")return;ev.preventDefault();S.strokes[S.strokes.length-1].push(pos(ev));drawPad()});
+ ["pointerup","pointercancel"].forEach(k=>ov.addEventListener(k,()=>{drawing=false}));}
+function practWrite(){const q=S.set[S.i],r=S.wres;
+  const res=!r?"":r.self?`<p class="chintro">${trp("La respuesta correcta es:","La risposta giusta è:")} <b class="chans">${esc(q.a)}</b></p><p class="chintro">${trp("¿Lo escribiste igual?","L'hai scritto uguale?")}</p>`
+    :`<p class="${r.ok?"chgood":"chbad"}">${r.ok?pick(["Bravo!","Esatto!","Perfetto!"]):trp("No es correcto.","Non è giusto.")} ${r.got?`<span>${trp("Leí","Ho letto")}: «${esc(r.got)}»</span>`:""}</p><p class="chintro">${trp("Respuesta","Risposta")}: <b class="chans">${esc(q.a)}</b> <span class="small">${esc(q.e)}</span></p>`;
+  setTimeout(drawPad,0);
+  return `<div class="chalk"><div class="chhead"><span>✍️ ${esc(LEVELS[q.c].tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
+   <div class="chbar"><i style="width:${Math.round(S.i/S.set.length*100)}%"></i></div>
+   <p class="chq">${esc(q.q)}</p><canvas id="wpad" width="320" height="130" aria-label="Escribe aquí con el dedo"></canvas>
+   <p class="chhead"><span>${trp("Escribe con el dedo en el pizarrón","Scrivi con il dito sulla lavagna")}</span><span>${q.a.length} ${trp("letras","lettere")}</span></p>
+   ${!r?`<div class="row">${btn("🧽 "+trp("BORRAR","CANCELLA"),"data-wclr","")}${btn("✔ "+trp("COMPROBAR","CONTROLLA"),"data-wchk")}</div><div class="row"><input id="wtxt" class="cwin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${trp("…o escríbelo con el teclado","…o scrivilo con la tastiera")}"></div>`:""}
+   ${res}<div class="chtray"><i></i><b></b></div></div>
+   ${r&&r.self&&r.pend?`<div class="row">${btn("✗ "+trp("NO","NO"),"data-pself=0","")}${btn("✓ "+trp("SÍ, IGUAL","SÌ, UGUALE"),"data-pself=1")}</div>`:""}
+   ${r&&!r.pend?btn(S.i+1<S.set.length?trp("SIGUIENTE ▶","AVANTI ▶"):trp("VER RESULTADO","VEDI IL RISULTATO"),"data-pnext"):""}${btn(trp("VOLVER AL MENÚ","TORNA AL MENU"),"data-pmenu","")}`}
+{const f=EXOV.pract;EXOV.pract=()=>(S.ov==="pract"&&S.step==="run"&&S.set&&S.set[S.i]&&S.set[S.i].w&&!needHow("pract"))?practWrite():f()}
+function buildSet(type,topics){const all=learned(),gen={gap:pGap,tab:pTab,voc:c=>pVoc(c,all),dia:pDia,write:pWrite};
+  let qs=[];topics.forEach(c=>{(type==="mix"?["gap","tab","voc","dia"]:[type]).forEach(k=>qs.push(...gen[k](c).map(q=>Object.assign(q,{c}))))});
+  return shuffle(qs).slice(0,type==="write"?6:8).map(q=>Object.assign(q,{ord:q.o?shuffle([0,1,2].slice(0,q.o.length)):null}))}
+async function wCheck(){const q=S.set[S.i],el=ov.querySelector&&ov.querySelector("#wtxt"),typed=el&&el.value?el.value:"";
+  if(typed){const ok=normW(typed)===normW(q.a);if(ok)S.ok++;S.wres={ok,got:typed};speak(q.a);render();return}
+  if(!S.strokes||!S.strokes.length){return}
+  const preds=await hwRead(S.strokes);
+  if(preds){const ok=preds.some(p=>normW(p)===normW(q.a));if(ok)S.ok++;S.wres={ok,got:preds[0]}}else S.wres={self:true,pend:true};
+  speak(q.a);render()}
+function exClick26w(D){
+  if(S.ov!=="pract")return false;
+  if("wclr" in D){S.strokes=[];drawPad();return true}
+  if("wchk" in D){wCheck();return true}
+  if("pself" in D){if(D.pself==="1")S.ok++;S.wres={self:true,pend:false,ok:D.pself==="1"};render();return true}
+  if("pnext" in D){S.strokes=[];S.wres=null;return false}
+  if("pgo" in D){S.strokes=[];S.wres=null;return false}
   return false}
 
 buildCity();welcome();requestAnimationFrame(frame);
