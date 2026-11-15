@@ -171,6 +171,7 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .fcard.flip{background:#fff7e0}
 .fces{font-size:20px;color:var(--mute);margin-top:8px}
 .hintw{border-top:2px dashed #c5d3dc;padding-top:6px;display:flex;flex-direction:column;gap:4px;font-size:20px}.hintw .it,.hl .it{font-size:20px}.hintw>b{display:inline}.hintw:first-child{border-top:none}.hl{background:#fff7e0;border-left:4px solid var(--accent);padding:4px 6px;font-size:20px}.pat{font-family:var(--px);font-size:10px;letter-spacing:2px}
+.story{background:#fff7e0;border:3px solid var(--ink);border-left:8px solid #a7663a;padding:8px 10px;display:flex;flex-direction:column;gap:6px}.story .it{font-size:21px;line-height:1.15}
 </style>
 </head>
 <body>
@@ -3103,6 +3104,121 @@ EXOV.cw=()=>{const h=cwHtml(),c=save.city;if(S.solved.length===S.cw.words.length
 function exClick16(D){
   if("phint" in D&&(S.ov==="sopa"||S.ov==="cw")){const c=save.city,z=save.puz[c]||(save.puz[c]={});z.h=z.h||{};z.h[D.phint]=(z.h[D.phint]||0)+1;persist();render();return true}
   return false}
+
+/* ================= v17: objetos robados reales con su historia, carteles con información de cada ciudad ================= */
+/* --- carteles: información real de cada ciudad (misma gramática del tema) --- */
+const TXT={
+ 0:["Torino è stata la prima capitale d'Italia, dal 1861 al 1865. Ieri sono arrivato in città e ho visitato la Mole Antonelliana: oggi ospita il Museo del {Cinema|cine}. Poi sono andato in un caffè storico e ho bevuto un bicerin, la {bevanda|bebida} tipica: caffè, cioccolato e crema di latte. La sera ho fatto due passi sotto i {portici|soportales}: a Torino sono lunghi più di diciotto chilometri!",
+  {t:"mc",q:"Che cos'è il bicerin?",o:["Una bevanda di caffè, cioccolato e crema","Un dolce alle mandorle","Un tipo di pane"],e:"«Il bicerin, la bevanda tipica: caffè, cioccolato e crema di latte»."}],
+ 1:["Quando ero piccolo, mio nonno mi raccontava sempre del Duomo di Milano: per costruirlo ci sono voluti quasi seicento anni! Ieri finalmente sono salito sulle {terrazze|terrazas}: mentre camminavo tra le guglie, vedevo tutta la città. Poi ho visitato il Cenacolo di Leonardo: avevo il {biglietto|entrada} da un mese. Alla fine ho mangiato un risotto alla milanese, giallo per lo {zafferano|azafrán}.",
+  {t:"mc",q:"Di che colore è il risotto alla milanese?",o:["Giallo","Rosso","Verde"],e:"«Un risotto alla milanese, giallo per lo zafferano»."}],
+ 2:["Venezia è costruita su più di cento isole, collegate da circa quattrocento {ponti|puentes}. Il più famoso è il ponte di Rialto: lo attraversano migliaia di turisti ogni giorno. Le gondole? Le guidano i gondolieri, che le muovono con un solo remo. A Carnevale tutti portano una {maschera|máscara}: io l'ho comprata per mia sorella e gliela darò a febbraio. A Murano lavorano il {vetro|vidrio}: te lo consiglio!",
+  {t:"mc",q:"Come si muove la gondola?",o:["Con un solo remo","Con un motore","Con due vele"],e:"«I gondolieri le muovono con un solo remo»."}],
+ 3:["Bologna ha l'università più antica del mondo occidentale: è del 1088. In centro ci sono quasi quaranta chilometri di {portici|soportales}: ci puoi camminare anche quando piove. Le torri? Oggi ce ne sono una ventina, ma nel Medioevo ce n'erano più di cento! E il cibo… tortellini, tagliatelle, mortadella: ne ho mangiati tanti. Al {mercato|mercado} ci torno domani.",
+  {t:"mc",q:"Quante torri c'erano nel Medioevo?",o:["Più di cento","Due","Quaranta"],e:"«Nel Medioevo ce n'erano più di cento»."}],
+ 4:["Domani visiterò gli Uffizi, uno dei musei più famosi del mondo: lì vedrò la Nascita di Venere di Botticelli. Poi andrò alla Galleria dell'Accademia, dove c'è il David di Michelangelo, alto più di cinque metri. Mi piacerebbe salire sulla {cupola|cúpula} del Brunelleschi: sono 463 {gradini|escalones}! La proprietaria dell'albergo mi ha detto: «Al posto suo, salirei a Piazzale Michelangelo al {tramonto|atardecer}». Seguirò il suo consiglio.",null],
+ 5:["Roma ha quasi tremila anni e credo che sia la città più bella del mondo. Si dice che chi lancia una moneta nella Fontana di Trevi torni a Roma. Penso che il Colosseo sia il monumento più impressionante: ospitava cinquantamila {spettatori|espectadores}. Il {tassista|taxista} pensa che i turisti camminino troppo poco: «Bisogna che Lei veda Trastevere a piedi!». {Benché|Aunque} sia stanco, stasera uscirò di nuovo.",null],
+ 6:["Napoli è la città della pizza: la margherita è nata qui nel 1889, in onore della regina Margherita. «{Assaggiala|Pruébala} da Michele, ma vacci presto!» mi ha detto un ragazzo. Sua madre ha aggiunto: «Sali al Vomero e guarda il Vesuvio: è un {vulcano|volcán} ancora attivo!». E se vai a Pompei, visitala con calma: la città romana è stata sepolta dalla cenere nel 79 dopo Cristo. Al ristorante il cameriere mi ha portato il {conto|cuenta} con un limoncello: «Glielo offre la casa!».",null],
+ 7:["Palermo è stata greca, araba, normanna e spagnola: per questo è più varia di tante altre città. La Cappella Palatina ha mosaici d'oro bellissimi e il Teatro Massimo è il teatro d'opera più grande d'Italia. Il mercato di Ballarò è più {rumoroso|ruidoso} di quello di Bologna, ma altrettanto buono: lì ho provato le arancine. Se avessi più tempo, resterei un'altra settimana. Se potrò, tornerò l'anno prossimo.",null],
+ 8:["Aosta è una piccola città tra le {montagne|montañas}, vicino al Monte Bianco. Ha più di duemila anni: il suo nome romano è Augusta Praetoria. In centro c'è un arco romano e c'è un teatro antico. Gli abitanti parlano italiano e francese. Fa freddo, ma c'è il sole. Il formaggio tipico è la fontina: con la fontina si prepara la {fonduta|fondue}.",null],
+ 9:["Genova è una città di mare. Il {porto|puerto} è molto grande e la Lanterna, il faro della città, è alta settantasette metri. Nel centro ci sono i «caruggi», le strade strette della città vecchia. Qui è nato Cristoforo Colombo. L'Acquario è uno dei più grandi d'Europa: gli {squali|tiburones} sono enormi! Il piatto tipico è la pasta con il pesto.",null],
+ 10:["Trento è il capoluogo del Trentino, nel nord d'Italia, tra le montagne. Nel centro c'è il Castello del Buonconsiglio: dal castello si vedono le Dolomiti. Dal 1545 al 1563 nella città c'è stato il Concilio di Trento. In piazza del Duomo c'è la fontana di Nettuno. A pranzo si mangiano i canederli, grandi gnocchi di {pane|pan}. Intorno alla città ci sono tanti {laghi|lagos}.",
+  {t:"mc",q:"Che cosa si vede dal castello?",o:["Le Dolomiti","Il mare","Il Monte Bianco"],e:"«Dal castello si vedono le Dolomiti»."}],
+ 11:["Trieste è una città elegante, vicino alla Slovenia. In centro c'è Piazza Unità d'Italia, la piazza sul mare più grande d'Europa. Ci sono molti caffè storici, con tavoli di {legno|madera} e {specchi|espejos} antichi: qui scriveva lo scrittore irlandese James Joyce. Vicino alla città c'è il castello di Miramare, bianco e bellissimo. A volte c'è la bora, un vento molto forte, e le strade sono quasi vuote.",null],
+ 12:["Perugia è il capoluogo dell'Umbria, una città antica su una collina. All'Università per Stranieri arrivano studenti da tutto il mondo: la sera si incontrano in piazza e si siedono sulle {scale|escaleras} del Duomo. Davanti al Duomo c'è la Fontana Maggiore, del 1278. A luglio c'è Umbria Jazz: i concerti cominciano alle nove di sera e la gente si diverte fino a tardi. Non ci si {annoia|aburre} mai!",null],
+ 13:["Ancona è il capoluogo delle Marche, sul mare Adriatico. Il suo porto è pieno di {traghetti|ferris} per la Grecia e la Croazia. Vicino al porto c'è l'Arco di Traiano, un arco romano di quasi duemila anni. La mia amica Giulia abita qui con suo fratello. A Giulia piacciono le {spiagge|playas} del Conero; a me piace soprattutto il brodetto, la zuppa di pesce tipica.",null],
+ 14:["Benvenuto a Como! Como è una città sul {lago|lago}, vicino alla Svizzera. Qui è nato Alessandro Volta, l'inventore della {pila|pila} elettrica. Nel Tempio Voltiano ci sono i suoi strumenti. Ogni giorno i turisti dicono «Buongiorno!» al custode. Ma oggi il custode è triste: una pila di Volta non c'è più!",
+  {t:"mc",q:"Dov'è Como?",o:["Sul lago","Sul mare","In montagna"],e:"«Como è una città sul lago»."}],
+ 15:["Bergamo ha due parti: Città Alta e Città Bassa. Città Alta è antica e ha le {mura|murallas} veneziane: sono patrimonio UNESCO. Una {funicolare|funicular} collega le due parti. In Piazza Vecchia c'è una bella fontana. Io sono qui e ho fame: il piatto tipico è la polenta!",null],
+ 16:["Verona è la città di Romeo e Giulietta. L'Arena è un anfiteatro romano: ha quasi duemila anni e ha posto per ventimila persone. D'estate c'è l'{opera|ópera}: un biglietto costa da trenta euro. Il fiume Adige attraversa la città e ha dieci {ponti|puentes}.",
+  {t:"mc",q:"Quanti anni ha l'Arena?",o:["Quasi duemila","Duecento","Trenta"],e:"«L'Arena ha quasi duemila anni»."}],
+ 17:["Padova è una città universitaria: l'università è del 1222 e qui ha insegnato Galileo Galilei. Il Caffè Pedrocchi è un caffè storico del 1831. Gli studenti bevono un {caffè|café} al banco. Il cameriere dice: «Prego, desidera?». Io rispondo: «Vorrei un cappuccino, per favore». Prato della Valle è una {piazza|plaza} enorme.",null]};
+Object.keys(TXT).forEach(i=>{const L=LEVELS[i];L.text=TXT[i][0];if(TXT[i][1])L.q[0]=TXT[i][1]});
+
+/* --- Nivel 1: La pila di Volta --- */
+{const k=CASES.find(x=>x.id==="l1");
+ Object.assign(k,{title:"La pila di Volta",obj:"Oggetto rubato: una pila originale di Alessandro Volta, dal Tempio Voltiano di Como.",
+  intro:"Caso n. 1. A Como, dal Tempio Voltiano, qualcuno ha rubato una pila originale di Alessandro Volta: ha più di duecento anni! Parla con la gente, trova le piste e segui il ladro.",
+  ending:"Hai scoperto dove sarà Bruno stasera: al Caffè Pedrocchi, dove aspetta un collezionista! Vai al caffè."});
+ const C=k.cities;
+ Object.assign(C[14].clues,{0:"Ieri il ladro ha visitato il Tempio Voltiano due volte.",1:"La guida del museo lo ricorda: è un uomo, alto e simpatico.",2:"Nel Tempio Voltiano ci sono gli strumenti di Alessandro Volta. La pila rubata ha più di duecento anni!"});
+ Object.assign(C[15].clues,{2:"Bruno ha detto al bigliettaio: «Ho una scatola molto speciale. Sono felice!»"});
+ C[16].prof=["Età e lavoro","35 anni, elettricista"];
+ Object.assign(C[16].clues,{1:"Il gelataio lo conosce: Bruno ha 35 anni ed è elettricista.",2:"Ha detto al telefono: «Domani sera vendo la pila a un collezionista!»"});
+ C[17].prof=["Movente","vendere la pila a un collezionista"];C[17].sopa=["PEDROCCHI","PILA","VOLTA"];
+ Object.assign(C[17].clues,{0:"Bruno è a Padova: stasera aspetta un collezionista in un caffè storico.",1:"Il movente: Bruno vuole vendere la pila di Volta a un collezionista.",2:"Nella scatola della pila c'è un biglietto con il disegno di una volpe: «Il collezionista arriverà. La Volpe»",3:"L'appuntamento è alle otto di sera."});}
+Object.assign(CLES[14],{0:"Ayer el ladrón visitó dos veces el Tempio Voltiano.",1:"La guía del museo lo recuerda: es un hombre, alto y simpático.",2:"En el Tempio Voltiano están los instrumentos de Alessandro Volta. ¡La pila robada tiene más de doscientos años!"});
+Object.assign(CLES[15],{2:"Bruno le dijo al taquillero: «Tengo una caja muy especial. ¡Estoy contento!»"});
+Object.assign(CLES[16],{1:"El heladero lo conoce: Bruno tiene 35 años y es electricista.",2:"Dijo por teléfono: «¡Mañana por la noche vendo la pila a un coleccionista!»"});
+Object.assign(CLES[17],{0:"Bruno está en Padua: esta noche espera a un coleccionista en un café histórico.",1:"El móvil: Bruno quiere vender la pila de Volta a un coleccionista.",2:"En la caja de la pila hay una nota con el dibujo de un zorro: «El coleccionista vendrá. La Volpe»",3:"La cita es a las ocho de la tarde."});
+Object.assign(CWDEF,{PILA:"L'oggetto rubato: la prima batteria della storia.",VOLTA:"Il cognome dello scienziato nato a Como."});
+Object.assign(WHINT,{PILA:["Volta l'ha inventata nel 1799: è la prima batteria.","Volta la inventó en 1799: es la primera batería. En italiano se dice igual que en español."],VOLTA:["Alessandro … : è il suo cognome.","Alessandro … : es su apellido. El «volt» se llama así por él."]});
+KEYW.l1=["VOLT","Il volt, l'unità di misura della tensione elettrica, porta il nome di Alessandro Volta."];
+FP.l1.hi=["Buonasera! Benvenuto al Pedrocchi.","Prego, si accomodi!","C'è un signore che aspetta qualcuno da un'ora…"];
+FINCAP.l1=FPLACE.l1="Padova, Caffè Pedrocchi. Bruno aspetta un collezionista.";
+FTALK.l1=["Ciao… posso sedermi? Sono Bruno, l'elettricista.","Ho preso la pila di Volta. Un collezionista mi aveva promesso tanti soldi…","Ma il collezionista non è venuto. C'è solo questo biglietto con una volpe: mi ha usato!","Scusa. La pila torna al Tempio Voltiano di Como. Grazie, detective!"];
+LEVELS[14].dial.who="Custode del museo";LEVELS[14].dial.turns[2][0]="Mi aiuti a trovare la pila di Volta?";
+LVL[0].desc=["Saludar, essere y avere, números y precios, pedir en el bar.","Salutare, essere e avere, numeri e prezzi, ordinare al bar."];
+{const z=save.puz[17];if(z&&z.cw&&!z.cw.words.some(p=>p.w==="PILA")){delete save.puz[17];delete save.found[17]}}
+
+/* --- Nivel 2: el mapa ahora es una carta náutica real --- */
+{const k=CASES.find(x=>x.id==="a2");
+ k.obj="Oggetto rubato: una carta nautica dell'Adriatico disegnata a Venezia da Battista Agnese verso il 1540, in mostra al museo di Aosta.";
+ k.intro=k.intro.replace("È una mappa del 1500 e mostra tutto il mare Adriatico.","È una carta nautica del 1540, disegnata a mano da Battista Agnese, e mostra tutto il mare Adriatico.");}
+
+function callText(){
+  const id=S.cs.id;
+  if(id==="l1")return "Pronto, detective? Qui è la Centrale di polizia. Bravo! La pila torna al Tempio Voltiano di Como. Ma quel biglietto con la volpe ci preoccupa… Ad Aosta è sparita una carta nautica antica. Vai ad Aosta!";
+  if(id==="b1")return "Pronto, detective? Qui è la Centrale di polizia. Hai preso La Volpe! Hai risolto il caso più grande d'Italia: tutti i tesori tornano ai loro musei. Complimenti! Ti richiameremo presto per una nuova avventura.";
+  if(id==="a2")return "Pronto, detective? Qui è la Centrale di polizia. Ottimo lavoro con la carta di Agnese! Ma ancora una volta c'era una volpe disegnata. Qualcuno che si fa chiamare La Volpe aiuta i ladri. E a Torino è appena sparito un codice di Leonardo. Il treno parte tra un'ora!";
+  if(id==="lp")return "Pronto, detective? Qui è la Centrale di polizia. Bravissimo con il Codice! Ora sappiamo che La Volpe ha una tana a Firenze. E a Cremona hanno appena rubato uno Stradivari… Parti per Firenze!";
+  return "Pronto, detective? C'è un nuovo caso per te!";
+}
+function finL1(x,t,ph,me,walkIn){
+  R(x,0,0,160,100,"#5d3a1a");for(let i=0;i<10;i++)R(x,i*16,0,8,62,"#6b4423");
+  R(x,18,10,40,26,"#94b0c2");R(x,20,12,36,22,"#c5d3dc");
+  R(x,79,0,2,8,"#ffcd75");R(x,70,8,20,3,"#ffcd75");const gl=Math.floor(t/500)%2?0.18:0.12;x.fillStyle=`rgba(255,205,117,${gl})`;x.fillRect(60,10,40,20);
+  R(x,104,38,52,26,"#a7663a");R(x,104,36,52,3,"#f4f4e4");R(x,122,24,20,12,"#c5d3dc");R(x,126,20,4,4,"#94b0c2");R(x,134,30,2,4,"#1a1c2c");
+  for(let yy=0;yy<4;yy++)for(let xx=0;xx<16;xx++)R(x,xx*10,62+yy*10,10,10,(xx+yy)%2?"#f4f4e4":"#1a1c2c");
+  R(x,38,70,26,4,"#f4f4e4");R(x,50,74,2,12,"#c5d3dc");R(x,44,66,6,4,"#f4f4e4");R(x,46,64,2,2,"#5d3a1a");
+  drawChar(x,128,22,{shirt:"#f4f4e4",hair:"#1a1c2c"},"down",0);
+  drawChar(x,26,56,me,"right",0);
+  const pila=(px,py)=>{for(let i=0;i<5;i++)R(x,px,py-i*2,6,2,i%2?"#c5d3dc":"#a7663a");R(x,px+2,py-12,1,3,"#1a1c2c")};
+  if(ph>=1){const bx=Math.round(150-walkIn*86),walking=walkIn<1;drawChar(x,bx,56,{shirt:"#3b5dc9",hair:"#ffcd75"},"left",walking?Math.floor(t/180)%2:0);
+    if(S.line>=3||ph>=2)pila(56,68);else pila(bx-4,68)}
+  if(ph>=2&&ph<5&&Math.floor(t/250)%2){x.fillStyle="#ffcd75";x.font="7px 'Press Start 2P', monospace";x.textAlign="center";x.fillText(ph===4?"FINE":"BRAVO!",80,96)}
+}
+
+/* --- la historia del objeto, capítulo a capítulo --- */
+const STORY={
+ l1:[["Alessandro Volta è nato a Como nel 1745. Era un professore di fisica e studiava l'elettricità.","Alessandro Volta nació en Como en 1745. Era profesor de física y estudiaba la electricidad."],
+  ["Nel 1799 Volta mette dischi di zinco e di rame uno sopra l'altro, con panni bagnati in acqua salata. È la pila: la prima batteria della storia!","En 1799 Volta pone discos de zinc y de cobre uno encima de otro, con paños mojados en agua salada. Es la pila: ¡la primera batería de la historia!"],
+  ["Con la pila, per la prima volta l'elettricità esce in modo continuo. Nel 1801 Volta presenta la sua pila a Napoleone, a Parigi.","Con la pila, por primera vez la electricidad sale de forma continua. En 1801 Volta presenta su pila a Napoleón, en París."],
+  ["Oggi l'unità di misura della tensione elettrica si chiama «volt», in suo onore. Senza la pila non avremmo batterie né telefoni. Gli strumenti di Volta si conservano nel Tempio Voltiano di Como.","Hoy la unidad de tensión eléctrica se llama «voltio», en su honor. Sin la pila no tendríamos baterías ni teléfonos. Los instrumentos de Volta se conservan en el Tempio Voltiano de Como."]],
+ a2:[["La carta rubata è un portolano: una carta per i marinai, disegnata a mano su pergamena.","La carta robada es un portulano: un mapa para marineros, dibujado a mano sobre pergamino."],
+  ["L'ha disegnata Battista Agnese, un cartografo nato a Genova che lavorava a Venezia, verso il 1540.","La dibujó Battista Agnese, un cartógrafo nacido en Génova que trabajaba en Venecia, hacia 1540."],
+  ["I portolani mostrano le coste, i porti e le rose dei venti. Con queste carte i marinai attraversavano il Mediterraneo.","Los portulanos muestran las costas, los puertos y las rosas de los vientos. Con estas cartas los marineros cruzaban el Mediterráneo."],
+  ["Allora Venezia dominava l'Adriatico: per questo sulla carta ci sono tanti paesi delle coste dell'Istria e della Dalmazia.","Entonces Venecia dominaba el Adriático: por eso en la carta hay muchos pueblos de las costas de Istria y Dalmacia."],
+  ["Oggi esistono più di settanta atlanti di Agnese, in biblioteche di tutto il mondo. Sono preziosi perché sono colorati e decorati con l'oro.","Hoy existen más de setenta atlas de Agnese, en bibliotecas de todo el mundo. Son valiosos porque están coloreados y decorados con oro."],
+  ["Su questa carta c'è un piccolo paese dell'Istria che oggi non esiste più: il paese del nonno di Elena.","En esta carta aparece un pueblecito de Istria que hoy ya no existe: el pueblo del abuelo de Elena."]],
+ lp:[["Il Codice sul volo degli uccelli è un piccolo quaderno di Leonardo da Vinci, scritto verso il 1505.","El Códice sobre el vuelo de los pájaros es un pequeño cuaderno de Leonardo da Vinci, escrito hacia 1505."],
+  ["Leonardo ha vissuto molti anni a Milano: qui ha dipinto il Cenacolo e progettava macchine. Sognava di far volare l'uomo.","Leonardo vivió muchos años en Milán: aquí pintó la Última Cena y diseñaba máquinas. Soñaba con hacer volar al hombre."],
+  ["Nel Codice ci sono disegni di uccelli, di ali e di macchine volanti. Leonardo scriveva al contrario, da destra a sinistra: si legge con uno specchio!","En el Códice hay dibujos de pájaros, alas y máquinas voladoras. Leonardo escribía al revés, de derecha a izquierda: ¡se lee con un espejo!"],
+  ["Nel 1893 il Codice è stato regalato al re Umberto I ed è arrivato alla Biblioteca Reale di Torino. Sotto il testo gli studiosi hanno trovato un disegno: forse un autoritratto di Leonardo.","En 1893 el Códice fue regalado al rey Humberto I y llegó a la Biblioteca Real de Turín. Bajo el texto los estudiosos encontraron un dibujo: quizá un autorretrato de Leonardo."]],
+ b1:[["Antonio Stradivari è nato verso il 1644 e ha lavorato tutta la vita a Cremona, la città dei liutai.","Antonio Stradivari nació hacia 1644 y trabajó toda su vida en Cremona, la ciudad de los luthiers."],
+  ["Ha costruito più di mille strumenti: violini, viole e violoncelli. Oggi ne esistono circa seicentocinquanta.","Construyó más de mil instrumentos: violines, violas y violonchelos. Hoy existen unos seiscientos cincuenta."],
+  ["Il suo segreto? Forse il legno di abete delle Alpi, forse la vernice. Gli scienziati lo studiano ancora oggi.","¿Su secreto? Quizá la madera de abeto de los Alpes, quizá el barniz. Los científicos todavía lo estudian."],
+  ["Uno Stradivari può valere milioni di euro. Al Museo del Violino di Cremona i musicisti li suonano spesso, perché un violino resta vivo solo se qualcuno lo suona.","Un Stradivarius puede valer millones de euros. En el Museo del Violín de Cremona los músicos los tocan a menudo, porque un violín solo sigue vivo si alguien lo toca."]]};
+function storyCh(c){const cs=caseOf(c),r=ROUTES[cs.route],k=r.ids.indexOf(c),st=STORY[cs.id];return st&&st[k]?{k,n:st.length,t:st[k],cs}:null}
+function storyBox(c){const s=storyCh(c);if(!s)return "";
+  return `<div class="story"><div class="eyebrow">📜 ${trp("La historia del objeto","La storia dell'oggetto")} · ${s.k+1}/${s.n}</div><p class="it">${esc(s.t[0])}${stage()<2?`<br><span class="mute small">${esc(s.t[1])}</span>`:""}</p>${spk(s.t[0])}</div>`}
+function storyDos(){const cur=caseOf(save.city);
+  return CASES.filter(cs=>STORY[cs.id]&&(cs===cur||caseDone(cs.id))).map(cs=>{const r=ROUTES[cs.route],upto=cs===cur&&!caseDone(cs.id)?r.ids.indexOf(save.city):r.ids.length-1;
+    return `<details class="pg"${cs===cur?" open":""}><summary><b>📜 ${esc(cs.title)}</b><span class="pgt">${upto+1}/${STORY[cs.id].length}</span></summary><div class="pgb">${STORY[cs.id].slice(0,upto+1).map((t,i)=>`<p class="tip it"><b>${i+1}.</b> ${esc(t[0])}${stage()<2?`<br><span class="mute small">${esc(t[1])}</span>`:""}</p>`).join("")}</div></details>`}).join("")}
+const _firstBtn=(h,ins)=>{const i=h.indexOf("<button");return i<0?h+ins:h.slice(0,i)+ins+h.slice(i)};
+const _lastBtn=(h,ins)=>{const i=h.lastIndexOf("<button");return i<0?h+ins:h.slice(0,i)+ins+h.slice(i)};
+EXOV.brief=()=>_firstBtn(novHtml()+briefHtml(),storyBox(save.city));
+EXOV.dos=()=>{const s=storyDos();return _lastBtn(dosHtml(),s?`<div class="eyebrow">${trp("La historia de los objetos","La storia degli oggetti")}</div>${s}`:"")};
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
