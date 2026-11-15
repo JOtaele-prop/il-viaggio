@@ -1184,7 +1184,8 @@ B1:[
  [["Mi sa dire se questo treno ferma a {to}?",["Sì, ferma proprio lì: è la prossima fermata.","Sì, ferma proprio lì: è la prossima fermare.","Sì, si ferma proprio là: è il prossimo binario."],"Fermata = parada; fermare = parar."],["Meno male! Avevo paura di aver sbagliato treno.",["Tranquillo, se avessi sbagliato te l'avrei detto!","Tranquillo, se sbagliavi te lo direi!","Tranquillo, se hai sbagliato te l'avrei detto!"],"Hipótesis irreal: se + trapassato, condizionale passato."]]]
 };
 const fill=(s,o)=>s.replace(/\{to\}/g,o.to).replace(/\{from\}/g,o.from);
-function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="it-IT";u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function ttsClean(t){return String(t).replace(/(?:_+\s*)+/g," … ").replace(/→|->/g,", ").replace(/[«»"“”]/g,"").replace(/·/g,", ").replace(/\p{Extended_Pictographic}|\uFE0F/gu,"").replace(/\s+([,.!?…])/g,"$1").replace(/\s{2,}/g," ").trim()}
+function speak(t){t=ttsClean(t);try{const u=new SpeechSynthesisUtterance(t);u.lang="it-IT";u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 function startTrip(from,to){
   const lv=lvOf(to)<=1?"A2":"B1",o={to:LEVELS[to].city,from:LEVELS[from].city};
   const a=ANN[lv][Math.floor(Math.random()*ANN[lv].length)],d=NB[lv][Math.floor(Math.random()*NB[lv].length)];
@@ -2347,7 +2348,7 @@ function finDraw(x,t,cs,ph){
 }
 
 /* ================= v10: final al ritmo de la voz + melodía del teléfono ================= */
-function speakDone(t,cb){let called=false;const once=()=>{if(!called){called=true;cb()}};
+function speakDone(t,cb){t=ttsClean(t);let called=false;const once=()=>{if(!called){called=true;cb()}};
   try{const u=new SpeechSynthesisUtterance(t);u.lang="it-IT";u.rate=.9;u.onend=once;u.onerror=once;speechSynthesis.cancel();speechSynthesis.speak(u);setTimeout(once,t.length*110+5000)}
   catch(e){setTimeout(once,Math.max(1500,t.length*65))}}
 function stepWait(tok,text,min){return new Promise(res=>{let spoken=!text,timed=false,done=false;
