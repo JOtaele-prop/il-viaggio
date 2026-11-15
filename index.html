@@ -3262,6 +3262,31 @@ function exClick18(D){
   if(S.ov==="shop"&&"shopnew" in D){if(S.n<S.tot)startShop(S.type,S.n+1,S.okN);else{S.closed=true;render()}return true}
   return false}
 
+/* ================= v19: el mapa no revela las ciudades que faltan ================= */
+const seenCity=i=>isOpen(i)||(save.stars[i]||0)>0;
+function drawItaly(x){
+  R(x,0,0,120,140,"#41a6f6");
+  for(const poly of [ITALY,SICILY,SARD]){x.fillStyle="#38b764";x.beginPath();poly.forEach((p,k)=>{const [a,b]=proj(p);k?x.lineTo(a,b):x.moveTo(a,b)});x.closePath();x.fill()}
+  const rt=routeOf(save.city),ids=rt.ids.filter(seenCity);
+  for(let k=0;k<ids.length-1;k++)pline(x,proj(CITYLL[ids[k]]),proj(CITYLL[ids[k+1]]),"#ffcd75",false);
+  ids.forEach(i=>{const [a,b]=proj(CITYLL[i]),cur=i===save.city,col=cur?"#b13e53":(save.stars[i]||0)>0?"#ffcd75":"#f4f4e4";
+    if(cur){R(x,a-3,b-3,8,8,"#1a1c2c");R(x,a-2,b-2,6,6,col)}else{R(x,a-2,b-2,6,6,"#1a1c2c");R(x,a-1,b-1,4,4,col)}});
+  const left=rt.ids.length-ids.length;if(left>0){x.font="8px 'Press Start 2P', monospace";x.textAlign="right";x.fillStyle="#1a1c2c";x.fillText("?".repeat(left),116,134)}
+}
+EXOV.map=()=>{const c=save.city,rt=routeOf(c),cards=rt.ids.filter(i=>save.cards[i]),left=rt.ids.filter(i=>!seenCity(i)).length;
+  return `<div class="eyebrow">${trp("Mapa del viaje","Mappa del viaggio")}</div><h2>${esc(rt.n)}</h2><canvas id="italy" width="120" height="140"></canvas><p class="legend mute"><span style="color:#e0a100">━</span> ${trp("tu recorrido","il tuo percorso")} · <span style="color:#b13e53">■</span> ${trp("estás aquí","sei qui")}</p>
+   ${rt.ids.map((i,k)=>{const x=LEVELS[i],o=seenCity(i);return `<button class="mapbtn" data-go="${i}" ${isOpen(i)?"":"disabled"}><span>${k+1}. ${o?esc(x.city):"? ? ?"}${i===c?" ◀":""}${save.cards[i]?" ✉":""}${tourOf(i).done?" ⚑":""}${save.vip[i]?" VIP":""}</span><span>${isOpen(i)?stars(save.stars[i]||0):"🔒"}</span></button>`}).join("")}
+   ${left?`<p class="mute small">${trp("Las próximas ciudades son un misterio: resuelve el enigma de cada ciudad para descubrir adónde fue el ladrón.","Le prossime città sono un mistero: risolvi l'enigma di ogni città per scoprire dove è andato il ladro.")}</p>`:""}
+   <div class="eyebrow">Cartoline · ${cards.length}/${rt.ids.length}</div>${cards.length?cards.map(i=>`<p class="tip"><b>${esc(LEVELS[i].city)}.</b> ${esc(LEVELS[i].card)}</p>`).join(""):`<p class="mute">${trp("Abre el baúl de cada ciudad para coleccionar sus postales.","Apri il baule di ogni città per collezionare le cartoline.")}</p>`}
+   ${btn(trp("VER TODOS LOS NIVELES","VEDI TUTTI I LIVELLI"),"data-levels","")}${btn(trp("CERRAR","CHIUDI"),"data-close")}`};
+EXOV.levels=()=>{let h=levelsHtml();LVL.forEach(l=>{const r=ROUTES[l.r];if(routeDone(l.r))return;const a=esc(LEVELS[r.ids[0]].city),b=esc(LEVELS[r.ids[r.ids.length-1]].city);h=h.split(`${a} → ${b}</p>`).join(`${a} → ? ? ?</p>`)});return h};
+Object.assign(WHINT,{BERGAMO:["Ha Città Alta, Città Bassa, le mura e la funicolare. Comincia con la B.","Tiene Ciudad Alta, Ciudad Baja, murallas y funicular. Empieza por B."],
+ VERONA:["La città dove vivevano Romeo e Giulietta: guarda il biglietto del treno nella pista n. 7.","La ciudad donde vivían Romeo y Julieta: mira el billete de tren en la pista n.º 7."],
+ PADOVA:["La città del Caffè Pedrocchi e di Sant'Antonio: guarda il biglietto nella pista n. 7.","La ciudad del Caffè Pedrocchi y de San Antonio: mira el billete en la pista n.º 7."],
+ GENOVA:["La città del pesto e della Lanterna. Comincia con la G.","La ciudad del pesto y de la Lanterna. Empieza por G."],
+ TRENTO:["Il capoluogo del Trentino, tra le montagne: guarda la pista n. 7.","La capital del Trentino, entre montañas: mira la pista n.º 7."],
+ TRIESTE:["La città di Elena, vicino alla Slovenia. Comincia con la T.","La ciudad de Elena, cerca de Eslovenia. Empieza por T."]});
+
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
