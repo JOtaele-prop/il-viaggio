@@ -208,6 +208,12 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .mcard.up{background:#f4f4e4;color:#1a1c2c;font-family:var(--tx);font-size:18px;line-height:1;border-color:#f4f4e4;word-break:normal;overflow-wrap:anywhere}.mcard.up.it{color:#29366f}.mcard.ok{background:#8ff0a4;border-color:#38b764}
 .obuilt{min-height:46px;border-bottom:2px dashed rgba(244,244,228,.5);display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}.obank{display:flex;flex-wrap:wrap;gap:6px}
 .ochip{background:rgba(0,0,0,.2);border:2px solid #f4f4e4;color:#f4f4e4;font-family:var(--tx);font-size:21px;padding:4px 8px}.ochip.on{border-color:#ffe58a;color:#ffe58a}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fcell{min-width:0;overflow:hidden;background:#f4f4e4;border:3px solid var(--ink);box-shadow:2px 2px 0 var(--ink);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:2px}
+.fcell span{font-size:40px;line-height:1}.fcell small{font-family:var(--tx);font-size:14px;line-height:1;overflow-wrap:anywhere;text-align:center}.fcell.ok{background:#8ff0a4}.fcell.no{background:#ffb3c7}
+.hrow{display:flex;align-items:center;gap:10px}.hrow canvas{width:110px;height:110px;flex:none;background:transparent!important;border:none!important;box-shadow:none!important}
+.hword{display:flex;flex-wrap:wrap;gap:4px;font-family:var(--px);font-size:16px;color:#ffe58a}.hword span{min-width:16px;text-align:center;border-bottom:2px solid #f4f4e4}
+.hkeys{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.hk{background:transparent;border:2px solid rgba(244,244,228,.6);color:#f4f4e4;font-family:var(--px);font-size:11px;padding:8px 0}.hk.ok{border-color:#8ff0a4;color:#8ff0a4}.hk.no{border-color:#ff9aa8;color:#ff9aa8;opacity:.6}
 </style>
 </head>
 <body>
@@ -1115,7 +1121,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -3947,6 +3953,89 @@ EXOV.packles=()=>{const P=PACK[S.k],l=P.lesson;return `<div class="row"><span cl
 {const old=nbDeck;nbDeck=function(got){const d=old(got);const extra=shuffle(PACKIDS.flatMap(k=>PACK[k].pairs)).slice(0,4);return shuffle([...d.slice(0,6),...extra])}}
 {const old=pVoc;pVoc=function(c,all){return PACK[c]?old(c,[c]):old(c,all)}}
 
+/* ================= v30: el vocabulario en la ciudad: zoo y familias a las que ayudar ================= */
+const FOBJ={
+ zoo:{who:"Guardiano dello zoo",e:"🦁",items:[["il cane","🐶","el perro"],["il gatto","🐱","el gato"],["il coniglio","🐰","el conejo"],["l'uccello","🐦","el pájaro"],["il pesce","🐟","el pez"],["la tartaruga","🐢","la tortuga"],["il cavallo","🐴","el caballo"],["la mucca","🐄","la vaca"],["il maiale","🐷","el cerdo"],["la pecora","🐑","la oveja"],["la gallina","🐔","la gallina"],["l'asino","🫏","el burro"],["la volpe","🦊","el zorro"],["il lupo","🐺","el lobo"],["l'orso","🐻","el oso"],["il leone","🦁","el león"],["l'elefante","🐘","el elefante"],["la scimmia","🐒","el mono"],["la farfalla","🦋","la mariposa"],["l'ape","🐝","la abeja"],["il serpente","🐍","la serpiente"],["la giraffa","🦒","la jirafa"],["la zebra","🦓","la cebra"],["il pinguino","🐧","el pingüino"],["il coccodrillo","🐊","el cocodrilo"]],
+  tpl:["Dov'è {x}? Indicamelo!","Dai da mangiare {a}!","Fai una foto {a}!","Oggi dobbiamo lavare {x}.","Il veterinario deve visitare {x}."]},
+ cucina:{who:"Mamma Rossi",e:"🍳",items:[["la pentola","🍲","la olla"],["la padella","🍳","la sartén"],["il piatto","🍽️","el plato"],["il bicchiere","🥛","el vaso"],["la tazza","☕","la taza"],["la forchetta","🍴","el tenedor"],["il coltello","🔪","el cuchillo"],["il cucchiaio","🥄","la cuchara"],["la ciotola","🥣","el cuenco"],["la teiera","🫖","la tetera"],["il sale","🧂","la sal"],["il barattolo","🫙","el bote"],["il frigorifero","🧊","la nevera"],["il tovagliolo","🧻","la servilleta"],["la bottiglia","🍾","la botella"],["il formaggio","🧀","el queso"],["le uova","🥚","los huevos"],["il pane","🍞","el pan"]],
+  tpl:["Passami {x}, per favore!","Mi serve {x}.","Prendi {x}, dai!","Dov'è {x}? Non lo trovo…","Mi dai {x}?"]},
+ camera:{who:"Luca, il figlio dei Rossi",e:"🛏️",items:[["il letto","🛏️","la cama"],["l'armadio","🚪","el armario"],["la sedia","🪑","la silla"],["la lampada","💡","la lámpara"],["la sveglia","⏰","el despertador"],["lo specchio","🪞","el espejo"],["il quadro","🖼️","el cuadro"],["la finestra","🪟","la ventana"],["il libro","📕","el libro"],["l'orsacchiotto","🧸","el osito de peluche"],["lo zaino","🎒","la mochila"],["le scarpe","👟","las zapatillas"],["i calzini","🧦","los calcetines"],["le pantofole","🩴","las chanclas"],["il computer","💻","el ordenador"],["la chitarra","🎸","la guitarra"],["il pallone","⚽","el balón"],["la candela","🕯️","la vela"]],
+  tpl:["Dov'è {x}? Aiutami a trovarlo!","Metti a posto {x}!","Mamma vuole vedere {x} in ordine.","Non trovo {x}… dov'è?","Prendi {x}, per favore."]}};
+const artA=x=>x.replace(/^il /,"al ").replace(/^lo /,"allo ").replace(/^la /,"alla ").replace(/^l'/,"all'").replace(/^i /,"ai ").replace(/^gli /,"agli ").replace(/^le /,"alle ");
+function startFobj(kind){const F=FOBJ[kind],rounds=shuffle(F.items.map((_,i)=>i)).slice(0,6).map(t=>{const opts=shuffle([t,...shuffle(F.items.map((_,i)=>i).filter(i=>i!==t)).slice(0,5)]);const it=F.items[t][0];return {t,opts,txt:pick(F.tpl).replace("{x}",it).replace("{a}",artA(it))}});
+  show("fobj",{kind,rounds,i:0,ok:0,pick:null});if(!needHow("fobj"))speak(rounds[0].txt)}
+function fobjHtml(){const F=FOBJ[S.kind],r=S.rounds[S.i],fam=S.kind!=="zoo",s=stage();
+  if(S.end){const win=S.ok>=5;return `<div class="shopsign">${F.e} ${fam?"CASA ROSSI":"LO ZOO"}${s<2?`<small>${fam?trp("la familia Rossi","la famiglia Rossi"):"el zoo"}</small>`:""}</div>
+    <div class="fb ${win?"ok":"no"}"><b>${win?"GRAZIE MILLE!":"PECCATO…"}</b><span>${S.ok} / ${S.rounds.length} ${trp("aciertos","risposte giuste")}.</span></div>
+    ${win&&fam?`<p class="it tip">«${esc(S.kind==="cucina"?"Che bravo! Per ringraziarti ti racconto una cosa che ho visto…":"Grazie! Ora la camera è in ordine. Sai, ho visto una cosa strana…")}»</p>`:""}${win&&!fam&&S.life?`<p class="chgood">+1 ♥</p>`:""}
+    ${!win?`<p class="mute">${trp("Necesitas al menos 5 aciertos. Sal y vuelve a entrar para intentarlo otra vez.","Servono almeno 5 risposte giuste. Esci e rientra per riprovare.")}</p>`:""}
+    ${win&&fam?btn(trp("ESCUCHAR LA PISTA","ASCOLTA LA PISTA"),"data-chk"):btn(trp("SALIR","ESCI"),"data-close")}`}
+  const done=S.pick!==null,okp=done&&S.pick===r.t;
+  return `<div class="row"><span class="eyebrow">${F.e} ${fam?(S.kind==="cucina"?trp("Ayuda a cocinar","Aiuta a cucinare"):trp("Ayuda a ordenar la habitación","Aiuta a riordinare la camera")):trp("Ayuda en el zoo","Aiuta allo zoo")} · ${S.i+1}/${S.rounds.length}</span><span class="eyebrow">✓ ${S.ok}</span></div>
+   <div class="eyebrow">🗣️ ${esc(F.who)}:</div><p class="it tip">«${esc(r.txt)}»</p>${spk(r.txt)}
+   <div class="fgrid">${r.opts.map(o=>{const it=F.items[o];return `<button class="fcell${done?(o===r.t?" ok":o===S.pick?" no":""):""}" data-fo="${o}" ${done?"disabled":""}><span>${it[1]}</span>${done?`<small>${esc(it[0])}</small>`:""}</button>`}).join("")}</div>
+   ${done?`<div class="fb ${okp?"ok":"no"}"><b>${okp?pick(["Bravo!","Esatto!","Perfetto!"]):"NO…"}</b><span>${esc(F.items[r.t][0])}${s<2?" = "+esc(F.items[r.t][2]):""}</span></div>${btn(S.i+1<S.rounds.length?trp("SIGUIENTE","AVANTI"):trp("TERMINAR","FINISCI"),"data-fnext")}`:""}${btn(trp("SALIR","ESCI"),"data-close","")}`}
+EXOV.fobj=()=>needHow("fobj")?howHtml("fobj"):fobjHtml();
+function exClick30(D){
+  if(S.ov!=="fobj")return false;
+  if("fo" in D){if(S.pick!==null)return true;S.pick=+D.fo;const r=S.rounds[S.i];if(S.pick===r.t){S.ok++;const it=FOBJ[S.kind].items[r.t];save.vocab[it[0]]=it[2];persist()}speak(FOBJ[S.kind].items[r.t][0]);render();return true}
+  if("fnext" in D){S.i++;S.pick=null;if(S.i>=S.rounds.length){S.end=true;const win=S.ok>=5;
+     if(win&&S.kind!=="zoo"){const c=save.city;if(!doneOf(c).includes("H")){doneOf(c).push("H");save.famK=save.famK||{};save.famK[c]=save.clue[c]||0}persist()}
+     if(win&&S.kind==="zoo"&&save.hearts<3){save.hearts++;S.life=true;persist();hud()}
+     speak(win?"Grazie mille!":"Peccato!")}else speak(S.rounds[S.i].txt);render();return true}
+  return false}
+HOW.fobj=["🧭","Trova la cosa giusta","Encuentra la cosa correcta","Alguien te pide algo en italiano («Passami il coltello», «Dov'è il leone?»). Escucha o lee y toca el dibujo correcto entre los 6. Son 6 pedidos: con 5 aciertos ganas. En las casas de las familias, si ayudas bien te cuentan una pista del ladrón; en el zoo recuperas un corazón. Para volver a jugar, sal y entra otra vez.","Qualcuno ti chiede una cosa in italiano. Ascolta e tocca il disegno giusto. Sono 6 richieste: con 5 risposte giuste vinci. Le famiglie ti danno una pista; lo zoo ti ridà un cuore."];
+EVERY.add("fobj");
+Object.assign(SHOPS,{zoo:{n:"Lo zoo",e:"🦁"},famiglia:{n:"Casa Rossi",e:"🏠"}});Object.assign(SIGN,{zoo:"ZOO",famiglia:"CASA ROSSI"});
+VEN[3]=["order","zoo"];VEN[0]=["order","wordle","zoo"];VEN[1]=["tiro","ruota","zoo"];VEN[2]=["cinema","enigma","zoo"];
+function makeDoors(c){
+  const L=LEVELS[c],pr=ents.find(e=>e.k==="prof"),cp=ents.find(e=>e.k==="capo"),dist=(d,e)=>Math.abs(d.x-e.x)+Math.abs(d.y-e.y);
+  const ds=L.sp.h.map(([x,y,w,s])=>({x:x+(w>>1),y:y+2,hx:x,hy:y,w,big:!!s}));
+  const big=ds.filter(d=>d.big),st=(big.length?big:ds).slice().sort((a,b)=>dist(a,cp)-dist(b,cp))[0];
+  const sc=ds.filter(d=>d!==st).sort((a,b)=>dist(a,pr)-dist(b,pr))[0];
+  const A=L.at,seen=new Set([A.start+""]),q=[A.start];
+  while(q.length){const [x,y]=q.pop();for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,kk=nx+","+ny;if(!seen.has(kk)&&!SOLID.includes(MAP[ny][nx])){seen.add(kk);q.push([nx,ny])}}}
+  const shops=ds.filter(d=>d!==st&&d!==sc).sort((a,b)=>seen.has(b.x+","+(b.y+1))-seen.has(a.x+","+(a.y+1)));
+  st.type="station";sc.type="school";
+  const ven=VEN[ROUTES.indexOf(routeOf(c))]||VEN[0],g=gi(c),n=has(c,"shop2")?99:has(c,"shop")?1:0;
+  let fam=0;
+  shops.forEach((d,k)=>{const reach=seen.has(d.x+","+(d.y+1));
+    if(k<n&&k<ven.length){const gm=ven[k];d.game=gm;d.type=(gm==="order"||gm==="wordle")?SHOPK[(c*3+k)%SHOPK.length]:gm;return}
+    if(reach&&g>=1&&fam<1){d.type="famiglia";d.game="fam";d.fam=(c%2?"camera":"cucina");fam++;return}
+    d.type="casa";d.game=null});
+  return ds;
+}
+function enterDoor(d){
+  const c=save.city;
+  if(d.type==="school"){if(!save.lesson[c]){save.lesson[c]=1;persist();hud();return show("lesson")}return show("pract",{step:"menu",sel:null})}
+  if(d.type==="station")return capoTalk();
+  if(d.type==="casa")return sayL("Toc toc…",pick(["La porta è chiusa. Non c'è nessuno.","Nessuno risponde… forse sono in vacanza!","Qui abita una signora che dorme: meglio non disturbare!"]),"Esta casa está cerrada.");
+  if(d.type==="famiglia"){if(doneOf(c).includes("H"))return sayL("Famiglia Rossi","Ciao! Grazie ancora per l'aiuto di oggi!","Ya ayudaste a esta familia hoy.");return startFobj(d.fam)}
+  ({order:()=>startShop(d.type),wordle:()=>startWordle(d.type),tiro:startTiro,ruota:startRuota,cinema:startCinema,enigma:startEnigma,zoo:()=>startFobj("zoo")})[d.game]();
+}
+/* --- l'impiccato (ahorcado) en el aula --- */
+PTYPES.splice(PTYPES.length-1,0,["hang","🪢","El ahorcado","L'impiccato"]);
+function pHang(c){const L=LV(c),out=[];L.pairs.forEach(p=>{const w=p[0].replace(/^(il|lo|la|i|gli|le|un|uno|una) /i,"").replace(/^l'/i,"").toLowerCase();if(/^[a-z]+$/.test(w)&&w.length>=4&&w.length<=10)out.push({kind:"hang",w,clue:p[1],c,g:[],miss:0})});return out}
+{const old=buildSet;buildSet=function(type,topics){
+  if(type==="hang"){let q=[];topics.forEach(c=>q.push(...pHang(c)));return shuffle(q).slice(0,5)}
+  const r=old(type,topics);if(type==="mix"){let q=[];topics.forEach(c=>q.push(...pHang(c)));if(q.length){const k=r.findIndex(x=>!x.kind&&!x.w);r.splice(k>=0?k:r.length-1,1,shuffle(q)[0])}}return r}}
+function drawHang(){const cv=ov.querySelector&&ov.querySelector("#hangc");if(!cv)return;const q=S.set[S.i],x=cv.getContext("2d"),m=q.miss;
+  x.clearRect(0,0,cv.width,cv.height);x.strokeStyle="#f4f4e4";x.lineWidth=3;x.lineCap="round";const L=(a,b,c2,d)=>{x.beginPath();x.moveTo(a,b);x.lineTo(c2,d);x.stroke()};
+  L(10,110,70,110);L(30,110,30,10);L(30,10,85,10);L(85,10,85,22);
+  if(m>0){x.beginPath();x.arc(85,32,10,0,Math.PI*2);x.stroke()}if(m>1)L(85,42,85,72);if(m>2)L(85,50,72,62);if(m>3)L(85,50,98,62);if(m>4)L(85,72,74,92);if(m>5)L(85,72,96,92)}
+function practHang(q){const won=[...q.w].every(ch=>q.g.includes(ch)),lost=q.miss>=6,done=won||lost;setTimeout(drawHang,0);
+  return `<div class="chalk">${chHead(q)}<p class="chq">🪢 ${trp("Adivina la palabra italiana letra por letra.","Indovina la parola italiana, lettera per lettera.")}</p>
+   <p class="chintro">${trp("Pista","Indizio")}: «${esc(q.clue)}» · ${q.w.length} ${trp("letras","lettere")}</p>
+   <div class="hrow"><canvas id="hangc" width="120" height="120"></canvas><div class="hword">${[...q.w].map(ch=>`<span>${q.g.includes(ch)||lost?ch:"_"}</span>`).join("")}</div></div>
+   <p class="mute small">${trp("Errores","Errori")}: ${q.miss} / 6</p>
+   ${done?`<p class="${won?"chgood":"chbad"}">${won?pick(["Bravo!","Salvato!","Perfetto!"]):trp("¡Ahorcado! Era:","Impiccato! Era:")+" "+esc(q.w)}</p>`:`<div class="hkeys">${"abcdefghilmnopqrstuvz".split("").concat(["j","k","w","x","y"]).map(ch=>`<button class="hk${q.g.includes(ch)?(q.w.includes(ch)?" ok":" no"):""}" data-hk="${ch}" ${q.g.includes(ch)?"disabled":""}>${ch}</button>`).join("")}</div>`}
+   ${chFoot(done)}`}
+{const f=EXOV.pract;EXOV.pract=()=>{if(S.ov==="pract"&&S.step==="run"&&!needHow("pract")){const q=S.set&&S.set[S.i];if(q&&q.kind==="hang")return practHang(q)}return f()}}
+function exClick30h(D){if(S.ov!=="pract"||S.step!=="run"||!("hk" in D))return false;const q=S.set[S.i];if(!q||q.kind!=="hang")return true;const ch=D.hk;if(q.g.includes(ch))return true;q.g.push(ch);if(!q.w.includes(ch))q.miss++;
+  const won=[...q.w].every(x=>q.g.includes(x));if(won){S.ok++;speak(q.w)}else if(q.miss>=6)speak(q.w);render();return true}
+
+
+{const old=cardHtml;cardHtml=function(){let h=old();const c=save.city;if(save.famK&&save.famK[c]===S.k){const w=clueWho(c,S.k);if(w)h=h.replace("🗣️ "+esc(w),"🗣️ Famiglia Rossi")}return h}}
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
