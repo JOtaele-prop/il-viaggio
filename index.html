@@ -1115,7 +1115,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -3658,16 +3658,16 @@ function enterDoor(d){
 const PTYPES=[["gap","🧩","Completa la frase","Completa la frase"],["tab","📋","Tablas del tema","Tabelle"],["voc","🔤","Vocabulario","Vocabolario"],["dia","💬","Conversación","Conversazione"],["mix","🎲","Un poco de todo","Un po' di tutto"]];
 const learned=()=>LVL.flatMap(l=>ROUTES[l.r].ids).filter(i=>save.lesson[i]);
 const uniq3=(right,pool)=>{const o=[right];shuffle(pool).forEach(x=>{if(o.length<3&&!o.includes(x))o.push(x)});return o.length===3?o:null};
-function pGap(c){const L=LEVELS[c],out=[];
+function pGap(c){const L=LV(c),out=[];
   L.q.forEach(q=>{if(q.t==="gap")out.push({q:q.s,o:q.o,e:q.e})});(XQ[c]||[]).forEach(q=>out.push({q:q.s,o:q.o,e:q.e}));return out}
-function pTab(c){const out=[];LEVELS[c].lesson.tabs.forEach(t=>{if(t.r.length<3)return;t.r.forEach(r=>{const o=uniq3(r[1],t.r.map(x=>x[1]));if(o)out.push({q:`${t.h}: ${r[0]} → ?`,o,e:`${r[0]} → ${r[1]}`})})});return out}
-function pVoc(c,all){const ps=LEVELS[c].pairs,pool=all.flatMap(i=>LEVELS[i].pairs);return ps.flatMap(p=>{const a=uniq3(p[1],pool.map(x=>x[1])),b=uniq3(p[0],pool.map(x=>x[0]));return [a&&{q:`«${p[0]}» → ?`,o:a,e:`${p[0]} = ${p[1]}`},b&&{q:`«${p[1]}» → ? (in italiano)`,o:b,e:`${p[1]} = ${p[0]}`}].filter(Boolean)})}
-function pDia(c){const d=LEVELS[c].dial;return d?d.turns.map(t=>({q:`${d.who}: «${t[0]}»`,o:t[1],e:t[2]})):[]}
+function pTab(c){const out=[];LV(c).lesson.tabs.forEach(t=>{if(t.r.length<3)return;t.r.forEach(r=>{const o=uniq3(r[1],t.r.map(x=>x[1]));if(o)out.push({q:`${t.h}: ${r[0]} → ?`,o,e:`${r[0]} → ${r[1]}`})})});return out}
+function pVoc(c,all){const ps=LV(c).pairs,pool=all.flatMap(i=>LV(i).pairs);return ps.flatMap(p=>{const a=uniq3(p[1],pool.map(x=>x[1])),b=uniq3(p[0],pool.map(x=>x[0]));return [a&&{q:`«${p[0]}» → ?`,o:a,e:`${p[0]} = ${p[1]}`},b&&{q:`«${p[1]}» → ? (in italiano)`,o:b,e:`${p[1]} = ${p[0]}`}].filter(Boolean)})}
+function pDia(c){const d=LV(c).dial;return d?d.turns.map(t=>({q:`${d.who}: «${t[0]}»`,o:t[1],e:t[2]})):[]}
 function buildSet(type,topics){const all=learned(),gen={gap:pGap,tab:pTab,voc:c=>pVoc(c,all),dia:pDia};
   let qs=[];topics.forEach(c=>{(type==="mix"?Object.keys(gen):[type]).forEach(k=>qs.push(...gen[k](c).map(q=>Object.assign(q,{c}))))});
   return shuffle(qs).slice(0,8).map(q=>Object.assign(q,{ord:shuffle([0,1,2].slice(0,q.o.length))}))}
 function practMenu(){const all=learned(),sel=S.sel;
-  const chips=all.map(c=>`<button class="chchip${sel===c?" on":""}" data-psel="${c}"><span class="fchip" style="background:${FCOL[FOCUS[c]||"G"]}">${esc(focusTxt(c))}</span> ${esc(LEVELS[c].tema)} <small>· ${esc(LEVELS[c].city)}</small></button>`).join("");
+  const chips=all.map(c=>`<button class="chchip${sel===c?" on":""}" data-psel="${c}"><span class="fchip" style="background:${FCOL[FOCUS[c]||"G"]}">${esc(focusTxt(c))}</span> ${esc(LV(c).tema)} <small>· ${esc(LV(c).city)}</small></button>`).join("");
   return `<div class="chalk"><div class="chhead"><span>🏫 ${trp("Escuela","Scuola")} · ${esc(LEVELS[save.city].city)}</span><span>${all.length} ${trp("temas","temi")}</span></div>
    <h2 class="chtitle">${trp("Aula de práctica","Aula di esercizi")}</h2>
    <p class="chintro">${trp("1. Elige qué quieres repasar (o todo). 2. Elige el tipo de ejercicio. Son 8 preguntas en el pizarrón, sin perder vidas.","1. Scegli che cosa ripassare (o tutto). 2. Scegli il tipo di esercizio. Sono 8 domande alla lavagna, senza perdere vite.")}</p>
@@ -3680,7 +3680,7 @@ function practMenu(){const all=learned(),sel=S.sel;
    ${btn("📖 "+trp("VER LA LECCIÓN DE HOY","RIVEDI LA LEZIONE DI OGGI"),"data-plesson","")}${btn(trp("SALIR DE LA ESCUELA","ESCI DALLA SCUOLA"),"data-close","")}`}
 function practRun(){const q=S.set[S.i],d=S.pick>=0;
   const opts=q.ord.map(k=>{const ok=k===0,me=S.pick===k;return `<button class="chopt${d?(ok?" ok":me?" no":""):""}" data-pans="${k}" ${d?"disabled":""}>${esc(q.o[k])}</button>`}).join("");
-  return `<div class="chalk"><div class="chhead"><span>${esc(LEVELS[q.c].tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
+  return `<div class="chalk"><div class="chhead"><span>${esc(LV(q.c).tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
    <div class="chbar"><i style="width:${Math.round(S.i/S.set.length*100)}%"></i></div>
    <p class="chq">${esc(q.q)}</p><div class="chopts">${opts}</div>
    ${d?`<p class="${S.pick===0?"chgood":"chbad"}">${S.pick===0?pick(["Bravo!","Esatto!","Perfetto!","Giusto!"]):trp("Casi…","Quasi…")} <span>${esc(q.e)}</span></p>`:""}
@@ -3694,7 +3694,7 @@ function practEnd(){const n=S.set.length,ok=S.ok,good=ok>=Math.ceil(n*.8);
 EXOV.pract=()=>S.step==="run"?practRun():S.step==="end"?practEnd():practMenu();
 function exClick26(D){
   if(S.ov!=="pract")return false;
-  if("psel" in D){S.sel=D.psel==="all"?null:+D.psel;S.msg="";render();return true}
+  if("psel" in D){S.sel=D.psel==="all"?null:(isNaN(+D.psel)?D.psel:+D.psel);S.msg="";render();return true}
   if("pgo" in D){const topics=S.sel===null||S.sel===undefined?learned():[S.sel],set=buildSet(D.pgo,topics);
     if(set.length<(["memo","match"].includes(D.pgo)?1:3)){S.step="menu";S.msg=trp("Todavía no hay bastantes ejercicios de este tipo para ese tema. Prueba otro tipo o «Todo».","Non ci sono ancora abbastanza esercizi di questo tipo per quel tema. Prova un altro tipo o «Tutto».");render();return true}
     Object.assign(S,{step:"run",type:D.pgo,set,i:0,ok:0,pick:-1,msg:"",life:false});render();ov.scrollTop=0;if(set[0].q)speak(set[0].q.replace(/→ \?.*$/,""));return true}
@@ -3708,7 +3708,7 @@ HOW.pract=["🏫","Aula di esercizi","Aula de práctica","En la escuela puedes r
 /* --- escribir con el dedo en el pizarrón --- */
 PTYPES.splice(4,0,["write","✍️","Escribe con el dedo","Scrivi con il dito"]);
 const normW=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z' ]/g,"").replace(/\s+/g," ").trim();
-function pWrite(c){const L=LEVELS[c],out=[];
+function pWrite(c){const L=LV(c),out=[];
   L.pairs.forEach(p=>{if(p[0].length<=14&&!/[·0-9]/.test(p[0]))out.push({q:trp("Escribe en italiano:","Scrivi in italiano:")+" «"+p[1]+"»",a:p[0],e:p[1]+" = "+p[0],c,w:1})});
   pGap(c).forEach(g=>{if(g.o[0].length<=12)out.push({q:g.q,a:g.o[0],e:g.e,c,w:1})});return out}
 let HWR=null,HWRok=null;
@@ -3727,7 +3727,7 @@ function practWrite(){const q=S.set[S.i],r=S.wres;
   const res=!r?"":r.self?`<p class="chintro">${trp("La respuesta correcta es:","La risposta giusta è:")} <b class="chans">${esc(q.a)}</b></p><p class="chintro">${trp("¿Lo escribiste igual?","L'hai scritto uguale?")}</p>`
     :`<p class="${r.ok?"chgood":"chbad"}">${r.ok?pick(["Bravo!","Esatto!","Perfetto!"]):trp("No es correcto.","Non è giusto.")} ${r.got?`<span>${trp("Leí","Ho letto")}: «${esc(r.got)}»</span>`:""}</p><p class="chintro">${trp("Respuesta","Risposta")}: <b class="chans">${esc(q.a)}</b> <span class="small">${esc(q.e)}</span></p>`;
   setTimeout(drawPad,0);
-  return `<div class="chalk"><div class="chhead"><span>✍️ ${esc(LEVELS[q.c].tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
+  return `<div class="chalk"><div class="chhead"><span>✍️ ${esc(LV(q.c).tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
    <div class="chbar"><i style="width:${Math.round(S.i/S.set.length*100)}%"></i></div>
    <p class="chq">${esc(q.q)}</p><canvas id="wpad" width="320" height="130" aria-label="Escribe aquí con el dedo"></canvas>
    <p class="chhead"><span>${trp("Escribe con el dedo en el pizarrón","Scrivi con il dito sulla lavagna")}</span><span>${q.a.length} ${trp("letras","lettere")}</span></p>
@@ -3785,7 +3785,7 @@ function drawPad(){const cv=ov.querySelector&&ov.querySelector("#wpad");if(!cv)r
     x.beginPath();x.moveTo(cx+8,cy+g.ch*.68);x.lineTo(cx+g.cw-8,cy+g.ch*.68);x.stroke();
     x.fillStyle="rgba(244,244,228,.35)";x.font="9px sans-serif";x.textAlign="left";x.fillText(String(k+1),cx+7,cy+15)}
   x.strokeStyle="#f4f4e4";x.lineWidth=4;x.lineCap="round";x.lineJoin="round";(S.strokes||[]).forEach(s=>{x.beginPath();s.forEach((p,i)=>i?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));if(s.length===1)x.lineTo(s[0].x+0.1,s[0].y);x.stroke()})}
-function pWrite(c){const L=LEVELS[c],out=[],okw=w=>/^[a-zàèéìòù]+$/i.test(w)&&w.length<=10;
+function pWrite(c){const L=LV(c),out=[],okw=w=>/^[a-zàèéìòù]+$/i.test(w)&&w.length<=10;
   L.pairs.forEach(p=>{if(okw(p[0]))out.push({q:trp("Escribe en italiano:","Scrivi in italiano:")+" «"+p[1]+"»",a:p[0].toLowerCase(),e:p[1]+" = "+p[0],c,w:1})});
   pGap(c).forEach(g=>{if(okw(g.o[0]))out.push({q:g.q,a:g.o[0].toLowerCase(),e:g.e,c,w:1})});return out}
 async function wCheck(){const q=S.set[S.i],el=ov.querySelector&&ov.querySelector("#wtxt"),typed=el&&el.value?el.value:"";
@@ -3802,7 +3802,7 @@ function practWrite(){const q=S.set[S.i],r=S.wres;
   else if(r&&r.self&&r.pend)res=`<p class="chintro">${trp("La respuesta correcta es:","La risposta giusta è:")} <b class="chans">${esc(q.a)}</b></p><p class="chintro">${trp("¿Lo escribiste igual?","L'hai scritto uguale?")}</p>`;
   else if(r)res=`<p class="${r.ok?"chgood":"chbad"}">${r.ok?pick(["Bravo!","Esatto!","Perfetto!"]):trp("No es correcto.","Non è giusto.")} ${r.got?`<span>${trp("Leí","Ho letto")}: «${esc(r.got)}»</span>`:""}</p><p class="chintro">${trp("Respuesta","Risposta")}: <b class="chans">${esc(q.a)}</b> <span class="small">${esc(q.e)}</span></p>`;
   setTimeout(drawPad,0);
-  return `<div class="chalk"><div class="chhead"><span>✍️ ${esc(LEVELS[q.c].tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
+  return `<div class="chalk"><div class="chhead"><span>✍️ ${esc(LV(q.c).tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div>
    <div class="chbar"><i style="width:${Math.round(S.i/S.set.length*100)}%"></i></div>
    <p class="chq">${esc(q.q)}</p><canvas id="wpad" width="64" height="84" aria-label="Escribe aquí con el dedo, una letra en cada casilla"></canvas>
    <p class="chhead"><span>${trp("Una letra en cada casilla, en minúscula","Una lettera per casella, in minuscolo")}</span><span>${[...q.a].length} ${trp("letras","lettere")}</span></p>
@@ -3824,9 +3824,9 @@ function exClick27(D){
 /* ================= v28: más formas de practicar (unir con flechas, memotest, ordenar la frase) y mezcla real ================= */
 PTYPES.length=0;PTYPES.push(["gap","🧩","Completa la frase","Completa la frase"],["tab","📋","Tablas del tema","Tabelle"],["voc","🔤","Vocabulario","Vocabolario"],["dia","💬","Conversación","Conversazione"],
  ["match","🔗","Unir con flechas","Collega con le frecce"],["memo","🃏","Memotest","Memory"],["order","🧱","Ordena la frase","Metti in ordine"],["write","✍️","Escribe con el dedo","Scrivi con il dito"],["mix","🎲","Un poco de todo","Un po' di tutto"]);
-const pairsOf=topics=>{const out=[];topics.forEach(c=>{LEVELS[c].pairs.forEach(p=>out.push([p[0],p[1],c]));LEVELS[c].lesson.tabs.forEach(t=>t.r.forEach(r=>{const l=r[0].length<12&&t.h.length<14?r[0]+" ("+t.h.toLowerCase()+")":r[0];if(l.length<26&&r[1].length<22)out.push([l,r[1],c])}))});
+const pairsOf=topics=>{const out=[];topics.forEach(c=>{LV(c).pairs.forEach(p=>out.push([p[0],p[1],c]));LV(c).lesson.tabs.forEach(t=>t.r.forEach(r=>{const l=r[0].length<12&&t.h.length<14?r[0]+" ("+t.h.toLowerCase()+")":r[0];if(l.length<26&&r[1].length<22)out.push([l,r[1],c])}))});
   const seen=new Set();return shuffle(out).filter(p=>{const k=p[0]+"|"+p[1];if(seen.has(k)||seen.has("L"+p[0])||seen.has("R"+p[1]))return false;seen.add(k);seen.add("L"+p[0]);seen.add("R"+p[1]);return true})};
-function pOrder(c){const L=LEVELS[c],out=[],clean=s=>s.replace(/[«»"!?.,:;]/g,"").replace(/\s+/g," ").trim();
+function pOrder(c){const L=LV(c),out=[],clean=s=>s.replace(/[«»"!?.,:;]/g,"").replace(/\s+/g," ").trim();
   L.q.forEach(q=>{if(q.t==="order")out.push({es:q.es,a:q.a[0],c})});
   if(L.dial)L.dial.turns.forEach(t=>{const a=clean(t[1][0]).toLowerCase();if(a.split(" ").length>=3&&a.split(" ").length<=8)out.push({es:t[0],a,c,ctx:L.dial.who})});
   const T=TEMAUSE[c];if(T){const a=clean(T[2]).toLowerCase();if(a.split(" ").length>=3&&a.split(" ").length<=9)out.push({es:T[1],a,c})}
@@ -3845,7 +3845,7 @@ function buildSet(type,topics){const all=learned(),gen={gap:pGap,tab:pTab,voc:c=
     if(out.length<8)out.push(...fin(mc("voc").slice(0,8-out.length)));return shuffle(out).slice(0,8)}
   return fin(mc(type).slice(0,8))}
 /* --- pantallas --- */
-const chHead=q=>`<div class="chhead"><span>${esc(LEVELS[q.c].tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div><div class="chbar"><i style="width:${Math.round(S.i/S.set.length*100)}%"></i></div>`;
+const chHead=q=>`<div class="chhead"><span>${esc(LV(q.c).tema)}</span><span>${S.i+1} / ${S.set.length} · ✓ ${S.ok}</span></div><div class="chbar"><i style="width:${Math.round(S.i/S.set.length*100)}%"></i></div>`;
 const chFoot=done=>`<div class="chtray"><i></i><b></b></div></div>${done?btn(S.i+1<S.set.length?trp("SIGUIENTE ▶","AVANTI ▶"):trp("VER RESULTADO","VEDI IL RISULTATO"),"data-pnext"):""}${btn(trp("VOLVER AL MENÚ","TORNA AL MENU"),"data-pmenu","")}`;
 const COLS=["#ffe58a","#9fe0ff","#8ff0a4","#ffb3c7","#d7b8ff"];
 function practMatch(q){const fin=q.done.length===q.L.length;setTimeout(drawLinks,0);
@@ -3882,6 +3882,70 @@ function exClick28(D){
   if("ochk" in D){const s=q.built.map(k=>q.words[k]).join(" ");q.res=normW(s)===normW(q.a);if(q.res)S.ok++;speak(q.a);render();return true}
   return false}
 HOW.pract[3]="En la escuela puedes repasar todo lo que ya aprendiste. Elige un tema (o «Todo») y una forma de practicar: completar frases, tablas, vocabulario, conversación, unir con flechas, memotest, ordenar frases o escribir con el dedo. «Un poco de todo» mezcla todas. No pierdes vidas; si aciertas el 80 %, recuperas un corazón.";
+
+/* ================= v29: vocabulario temático (animales, la habitación, la cocina) ================= */
+const PACK={
+ anim:{id:"anim",city:"🐾",tema:"Gli animali",e:"🐾",
+  lesson:{intro:"Los animales en italiano. Fíjate en el artículo: il / lo / la / l'.",tabs:[
+   {h:"Animali domestici",r:[["🐶 il cane","el perro"],["🐱 il gatto","el gato"],["🐰 il coniglio","el conejo"],["🐦 l'uccello","el pájaro"],["🐟 il pesce","el pez"],["🐢 la tartaruga","la tortuga"]]},
+   {h:"Animali della fattoria",r:[["🐴 il cavallo","el caballo"],["🐄 la mucca","la vaca"],["🐷 il maiale","el cerdo"],["🐑 la pecora","la oveja"],["🐔 la gallina","la gallina"],["🫏 l'asino","el burro"]]},
+   {h:"Animali selvatici",r:[["🦊 la volpe","el zorro"],["🐺 il lupo","el lobo"],["🐻 l'orso","el oso"],["🦁 il leone","el león"],["🐘 l'elefante","el elefante"],["🐒 la scimmia","el mono"],["🦋 la farfalla","la mariposa"],["🐝 l'ape","la abeja"]]},
+   {h:"Che verso fa?",r:[["il cane","abbaia (ladra)"],["il gatto","miagola (maúlla)"],["la mucca","muggisce (muge)"],["l'uccello","canta (canta)"]]}],
+   tip:"Plural: il gatto → i gatti, la mucca → le mucche, l'uccello → gli uccelli."},
+  pairs:[["il cane","el perro"],["il gatto","el gato"],["il cavallo","el caballo"],["la mucca","la vaca"],["il maiale","el cerdo"],["la pecora","la oveja"],["la volpe","el zorro"],["il lupo","el lobo"],["l'orso","el oso"],["la farfalla","la mariposa"],["l'ape","la abeja"],["la scimmia","el mono"],["il coniglio","el conejo"],["l'uccello","el pájaro"]],
+  q:[{t:"gap",s:"Il ___ abbaia.",o:["cane","gatto","pesce"],e:"El perro ladra: il cane abbaia."},{t:"gap",s:"Il gatto ___.",o:["miagola","abbaia","nuota"],e:"El gato maúlla: miagola."},{t:"gap",s:"L'___ fa il miele.",o:["ape","orso","asino"],e:"La abeja hace la miel: l'ape."},
+   {t:"gap",s:"La ___ ci dà il latte.",o:["mucca","gallina","volpe"],e:"La vaca nos da la leche: la mucca."},{t:"gap",s:"La ___ fa le uova.",o:["gallina","pecora","scimmia"],e:"La gallina pone los huevos."},{t:"gap",s:"Un gatto, due ___.",o:["gatti","gatte","gatto"],e:"Plural masculino: gatti."},
+   {t:"gap",s:"Un uccello, tre ___.",o:["uccelli","uccelle","uccello"],e:"Plural: uccelli."},{t:"gap",s:"___ elefante è grande.",o:["L'","Il","La"],e:"Delante de vocal: l'elefante."},{t:"gap",s:"La ___ è furba e ha la coda rossa.",o:["volpe","mucca","pecora"],e:"La volpe = el zorro."},
+   {t:"order",es:"Mi perro se llama Max.",a:["il mio cane si chiama max"]},{t:"order",es:"Tengo un gato negro.",a:["ho un gatto nero"]},{t:"order",es:"El zorro es muy astuto.",a:["la volpe è molto furba"]}]},
+ camera:{id:"camera",city:"🛏️",tema:"La camera da letto",e:"🛏️",
+  lesson:{intro:"Las cosas de la habitación y dónde están (preposiciones de lugar).",tabs:[
+   {h:"I mobili",r:[["🛏️ il letto","la cama"],["🚪 l'armadio","el armario"],["il comodino","la mesita de noche"],["la scrivania","el escritorio"],["🪑 la sedia","la silla"],["la mensola","la estantería / balda"]]},
+   {h:"Gli oggetti",r:[["il cuscino","la almohada"],["la coperta","la manta"],["il lenzuolo","la sábana"],["💡 la lampada","la lámpara"],["⏰ la sveglia","el despertador"],["🪞 lo specchio","el espejo"],["il tappeto","la alfombra"],["la tenda","la cortina"],["🖼️ il quadro","el cuadro"],["il cassetto","el cajón"]]},
+   {h:"Dov'è?",r:[["sopra / sul","encima de"],["sotto","debajo de"],["accanto a","al lado de"],["dentro / nel","dentro de"],["davanti a","delante de"],["dietro","detrás de"]]}],
+   tip:"su + il = sul, in + il = nel: «Il libro è sul comodino», «I vestiti sono nell'armadio»."},
+  pairs:[["il letto","la cama"],["l'armadio","el armario"],["il comodino","la mesita de noche"],["la scrivania","el escritorio"],["il cuscino","la almohada"],["la coperta","la manta"],["la lampada","la lámpara"],["la sveglia","el despertador"],["lo specchio","el espejo"],["il tappeto","la alfombra"],["la tenda","la cortina"],["il cassetto","el cajón"],["sotto","debajo"],["accanto a","al lado de"]],
+  q:[{t:"gap",s:"Metto i vestiti nell'___.",o:["armadio","comodino","letto"],e:"La ropa va en el armario: l'armadio."},{t:"gap",s:"La ___ suona alle sette.",o:["sveglia","lampada","tenda"],e:"El despertador suena: la sveglia."},{t:"gap",s:"Mi guardo nello ___.",o:["specchio","cuscino","quadro"],e:"Me miro en el espejo: lo specchio."},
+   {t:"gap",s:"Di notte dormo nel ___.",o:["letto","cassetto","tappeto"],e:"Duermo en la cama: il letto."},{t:"gap",s:"Il gatto dorme ___ il letto.",o:["sotto","dentro","dietro di"],e:"Debajo de la cama: sotto il letto."},{t:"gap",s:"Il libro è ___ comodino.",o:["sul","sotto","nel il"],e:"su + il = sul."},
+   {t:"gap",s:"___ specchio è rotto.",o:["Lo","Il","La"],e:"Delante de s + consonante: lo specchio."},{t:"gap",s:"Fa freddo: prendo un'altra ___.",o:["coperta","sedia","mensola"],e:"Hace frío: otra manta (coperta)."},
+   {t:"order",es:"La lámpara está en la mesita de noche.",a:["la lampada è sul comodino"]},{t:"order",es:"El gato duerme debajo de la cama.",a:["il gatto dorme sotto il letto"]},{t:"order",es:"Abro la ventana por la mañana.",a:["apro la finestra la mattina"]}]},
+ cucina:{id:"cucina",city:"🍳",tema:"La cucina",e:"🍳",
+  lesson:{intro:"Los objetos de la cocina y los verbos para cocinar.",tabs:[
+   {h:"Gli elettrodomestici",r:[["🧊 il frigorifero","la nevera"],["il forno","el horno"],["il fornello","el fogón"],["il microonde","el microondas"],["la lavastoviglie","el lavavajillas"],["🚰 il lavandino","el fregadero"]]},
+   {h:"Pentole e posate",r:[["🍲 la pentola","la olla"],["🍳 la padella","la sartén"],["🍽️ il piatto","el plato"],["🥛 il bicchiere","el vaso"],["☕ la tazza","la taza"],["🍴 la forchetta","el tenedor"],["🔪 il coltello","el cuchillo"],["🥄 il cucchiaio","la cuchara"],["il tovagliolo","la servilleta"]]},
+   {h:"In cucina si…",r:[["cucinare","cocinar"],["tagliare","cortar"],["mescolare","remover / mezclar"],["bollire","hervir"],["friggere","freír"],["apparecchiare la tavola","poner la mesa"]]}],
+   tip:"Se dice «il cucchiaio» (cuchara) y «il cucchiaino» (cucharita, para el café)."},
+  pairs:[["il frigorifero","la nevera"],["il forno","el horno"],["la pentola","la olla"],["la padella","la sartén"],["il piatto","el plato"],["il bicchiere","el vaso"],["la tazza","la taza"],["la forchetta","el tenedor"],["il coltello","el cuchillo"],["il cucchiaio","la cuchara"],["il lavandino","el fregadero"],["tagliare","cortar"],["bollire","hervir"],["mescolare","mezclar"]],
+  q:[{t:"gap",s:"Taglio il pane con il ___.",o:["coltello","cucchiaio","piatto"],e:"Con el cuchillo: il coltello."},{t:"gap",s:"Mangio la minestra con il ___.",o:["cucchiaio","coltello","bicchiere"],e:"La sopa con la cuchara: il cucchiaio."},{t:"gap",s:"Bevo il caffè in una ___.",o:["tazza","padella","pentola"],e:"El café en una taza."},
+   {t:"gap",s:"Il latte è nel ___.",o:["frigorifero","forno","lavandino"],e:"La leche en la nevera: il frigorifero."},{t:"gap",s:"Per la pasta l'acqua deve ___.",o:["bollire","friggere","tagliare"],e:"El agua tiene que hervir: bollire."},{t:"gap",s:"Friggo le uova in ___.",o:["padella","tazza","forchetta"],e:"Los huevos en la sartén: in padella."},
+   {t:"gap",s:"Lavo i piatti nel ___.",o:["lavandino","frigorifero","forno"],e:"Los platos en el fregadero: il lavandino."},{t:"gap",s:"Prima di cena ___ la tavola.",o:["apparecchio","cucino","bollo"],e:"Poner la mesa: apparecchiare."},
+   {t:"order",es:"Pongo los platos en la mesa.",a:["metto i piatti sul tavolo"]},{t:"order",es:"La pasta está en la olla.",a:["la pasta è nella pentola"]},{t:"order",es:"Lavo los vasos en el fregadero.",a:["lavo i bicchieri nel lavandino"]}]}};
+Object.assign(FOCUS,{anim:"V",camera:"V",cucina:"V"});
+const PACKIDS=Object.keys(PACK);
+const LV=c=>typeof c==="string"&&PACK[c]?PACK[c]:LEVELS[c];
+/* la práctica acepta temas de vocabulario además de las ciudades */
+{const f=EXOV.pract;EXOV.pract=()=>{let h=f();if(S.ov!=="pract"||S.step!=="menu"||needHow("pract"))return h;
+  const chips=PACKIDS.map(k=>`<button class="chchip${S.sel===k?" on":""}" data-psel="${k}"><span class="fchip" style="background:${FCOL.V}">${trp("Vocabulario","Vocabolario")}</span> ${PACK[k].e} ${esc(PACK[k].tema)}</button>`).join("");
+  return h.replace(`<div class="chh">2 · `,`<div class="chh">📦 ${trp("Temas de vocabulario","Temi di vocabolario")}</div><div class="chchips">${chips}</div><div class="chh">2 · `)}}
+function exClick29(D){
+  if(S.ov==="pract"&&"psel" in D&&PACK[D.psel]){S.sel=D.psel;S.msg="";render();return true}
+  if(S.ov==="pract"&&"plesson" in D&&PACK[S.sel]){show("packles",{k:S.sel});return true}
+  if(S.ov==="packles"&&"pback" in D){show("pract",{step:"menu",sel:S.k});return true}
+  return false}
+EXOV.packles=()=>{const P=PACK[S.k],l=P.lesson;return `<div class="row"><span class="eyebrow">🏫 ${trp("Vocabulario","Vocabolario")}</span></div><div class="chalk"><div class="chhead"><span>${P.e}</span><span>${trp("Vocabulario","Vocabolario")}</span></div><h2 class="chtitle">${esc(P.tema)}</h2><p class="chintro">${esc(l.intro)}</p>
+   ${l.tabs.map(t=>`<div class="chh">${esc(t.h)}</div><table class="cht">${t.r.map(r=>`<tr><td>${esc(r[0])} ${spk1(r[0].replace(/^\S+\s(?=(il|lo|la|l'|i|gli|le)\b)/u,""))}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>`).join("")}<div class="chtip">⚠ ${esc(l.tip)}</div><div class="chtray"><i></i><b></b></div></div>
+   ${btn("✏️ "+trp("PRACTICAR ESTE TEMA","ESERCITATI SU QUESTO TEMA"),"data-pback")}${btn(trp("CERRAR","CHIUDI"),"data-close","")}`};
+/* «Todo» incluye también los temas de vocabulario */
+{const old=buildSet;buildSet=function(type,topics){if(topics.every(t=>typeof t==="number")&&topics.length===learned().length)topics=[...topics,...PACKIDS];return old(type,topics)}}
+/* escribir: sin artículo */
+{const old=pWrite;pWrite=function(c){const L=LV(c);if(!PACK[c])return old(c);const out=[];
+  L.pairs.forEach(p=>{const a=p[0].replace(/^(il|lo|la|i|gli|le|un|uno|una) /i,"").replace(/^l'/i,"");if(/^[a-zàèéìòù]+$/i.test(a)&&a.length<=10)out.push({q:trp("Escribe en italiano:","Scrivi in italiano:")+" «"+p[1]+"»",a:a.toLowerCase(),e:p[1]+" = "+p[0],c,w:1})});
+  pGap(c).forEach(g=>{if(/^[a-zàèéìòù]+$/i.test(g.o[0])&&g.o[0].length<=10)out.push({q:g.q,a:g.o[0].toLowerCase(),e:g.e,c,w:1})});return out}}
+/* Quaderno: palabras de los temas */
+{const old=nbPar;nbPar=function(got,sel){const row=(it,es)=>`<tr><td><span class="it">${esc(it)}</span> ${spk1(it)}</td><td>${esc(es)}</td></tr>`;
+  return old(got,sel)+`<div class="lvh">📦 ${trp("Temas de vocabulario","Temi di vocabolario")}</div>`+PACKIDS.map(k=>{const P=PACK[k],rows=P.lesson.tabs.flatMap(t=>t.r);
+    return `<details class="pg"><summary><b>${P.e} ${esc(P.tema)}</b><span class="pgt">${rows.length} ${trp("palabras","parole")}</span></summary><div class="pgb">${P.lesson.tabs.map(t=>`<div class="eyebrow">${esc(t.h)}</div><table>${t.r.map(r=>row(r[0].replace(/^\S+\s(?=(il|lo|la|l'|i|gli|le)\b)/u,""),r[1])).join("")}</table>`).join("")}</div></details>`}).join("")}}
+{const old=nbDeck;nbDeck=function(got){const d=old(got);const extra=shuffle(PACKIDS.flatMap(k=>PACK[k].pairs)).slice(0,4);return shuffle([...d.slice(0,6),...extra])}}
+{const old=pVoc;pVoc=function(c,all){return PACK[c]?old(c,[c]):old(c,all)}}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
