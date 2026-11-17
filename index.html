@@ -220,6 +220,7 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 #hcard .it,#hcard .hl{color:var(--ink)}#hcard .hcin{max-height:46vh;overflow-y:auto}
 .newrow td{background:#8ff0a4!important;font-weight:bold}
 .lugrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.lucard{background:#c5d3dc;border:3px solid var(--ink);padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.lucard canvas{width:100%;height:auto;image-rendering:pixelated}.lucard span{font-family:var(--px);font-size:9px}.lucard.no{opacity:.35}.lucard.ok{background:#8ff0a4}
+.fcell.place span{position:relative}.parr{position:absolute;right:-12px;bottom:-6px;font-size:20px;background:#ffcd75;border:2px solid var(--ink);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;line-height:1}
 </style>
 </head>
 <body>
@@ -1128,7 +1129,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick33(D)||exClick32(D)||exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick34(D)||exClick33(D)||exClick32(D)||exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -4249,6 +4250,37 @@ EXOV.stop=()=>{const c=save.city,L=LEVELS[c],f=L.tour.facts[S.i],x=(TOURX[c]||[]
   return `<div class="eyebrow">Free walking tour · tappa ${S.i+1}/3</div><canvas id="pic" class="pic" width="132" height="72"></canvas><div class="eyebrow">La guida racconta:</div>
    <p class="it">${esc(f[0])}</p>${x?`<p class="it">${esc(x[0])}</p>`:""}${spk(f[0]+(x?" "+x[0]:""))}
    ${S.tr||s===0?`<p class="tip">${esc(f[1])}${x?" "+esc(x[1]):""}</p>`:btn("VER TRADUCCIÓN","data-tr","")}${btn(S.guided&&more?"SIGUIENTE PARADA →":"CONTINUAR","data-stopok")}`};
+
+/* ================= v34: la historia del objeto llega al resolver el enigma; ordenar la habitación con «metti … sul …» ================= */
+EXOV.brief=()=>novHtml()+briefHtml();
+const puzDone=()=>S.ov==="sopa"?S.found&&S.words&&S.found.length===S.words.length:S.ov==="cw"?S.solved&&S.cw&&S.solved.length===S.cw.words.length:false;
+["sopa","cw"].forEach(k=>{const f=EXOV[k];EXOV[k]=()=>{let h=f();if(!needHow(k)&&puzDone()){const sb=storyBox(save.city);if(sb)h=_insHelp(h,`<div class="eyebrow">🎉 ${trp("¡Enigma resuelto! Y descubres algo más…","Enigma risolto! E scopri qualcosa di più…")}</div>`+sb)}return h}});
+function storyDos(){const cur=caseOf(save.city);
+  return CASES.filter(cs=>STORY[cs.id]&&(cs===cur||caseDone(cs.id))).map(cs=>{const r=ROUTES[cs.route],done=caseDone(cs.id);let upto=done?r.ids.length-1:r.ids.indexOf(save.city)-(save.found[save.city]?0:1);
+    if(upto<0)return `<details class="pg"><summary><b>📜 ${esc(cs.title)}</b><span class="pgt">0/${STORY[cs.id].length}</span></summary><div class="pgb"><p class="mute small">${trp("Resuelve el enigma de cada ciudad para descubrir la historia del objeto.","Risolvi l'enigma di ogni città per scoprire la storia dell'oggetto.")}</p></div></details>`;
+    return `<details class="pg"${cs===cur?" open":""}><summary><b>📜 ${esc(cs.title)}</b><span class="pgt">${upto+1}/${STORY[cs.id].length}</span></summary><div class="pgb">${STORY[cs.id].slice(0,upto+1).map((t,i)=>`<p class="tip it"><b>${i+1}.</b> ${esc(t[0])}${stage()<2?`<br><span class="mute small">${esc(t[1])}</span>`:""}</p>`).join("")}</div></details>`}).join("")}
+/* --- habitación: colocar objetos --- */
+const PLACES=[["sul letto","🛏️","⬆","encima de la cama"],["sotto il letto","🛏️","⬇","debajo de la cama"],["sulla sedia","🪑","⬆","encima de la silla"],["sotto la sedia","🪑","⬇","debajo de la silla"],
+ ["nell'armadio","🗄️","📥","dentro del armario"],["nel cassetto","🗃️","📥","dentro del cajón"],["sul divano","🛋️","⬆","encima del sofá"],["accanto alla finestra","🪟","↔","al lado de la ventana"],["sul tappeto","🟫","⬆","encima de la alfombra"]];
+const MOVABLE=["il libro","l'orsacchiotto","lo zaino","le scarpe","i calzini","le pantofole","il computer","la chitarra","il pallone","la sveglia","la lampada","la candela"];
+{const old=startFobj;startFobj=function(kind){old(kind);if(kind!=="camera"||lvOf(save.city)<1)return;const F=FOBJ.camera;
+  S.rounds.forEach((r,i)=>{if(i%2===0)return;const movs=F.items.map((x,j)=>j).filter(j=>MOVABLE.includes(F.items[j][0]));const t=pick(movs),p=Math.floor(Math.random()*PLACES.length);
+    const opts=shuffle([t,...shuffle(F.items.map((_,j)=>j).filter(j=>j!==t)).slice(0,5)]),popts=shuffle([p,...shuffle(PLACES.map((_,j)=>j).filter(j=>j!==p)).slice(0,3)]);
+    const it=F.items[t][0],verb=pick(["Metti","Per favore, metti","Puoi mettere"]);Object.assign(r,{t,opts,place:p,popts,txt:`${verb} ${it} ${PLACES[p][0]}!`,step:0})});
+  if(!needHow("fobj"))speak(S.rounds[0].txt)}}
+{const f=EXOV.fobj;EXOV.fobj=()=>{const r=S.rounds&&S.rounds[S.i];if(needHow("fobj")||!r||r.place===undefined||S.end)return f();
+  const F=FOBJ.camera,s=stage(),obj=F.items[r.t],done=r.step===2;
+  const head=`<div class="row"><span class="eyebrow">🛏️ ${trp("Ayuda a ordenar la habitación","Aiuta a riordinare la camera")} · ${S.i+1}/${S.rounds.length}</span><span class="eyebrow">✓ ${S.ok}</span></div><div class="eyebrow">🗣️ ${esc(F.who)}:</div><p class="it tip">«${esc(r.txt)}»</p>${spk(r.txt)}`;
+  if(r.step===0)return head+`<p class="mute small">1 · ${trp("Toca el objeto","Tocca l'oggetto")}</p><div class="fgrid">${r.opts.map(o=>`<button class="fcell" data-pobj="${o}"><span>${F.items[o][1]}</span></button>`).join("")}</div>${btn(trp("SALIR","ESCI"),"data-close","")}`;
+  const placeBtns=r.popts.map(p=>{const P=PLACES[p];return `<button class="fcell place${done?(p===r.place?" ok":p===r.ppick?" no":""):""}" data-ppl="${p}" ${done?"disabled":""}><span>${P[1]}<b class="parr">${P[2]}</b></span>${done?`<small>${esc(P[0])}</small>`:""}</button>`}).join("");
+  const okAll=done&&r.opick===r.t&&r.ppick===r.place;
+  return head+`<p class="mute small">${trp("Llevas","Hai preso")}: <b>${F.items[r.opick][1]} ${done?esc(F.items[r.opick][0]):""}</b> · 2 · ${trp("¿Dónde lo pones?","Dove lo metti?")}</p><div class="fgrid">${placeBtns}</div>
+   ${done?`<div class="fb ${okAll?"ok":"no"}"><b>${okAll?pick(["Bravo!","Perfetto!"]):"NO…"}</b><span>${esc(obj[0])} ${esc(PLACES[r.place][0])}${s<2?" = "+esc(obj[2])+" "+esc(PLACES[r.place][3]):""}</span></div>${btn(S.i+1<S.rounds.length?trp("SIGUIENTE","AVANTI"):trp("TERMINAR","FINISCI"),"data-fnext")}`:""}${btn(trp("SALIR","ESCI"),"data-close","")}`}}
+function exClick34(D){if(S.ov!=="fobj")return false;const r=S.rounds&&S.rounds[S.i];if(!r||r.place===undefined)return false;
+  if("pobj" in D&&r.step===0){r.opick=+D.pobj;r.step=1;speak(FOBJ.camera.items[r.opick][0]);render();return true}
+  if("ppl" in D&&r.step===1){r.ppick=+D.ppl;r.step=2;const ok=r.opick===r.t&&r.ppick===r.place;if(ok){S.ok++;const it=FOBJ.camera.items[r.t];save.vocab[it[0]]=it[2];save.vocab[PLACES[r.place][0]]=PLACES[r.place][3];persist()}speak(FOBJ.camera.items[r.t][0]+" "+PLACES[r.place][0]);render();return true}
+  if("fo" in D)return true;
+  return false}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
