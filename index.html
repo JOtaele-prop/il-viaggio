@@ -936,6 +936,7 @@ function frame(t){
       else if(e.k==="talk")mark(g,x,y,d.includes("D"));
       else if(e.k==="quest")mark(g,x,y,d.includes("F"));
       else if(e.k==="wit")mark(g,x,y,d.includes("I"));
+      else if(e.k==="chainC"&&(save.chain||{})[c]===2)mark(g,x,y,false);
       else if(e.k==="prof"&&!save.lesson[c])mark(g,x,y,false);
       else if(e.k==="capo"&&save.found[c]&&tourOf(c).done)mark(g,x,y,false);
       else if(e.k==="guide"){R(g,x+13,y-3,1,13,"#1a1c2c");R(g,x+9,y-6,9,3,"#ffcd75");R(g,x+11,y-8,5,2,"#ffcd75")}}}
@@ -1125,7 +1126,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick32(D)||exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -1457,7 +1458,7 @@ function idkHtml(){
 function dosHtml(){
   const c=save.city,cs=caseOf(c),r=ROUTES[cs.route];
   const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
-  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=gotList(i).filter(k=>k!==1).map(k=>cs.cities[i].clues[k]);
     return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
   const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn("RESOLVER LA SOPA DE LETRAS","data-sopa"):"";
   return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas><table>${rows}</table>${sp}<div class="eyebrow">Diario delle piste</div>${diary||"<p class='mute'>Todavía no tienes pistas.</p>"}${btn("CERRAR","data-close")}`;
@@ -1831,7 +1832,7 @@ function idkHtml(){
 function dosHtml(){
   const c=save.city,cs=caseOf(c),r=ROUTES[cs.route];
   const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
-  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=gotList(i).filter(k=>k!==1).map(k=>cs.cities[i].clues[k]);
     return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
   const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz"):"";
   return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas><table>${rows}</table>${sp}${routeDone(routeIdx(c))?btn(trp("VER EL FINAL DEL CASO","RIVEDI IL FINALE"),"data-fin",""):""}
@@ -2009,7 +2010,7 @@ function dosHtml(){
   const c=save.city,cs=caseOf(c),r=ROUTES[cs.route],id=cs.id;
   const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
   const marks=SEQ[id].map(k=>`<tr><td>${TR[k][0]}</td><td>${discOf(c).includes(k)?esc(TR[k][1][THV[id][k]]):"???"}</td></tr>`).join("");
-  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=gotList(i).filter(k=>k!==1).map(k=>cs.cities[i].clues[k]);
     return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
   const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz"):"";
   return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas>
@@ -2547,7 +2548,7 @@ function dosHtml(){
   const c=save.city,cs=caseOf(c),r=ROUTES[cs.route],id=cs.id;
   const rows=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return `<tr><td>${esc(p[0])}</td><td>${kn?esc(p[1]):"???"}</td></tr>`}).join("");
   const marks=SEQ[id].map(k=>`<tr><td>${TR[k][0]}</td><td>${discOf(c).includes(k)?esc(TR[k][1][THV[id][k]]):"???"}</td></tr>`).join("");
-  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=cs.cities[i].clues.slice(0,save.clue[i]).filter((_,k)=>k!==1);
+  const diary=r.ids.filter(i=>(save.clue[i]||0)>0).map(i=>{const cl=gotList(i).filter(k=>k!==1).map(k=>cs.cities[i].clues[k]);
     return `<div class="eyebrow">${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</div>`+cl.map(t=>`<p class="tip it">${esc(t)}</p>`).join("")}).join("");
   const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz"):"";
   return `<div class="eyebrow">Dossier del detective</div><h2>${esc(cs.title)}</h2><p class="it">${esc(cs.obj)}</p><canvas id="face" class="face" width="40" height="44"></canvas>
@@ -3141,10 +3142,10 @@ function hintLines(c,w,n,max){const out=[],wh=WHINT[w],s=stage();
   return steps.slice(0,Math.min(n,max))}
 function puzHelp(c,words,solved,labels){
   const cs=caseOf(c),cl=cs.cities[c].clues,k=save.clue[c]||0,max=hintMax(c);
-  const clues=`<details class="pg clues"${S.helpOpen?" open":""}><summary><b>🔎 ${trp("Tus pistas","Le tue piste")}</b><span class="pgt">${k}/7</span></summary><div class="pgb">${cl.slice(0,k).map((t,i)=>`<p class="tip it"><b>${i+1}.</b> ${clueWho(c,i)?"<i>"+esc(clueWho(c,i))+":</i> ":""}${esc(t)}${CLES[c]&&stage()<2?`<br><span class="mute small">${esc(CLES[c][i])}</span>`:""}</p>`).join("")}</div></details>`;
-  const rows=words.map((w,wi)=>{if(solved.includes(wi))return "";const n=hintSteps(c,w),ls=hintLines(c,w,n,max),left=Math.min(max,(WHINT[w]&&max>=3?3:2))-n;
+  const clues=`<details class="pg clues"${S.helpOpen?" open":""}><summary><b>🔎 ${trp("Tus pistas","Le tue piste")}</b><span class="pgt">${k}/7</span></summary><div class="pgb">${gotList(c).map(i=>[cl[i],i]).map(([t,i])=>`<p class="tip it"><b>${i+1}.</b> ${clueWho(c,i)?"<i>"+esc(clueWho(c,i))+":</i> ":""}${esc(t)}${CLES[c]&&stage()<2?`<br><span class="mute small">${esc(CLES[c][i])}</span>`:""}</p>`).join("")}</div></details>`;
+  const rows=words.map((w,wi)=>{if(solved.includes(wi))return "";const n=hintSteps(c,w),ls=hintLines(c,w,n,max),left=hintAvail(c,w)-n;
     return `<div class="hintw"><b>${labels?labels[wi]:trp("Palabra","Parola")+" "+(wi+1)}</b> <span class="mute small">(${w.length})</span> ${esc(CWDEF[w]||"")}${ls.map(l=>`<div class="hl">💡 ${l}</div>`).join("")}${left>0?btn("💡 "+trp("PEDIR AYUDA","CHIEDI AIUTO"),`data-phint="${w}"`,""):`<div class="mute small">${trp("No quedan más ayudas para esta palabra.","Non ci sono altri aiuti per questa parola.")}</div>`}</div>`}).join("");
-  return clues+`<details class="pg aid"${S.aidOpen?" open":""}><summary><b>💡 ${trp("Ayudas","Aiuti")}</b><span class="pgt">${max===3?trp("hasta 3 por palabra","fino a 3 per parola"):max===2?trp("hasta 2 por palabra","fino a 2 per parola"):trp("1 por palabra","1 per parola")}</span></summary><div class="pgb">${rows}</div></details>`}
+  return clues+`<details class="pg aid"${S.aidOpen?" open":""}><summary><b>💡 ${trp("Ayudas","Aiuti")}</b><span class="pgt">${trp("hasta","fino a")} ${hintAvail(c,words[0])} ${trp("por palabra","per parola")}</span></summary><div class="pgb">${rows}</div></details>`}
 const _insHelp=(h,help)=>{const i=h.lastIndexOf("<button");return i<0?h+help:h.slice(0,i)+help+h.slice(i)};
 EXOV.sopa=()=>{const h=sopaHtml(),c=save.city;return S.found.length===S.words.length?h:_insHelp(h,puzHelp(c,S.words,S.found))};
 EXOV.cw=()=>{const h=cwHtml(),c=save.city;if(S.solved.length===S.cw.words.length)return h;const ws=S.cw.words.map(p=>p.w);return _insHelp(h,puzHelp(c,ws,S.solved,S.cw.words.map(p=>p.num+(p.dir?" ↓":" →"))))};
@@ -4047,12 +4048,112 @@ function hintCard(html){let el=document.getElementById("hcard");if(!el||!el.isCo
 function exClick31(D){
   if(!("phint" in D)||(S.ov!=="sopa"&&S.ov!=="cw"))return false;
   const c=save.city,w=D.phint,z=save.puz[c]||(save.puz[c]={});z.h=z.h||{};const max=hintMax(c);
-  const avail=Math.min(max,(WHINT[w]&&max>=3)?3:2);if((z.h[w]||0)>=avail)return true;
+  const avail=hintAvail(c,w);if((z.h[w]||0)>=avail)return true;
   z.h[w]=(z.h[w]||0)+1;persist();const ls=hintLines(c,w,z.h[w],max),lab=S.ov==="cw"?(()=>{const p=S.cw.words.find(p=>p.w===w);return p?p.num+(p.dir?" ↓":" →"):""})():trp("Palabra","Parola")+" "+(S.words.indexOf(w)+1);
   hintCard(`<div class="eyebrow">💡 ${trp("Ayuda","Aiuto")} · ${esc(lab)} · ${z.h[w]}/${avail}</div><div class="mute small">${esc(CWDEF[w]||"")}</div>${ls.map((l,i)=>`<div class="hl${i===ls.length-1?" new":""}">${l}</div>`).join("")}`);
   try{ov.scrollTo({top:0,behavior:"smooth"})}catch(e){ov.scrollTop=0}return true}
 
 ov.addEventListener("toggle",e=>{const t=e.target;if(!t||!t.classList)return;if(t.classList.contains("aid"))S.aidOpen=t.open;if(t.classList.contains("clues"))S.helpOpen=t.open},true);
+/* ================= v32: última ayuda en español, sonidos de acierto/error, pistas encadenadas ================= */
+/* --- ayudas: la última es la palabra en español --- */
+const WES={BERGAMO:"Bérgamo",MURA:"murallas",ALTA:"alta",VERONA:"Verona",ARENA:"arena",AMORE:"amor",PADOVA:"Padua",STUDENTI:"estudiantes",PIAZZA:"plaza",PILA:"pila",
+ GENOVA:"Génova",MARE:"mar",PESTO:"pesto",TRENTO:"Trento",CASTELLO:"castillo",LAGO:"lago",TRIESTE:"Trieste",CAFFE:"café",PERUGIA:"Perugia",UMBRIA:"Umbría",BACI:"besos",
+ ANCONA:"Ancona",PORTO:"puerto",CROAZIA:"Croacia",MOLO:"muelle",TRAGHETTO:"ferry",MAPPA:"mapa",MILANO:"Milán",MODA:"moda",SCALA:"escalera (como el teatro La Scala)",
+ VENEZIA:"Venecia",GONDOLA:"góndola",CANALI:"canales",BOLOGNA:"Bolonia",TORRI:"torres",PORTICI:"soportales",BIBLIOTECA:"biblioteca",CODICE:"códice",ALI:"alas",
+ ROMA:"Roma",FONTANA:"fuente",COLOSSEO:"Coliseo",NAPOLI:"Nápoles",VESUVIO:"Vesubio",PIZZA:"pizza",PALERMO:"Palermo",SICILIA:"Sicilia",ISOLA:"isla",MASSIMO:"máximo",TEATRO:"teatro",VIOLINO:"violín"};
+function hintList(c,w){const l=lvOf(c),wh=WHINT[w],s=stage(),st=[];
+  if(wh&&l<=1)st.push(`<span class="it">${esc(wh[0])}</span>${s<2?`<br><span class="mute small">${esc(wh[1])}</span>`:""}`);
+  st.push(trp("Empieza por","Comincia con")+` <b>${w[0]}</b> · ${w.length} ${trp("letras","lettere")}`);
+  if(l<=3)st.push(`<b class="pat">${[...w].map((ch,i)=>i%2===0?ch:"_").join(" ")}</b>`);
+  if(WES[w])st.push(`${trp("En español","In spagnolo")}: <b>«${esc(WES[w])}»</b> — ${trp("escríbela en italiano","scrivila in italiano")}`);
+  return st}
+const hintAvail=(c,w)=>hintList(c,w).length;
+function hintLines(c,w,n){return hintList(c,w).slice(0,n)}
+/* --- sonidos de acierto y error --- */
+function sfxOk(){tone(660,0,.07,"square",.05);tone(988,.07,.12,"square",.05)}
+function sfxBad(){tone(220,0,.12,"sawtooth",.045);tone(165,.1,.2,"sawtooth",.045)}
+const SFXOK=".fb.ok,.chgood,.fcell.ok,.hk.ok,.mbx.ok,.mcard.ok,.chopt.ok",SFXBAD=".fb.no,.chbad,.fcell.no,.hk.no,.mbx.no,.chopt.no";
+let sfxLast={ov:null,ok:0,bad:0};
+try{new MutationObserver(()=>{if(!ov.querySelectorAll)return;const okN=ov.querySelectorAll(SFXOK).length,badN=ov.querySelectorAll(SFXBAD).length,same=sfxLast.ov===S.ov;
+  if(same){if(okN>sfxLast.ok)sfxOk();else if(badN>sfxLast.bad)sfxBad()}
+  sfxLast={ov:S.ov,ok:okN,bad:badN}}).observe(ov,{childList:true})}catch(e){}
+/* --- pistas encadenadas: testigo → local → monumento --- */
+const CHAIN={
+ 16:{venue:"bar",worker:"Cameriere",idx:[3,4,5],place:"il bar",cname:"Fotografo",
+  t:[["Gelataio","Dopo il gelato, il signore con la scatola è entrato nel bar qui vicino. Diceva che domani va in una città con un'università antichissima. Chiedi al cameriere del bar!","Después del helado, el señor de la caja entró en el bar de aquí al lado. Decía que mañana va a una ciudad con una universidad antiquísima. ¡Pregúntale al camarero del bar!"],
+   ["Cameriere","Sì, l'ho servito io! Ha detto: «Domani bevo un caffè in un caffè storico, famoso in tutta Italia.» Poi è andato verso l'anfiteatro: chiedi al fotografo che lavora lì davanti.","¡Sí, lo atendí yo! Dijo: «Mañana tomo un café en un café histórico, famoso en toda Italia.» Luego se fue hacia el anfiteatro: pregúntale al fotógrafo que trabaja allí delante."],
+   ["Fotografo","Il signore con la scatola mi ha chiesto di Prato della Valle: uno spazio enorme in mezzo alla città, con statue e un canale.","El señor de la caja me preguntó por Prato della Valle: un espacio enorme en medio de la ciudad, con estatuas y un canal."]]},
+ 10:{venue:"edicola",worker:"Edicolante",idx:[3,4,5],place:"l'edicola",cname:"Fioraia",
+  t:[["Bigliettaio","Prima di comprare il biglietto, Elena è entrata all'edicola: cercava un giornale della sua città, sul mare, vicino alla Slovenia. Chiedi all'edicolante!","Antes de comprar el billete, Elena entró en el quiosco: buscaba un periódico de su ciudad, junto al mar, cerca de Eslovenia. ¡Pregúntale al quiosquero!"],
+   ["Edicolante","Sì, ha comprato una guida dei locali storici: «Domani bevo un espresso in un locale con gli specchi antichi.» Poi è andata verso il castello: c'è una fioraia lì davanti.","Sí, compró una guía de locales históricos: «Mañana tomo un espresso en un local con espejos antiguos.» Luego se fue hacia el castillo: hay una florista allí delante."],
+   ["Fioraia","Parlavamo del tempo e mi ha detto: «Ho paura di quel vento fortissimo che soffia nella mia città!»","Hablábamos del tiempo y me dijo: «¡Me da miedo ese viento fortísimo que sopla en mi ciudad!»"]]},
+ 1:{venue:"tiro",worker:"Giostraio",idx:[3,4,5],place:"il tiro a segno",cname:"Edicolante del Duomo",
+  t:[["Tranviere","Marco è sceso dal tram ed è andato al luna park, al tiro a segno: voleva vincere un premio prima di partire per una città costruita sull'acqua.","Marco se bajó del tranvía y fue al parque de atracciones, al tiro al blanco: quería ganar un premio antes de irse a una ciudad construida sobre el agua."],
+   ["Giostraio","Sì, ha giocato qui! Ha vinto un quadretto e ha detto: «Voglio dipingere le strade d'acqua di quella città.» Poi è andato verso il Duomo: c'è un edicolante sulla piazza.","¡Sí, jugó aquí! Ganó un cuadrito y dijo: «Quiero pintar las calles de agua de esa ciudad.» Luego se fue hacia el Duomo: hay un quiosquero en la plaza."],
+   ["Edicolante del Duomo","Da me ha comprato una mappa dei vaporetti.","En mi quiosco compró un mapa de los vaporetti."]]},
+ 5:{venue:"cinema",worker:"Bigliettaia del cinema",idx:[3,4,5],place:"il cinema",cname:"Barista del Colosseo",
+  t:[["Tassista","L'ho lasciato davanti al cinema. Mi ha detto: «Dopo il film voglio mangiare una vera margherita, quella del sud.» Chiedi alla bigliettaia del cinema!","Lo dejé delante del cine. Me dijo: «Después de la película quiero comer una auténtica margarita, la del sur.» ¡Pregúntale a la taquillera del cine!"],
+   ["Bigliettaia del cinema","Sì, ha visto un film su un vulcano e ha comprato il poster! Poi è andato verso l'anfiteatro dei gladiatori: chiedi al barista lì davanti.","¡Sí, vio una película sobre un volcán y compró el póster! Luego se fue hacia el anfiteatro de los gladiadores: pregúntale al camarero de allí delante."],
+   ["Barista del Colosseo","Mi ha chiesto che cos'è un caffè sospeso.","Me preguntó qué es un café suspendido."]]}};
+Object.keys(CHAIN).forEach(c=>{const CH=CHAIN[c],cs=CASES.find(k=>k.cities[c]);CH.idx.forEach((ix,j)=>{cs.cities[c].clues[ix]=CH.t[j][1];CSTORY[c][ix]=CH.t[j];CLES[c][ix]=CH.t[j][2]})});
+save.chain=save.chain||{};save.gotI=save.gotI||{};save.chainPend=save.chainPend||{};
+Object.keys(CHAIN).forEach(c=>{if(!save.chain[c]&&(save.done[c]||[]).includes("D"))save.chain[c]=1});
+const gotList=i=>{const k=save.clue[i]||0;const g=save.gotI[i];return g&&g.length===k?g.slice().sort((a,b)=>a-b):[...Array(k).keys()]};
+function nextStep(){
+  const c=save.city,d=doneOf(c),k=save.clue[c]||0,cs=caseOf(c),CH=CHAIN[c];
+  if(k<7&&d.length>k){
+    let got=save.gotI[c];if(!got||got.length!==k)got=save.gotI[c]=[...Array(k).keys()];
+    let idx=save.chainPend[c];
+    if(idx==null||got.includes(idx)){const res=CH?CH.idx:[];idx=[0,1,2,3,4,5,6].find(i=>!got.includes(i)&&!res.includes(i));if(idx==null)idx=[0,1,2,3,4,5,6].find(i=>!got.includes(i))}
+    delete save.chainPend[c];got.push(idx);save.clue[c]=k+1;persist();hud();const txt=cs.cities[c].clues[idx];show("card",{k,idx,txt});speak(txt);return}
+  if(k>=7&&!save.found[c])return sayL("Detective","Hai sette piste! Ora scopri dove è andato il ladro.",puzType(c)==="sopa"?"Busca en la sopa de letras las palabras escondidas: salen de tus pistas.":"Completa el crucigrama: las definiciones salen de tus pistas.",btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz")+btn(trp("MÁS TARDE","PIÙ TARDI"),"data-close",""));
+  hide();
+}
+function cardHtml(){
+  const c=save.city,cs=caseOf(c),p=cs.cities[c].prof,ix=S.idx??S.k,es=CLES[c]&&stage()<2?CLES[c][ix]:"";let who=clueWho(c,ix);
+  if(save.famK&&save.famK[c]===S.k)who="Famiglia Rossi";
+  const CH=CHAIN[c],j=CH?CH.idx.indexOf(ix):-1;
+  return `<div class="eyebrow">Nuova pista · ${S.k+1}/7</div><h2>${esc(cs.title)}</h2>${who?`<div class="eyebrow">🗣️ ${esc(who)} ${trp("cuenta","racconta")}:</div>`:""}<p class="it tip">«${esc(S.txt)}»${es?`<br><span class="mute small">${esc(es)}</span>`:""}</p>${spk(S.txt)}`+
+   (j===0?`<p class="fb ok"><b>🔗 ${trp("PISTA EN CADENA","PISTA A CATENA")}</b><span>${trp("Ve a","Vai a")} ${esc(CH.place)} ${trp("y habla con","e parla con")} ${esc(CH.worker)}.</span></p>`:"")+
+   (j===1?`<p class="fb ok"><b>🔗 ${trp("SIGUE LA CADENA","SEGUI LA CATENA")}</b><span>${trp("Busca cerca del monumento a","Cerca vicino al monumento")}: ${esc(CH.cname)} (!).</span></p>`:"")+
+   (ix>=3?`<p class="mute small">${trp("📝 Esta pista te servirá para el enigma: queda apuntada en él.","📝 Questa pista ti servirà per l'enigma: resta annotata lì.")}</p>`:"")+
+   (ix===1?`<div class="fb ok"><b>DOSSIER AGGIORNATO</b><span>${esc(p[0])}: ${esc(p[1])}</span></div>`:"")+btn("CONTINUAR","data-cardok");
+}
+/* el local: la gente de dentro */
+let CHAINB=false;
+const VENSTART={bar:()=>startShop("bar"),edicola:()=>startShop("edicola"),tiro:()=>startTiro(),cinema:()=>startCinema()};
+EXOV.people=()=>{const c=save.city,CH=CHAIN[c],st=save.chain[c]||0,sh=SHOPS[CH.venue];
+  const cust=[["Signora con il cappotto",["Io? Non ho visto niente, scusa.","Sono qui solo per un momento…","Un ladro? Che paura!"]],["Ragazzo con le cuffie",["Eh? Scusa, ascoltavo la musica.","Non so niente, mi dispiace.","Chiedi a chi lavora qui!"]]];
+  const pick2=S.talk;
+  let msg="";if(pick2===0||pick2===1)msg=`<div class="eyebrow">🗣️ ${esc(cust[pick2][0])}:</div><p class="it tip">«${esc(cust[pick2][1][(S.n||0)%3])}»</p>`;
+  if(pick2===2)msg=`<div class="eyebrow">🗣️ ${esc(CH.worker)}:</div><p class="it tip">«${st===0?"Un ladro? Non mi ricordo di nessuno… Forse qualcuno in città sa qualcosa.":st===1?"Ah, sì… forse mi ricordo! Ma adesso ho tanto lavoro. Aiutami, e poi ti racconto tutto.":"Ti ho già detto tutto! Vuoi lavorare ancora un po'?"}»</p>`+
+    (st===1?btn(trp("AYUDAR (JUGAR)","AIUTA (GIOCA)"),"data-pwork"):btn(trp("JUGAR DE TODOS MODOS","GIOCA COMUNQUE"),"data-pplay",""));
+  return `<div class="shopsign">${sh.e} ${esc(sh.n.toUpperCase())}</div><p class="mute">${trp("Dentro hay varias personas. ¿Con quién hablas?","Dentro ci sono diverse persone. Con chi parli?")}</p>
+   <div class="tiles">${cust.map((p,i)=>`<button class="tile" data-ptalk="${i}">🧑 ${esc(p[0])}</button>`).join("")}<button class="tile" data-ptalk="2">🧑‍🍳 ${esc(CH.worker)}${st===1?" ❗":""}</button></div>${msg}${btn(trp("SALIR","ESCI"),"data-close","")}`};
+const chainOk=()=>S.ov==="shop"?!!(S.closed&&S.okN>=2):!!(S.end&&S.end.ok);
+{const old=enterDoor;enterDoor=function(d){const c=save.city,CH=CHAIN[c];if(CH&&d.type===CH.venue&&(save.chain[c]||0)<2)return show("people",{talk:null,n:0});return old(d)}}
+{const old=interact;interact=function(){if(S.ov||P.moving||W)return old();const fx=P.x+DIRS[P.dir][0],fy=P.y+DIRS[P.dir][1],e=entAt(fx,fy);
+  if(e&&e.k==="chainC"){const c=save.city,CH=CHAIN[c],st=save.chain[c]||0;
+    if(st<2)return sayL(CH.cname,pick(["Che bella giornata!","Bello il monumento, vero?","Scusa, sto lavorando."]),"Todavía no sabe nada: sigue la cadena de pistas.");
+    if(st===2){save.chain[c]=3;doneOf(c).push("C3");save.chainPend[c]=CH.idx[2];persist();return nextStep()}
+    return sayL(CH.cname,"Ti ho già detto tutto!","Ya te dio su pista.")}
+  return old()}}
+function exClick32(D){const c=save.city,CH=CHAIN[c];
+  if(S.ov==="dial"&&"dend" in D&&CH&&!(save.chain[c])){save.chain[c]=1;save.chainPend[c]=CH.idx[0];persist();return false}
+  if(S.ov==="people"){if("ptalk" in D){S.n=(S.n||0)+1;S.talk=+D.ptalk;render();return true}
+    if("pwork" in D){CHAINB=true;HOWSKIP=null;VENSTART[CH.venue]();return true}
+    if("pplay" in D){CHAINB=false;VENSTART[CH.venue]();return true}}
+  if("close" in D&&CHAINB&&CH&&["shop","tiro","cinema"].includes(S.ov)){const ok=chainOk();CHAINB=false;
+    if(ok&&(save.chain[c]||0)===1){save.chain[c]=2;doneOf(c).push("C2");save.chainPend[c]=CH.idx[1];persist();hide();nextStep();return true}
+    if(!ok){hide();sayL(CH.worker,"Mmm… non abbiamo finito il lavoro. Torna e riprova!","Tienes que terminar bien el juego para que te cuente lo que sabe.");return true}}
+  return false}
+{const old=buildCity;buildCity=function(){old();const c=save.city,CH=CHAIN[c];if(!CH)return;const Lr=LEVELS[c].sp.L,A=LEVELS[c].at,fronts=new Set(DOORS.map(d=>d.x+","+(d.y+1)));
+  const free=(x,y)=>x>0&&y>0&&x<MW-1&&y<MH-1&&!SOLID.includes(MAP[y][x])&&MAP[y][x]!=="="&&!ents.some(e=>e.x===x&&e.y===y)&&!fronts.has(x+","+y)&&!(x===A.start[0]&&y===A.start[1]);
+  const cx=Lr[0]+(Lr[2]>>1),by=Lr[1]+Lr[3];let spot=null;
+  for(let r=0;r<6&&!spot;r++)for(let dx=-r;dx<=r&&!spot;dx++)for(let dy=0;dy<=r&&!spot;dy++){const x=cx+dx,y=by+dy;if(free(x,y)&&!",".includes(MAP[y][x]))spot=[x,y]}
+  if(!spot)for(let r=0;r<6&&!spot;r++)for(let dx=-r;dx<=r&&!spot;dx++){const x=cx+dx,y=by+r;if(free(x,y))spot=[x,y]}
+  if(spot){ents.push({k:"chainC",x:spot[0],y:spot[1],o:{shirt:"#ef7d57",hair:"#5d3a1a"}});fixBlocks()}}}
+
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
