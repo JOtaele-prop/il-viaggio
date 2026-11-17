@@ -218,6 +218,8 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 #hcard .hcin{background:#fff7e0;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:20px}
 #hcard .hl.new{border-left-color:#38b764;background:#e5f4e4}
 #hcard .it,#hcard .hl{color:var(--ink)}#hcard .hcin{max-height:46vh;overflow-y:auto}
+.newrow td{background:#8ff0a4!important;font-weight:bold}
+.lugrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.lucard{background:#c5d3dc;border:3px solid var(--ink);padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.lucard canvas{width:100%;height:auto;image-rendering:pixelated}.lucard span{font-family:var(--px);font-size:9px}.lucard.no{opacity:.35}.lucard.ok{background:#8ff0a4}
 </style>
 </head>
 <body>
@@ -1126,7 +1128,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick32(D)||exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick33(D)||exClick32(D)||exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -4153,6 +4155,100 @@ function exClick32(D){const c=save.city,CH=CHAIN[c];
   for(let r=0;r<6&&!spot;r++)for(let dx=-r;dx<=r&&!spot;dx++)for(let dy=0;dy<=r&&!spot;dy++){const x=cx+dx,y=by+dy;if(free(x,y)&&!",".includes(MAP[y][x]))spot=[x,y]}
   if(!spot)for(let r=0;r<6&&!spot;r++)for(let dx=-r;dx<=r&&!spot;dx++){const x=cx+dx,y=by+r;if(free(x,y))spot=[x,y]}
   if(spot){ents.push({k:"chainC",x:spot[0],y:spot[1],o:{shirt:"#ef7d57",hair:"#5d3a1a"}});fixBlocks()}}}
+
+/* ================= v33: el identikit se abre solo cuando cambia; rueda de reconocimiento al final; tour más completo ================= */
+let DOSPEND=null;
+{const f=EXOV.dos;EXOV.dos=()=>{let h=f();const n=S.hl;if(!n)return h;const c=save.city,cs=caseOf(c),id=cs.id;let ban="";
+  if(n.k&&n.k.length){ban=n.k.map(k=>`${TR[k][0]}: <b>${esc(TR[k][1][THV[id][k]])}</b>`).join(" · ");n.k.forEach(k=>{h=h.replace(`<tr><td>${TR[k][0]}</td>`,`<tr class="newrow"><td>${TR[k][0]}</td>`)})}
+  if(n.prof){const p=cs.cities[n.prof].prof;ban+=(ban?" · ":"")+`${esc(p[0])}: <b>${esc(p[1])}</b>`;h=h.replace(`<tr><td>${esc(p[0])}</td>`,`<tr class="newrow"><td>${esc(p[0])}</td>`)}
+  return `<div class="fb ok"><b>🆕 ${trp("IDENTIKIT ACTUALIZADO","IDENTIKIT AGGIORNATO")}</b><span>${ban}</span></div>`+h}}
+function exClick33(D){
+  if(("ns" in D||"cardok" in D)&&!DOSPEND){if(S.ov==="idk"&&S.won&&S.ed&&S.ed.length)DOSPEND={k:S.ed.slice()};else if(S.ov==="card"&&(S.idx??S.k)===1)DOSPEND={prof:save.city}}
+  if(("ns" in D||"cardok" in D)&&DOSPEND){const hl=DOSPEND;DOSPEND=null;show("dos",{hl,after:true});try{ov.scrollTop=0}catch(e){}return true}
+  if(S.ov==="dos"&&S.after&&"close" in D){hide();nextStep();return true}
+  if(S.ov==="lineup"){
+    if("lu" in D){if(S.res==="ok")return true;const k=+D.lu;if(k===S.ans){S.res="ok";speak(caseOf(S.c).woman?"Sì, è lei!":"Sì, è lui!")}else{S.bad.push(k);S.res="no";speak("No, non è questa persona.");lose();if(dead())return true}render();return true}
+    if("luok" in D){save.lineup=save.lineup||{};save.lineup[caseOf(S.c).id]=1;persist();const c=S.c;LINEUPGO=true;startFin(c);LINEUPGO=false;return true}}
+  return false}
+/* rueda de reconocimiento antes del final */
+let LINEUPGO=false;
+function lineupSet(c){const id=caseOf(c).id,keys=SEQ[id],tv=THV[id];let known=discOf(c).filter(k=>keys.includes(k));if(!known.length)known=keys.slice(0,2);
+  const target={};keys.forEach(k=>target[k]=tv[k]);const cands=[target];
+  shuffle(known).concat(shuffle(known)).forEach(k=>{if(cands.length>=4)return;const v=Object.assign({},target),opts=TR[k][1].map((_,i)=>i).filter(i=>i!==tv[k]);v[k]=pick(opts);
+    if(known.length>1&&Math.random()<.5){const k2=pick(known.filter(x=>x!==k));v[k2]=pick(TR[k2][1].map((_,i)=>i).filter(i=>i!==tv[k2]))}
+    if(!cands.some(o=>JSON.stringify(o)===JSON.stringify(v)))cands.push(v)});
+  while(cands.length<4){const v=Object.assign({},target),k=pick(known);v[k]=pick(TR[k][1].map((_,i)=>i).filter(i=>i!==tv[k]));cands.push(v)}
+  const unk=Object.keys(TR).filter(k=>!known.includes(k)&&k!=="hair");cands.forEach(v=>unk.forEach(k=>{if(Math.random()<.5)v[k]=Math.floor(Math.random()*TR[k][1].length)}));
+  const ord=shuffle([0,1,2,3]);return {cands:ord.map(i=>cands[i]),ans:ord.indexOf(0),known}}
+{const old=startFin;startFin=function(c){const id=caseOf(c).id;if(LINEUPGO||(save.lineup&&save.lineup[id])||(S.ov==="dos"))return old(c);const L=lineupSet(c);show("lineup",Object.assign({c,bad:[],res:null},L))}}
+EXOV.lineup=()=>{const cs=caseOf(S.c),id=cs.id;setTimeout(()=>{(ov.querySelectorAll?[...ov.querySelectorAll(".lucv")]:[]).forEach((cv,i)=>{try{drawFace2(cv.getContext("2d"),S.cands[i])}catch(e){}})},0);
+  const marks=S.known.map(k=>`<tr><td>${TR[k][0]}</td><td>${esc(TR[k][1][THV[id][k]])}</td></tr>`).join("");
+  return `<div class="eyebrow">🕵️ ${trp("Rueda de reconocimiento","Riconoscimento")}</div><h2>${trp("¿Quién es el ladrón?","Chi è il ladro?")}</h2>
+   <p class="it">${cs.woman?"La polizia ha fermato quattro donne vicino al posto. Guarda il tuo identikit: quale è la ladra?":"La polizia ha fermato quattro persone vicino al posto. Guarda il tuo identikit: chi è il ladro?"}</p>
+   <div class="eyebrow">${trp("Tu identikit","Il tuo identikit")}</div><table>${marks}</table>
+   <div class="lugrid">${S.cands.map((v,i)=>`<button class="lucard${S.bad.includes(i)?" no":""}${S.res==="ok"&&i===S.ans?" ok":""}" data-lu="${i}" ${S.bad.includes(i)||S.res==="ok"?"disabled":""}><canvas class="lucv" width="40" height="44"></canvas><span>${i+1}</span></button>`).join("")}</div>
+   ${S.res==="no"?`<div class="fb no"><b>${trp("NO ES ESA PERSONA","NON È QUESTA PERSONA")}</b><span>${trp("Compara cada rasgo del identikit. -1 ♥","Confronta ogni segno particolare. -1 ♥")}</span></div>`:""}
+   ${S.res==="ok"?`<div class="fb ok"><b>${cs.woman?"SÌ, È LEI!":"SÌ, È LUI!"}</b><span>${trp("Lo has reconocido gracias al identikit.","L'hai riconosciuto grazie all'identikit.")}</span></div>${btn(trp("CONTINUAR","CONTINUA"),"data-luok")}`:""}`};
+/* --- free walking tour: más información en cada parada --- */
+const TOURX={
+ 0:[["All'inizio doveva essere una sinagoga, ma la comunità ebraica non aveva abbastanza soldi per finirla. Oggi si può salire in ascensore fino a 85 metri e vedere le Alpi.","Al principio iba a ser una sinagoga, pero la comunidad judía no tenía dinero suficiente para terminarla. Hoy se puede subir en ascensor hasta 85 metros y ver los Alpes."],
+  ["In quegli anni il Parlamento si riuniva a Palazzo Carignano. Poi la capitale è passata a Firenze e, nel 1871, a Roma.","En esos años el Parlamento se reunía en el Palacio Carignano. Luego la capital pasó a Florencia y, en 1871, a Roma."],
+  ["È nato nel 1806, quando il cacao era carissimo: i cioccolatieri hanno aggiunto le nocciole per usarne meno. Ha la forma di una piccola barca rovesciata.","Nació en 1806, cuando el cacao era carísimo: los chocolateros añadieron avellanas para usar menos. Tiene forma de barquita al revés."]],
+ 1:[["Ci sono voluti quasi seicento anni per finirlo. Sul tetto ci sono più di tremila statue e si può camminare tra le guglie.","Se tardó casi seiscientos años en terminarla. En el tejado hay más de tres mil estatuas y se puede caminar entre los pináculos."],
+  ["Qui hanno debuttato molte opere di Verdi e di Puccini. La sera della prima, il 7 dicembre, è un grande evento per tutta la città.","Aquí se estrenaron muchas óperas de Verdi y de Puccini. La noche del estreno, el 7 de diciembre, es un gran acontecimiento para toda la ciudad."],
+  ["Si dice che un aiutante di un pittore ha messo lo zafferano nel riso per scherzo, a un matrimonio. Spesso si mangia con l'ossobuco.","Se dice que un ayudante de un pintor echó azafrán en el arroz como broma, en una boda. A menudo se come con osobuco."]],
+ 2:[["Dalla cima si vedono tutta la laguna e, nei giorni limpidi, anche le Dolomiti. Accanto c'è la Basilica di San Marco, piena di mosaici d'oro.","Desde lo alto se ve toda la laguna y, en los días claros, también los Dolomitas. Al lado está la Basílica de San Marcos, llena de mosaicos de oro."],
+  ["Il vaporetto è come un autobus sull'acqua. Anche la polizia, le ambulanze e i pompieri usano le barche.","El vaporetto es como un autobús sobre el agua. También la policía, las ambulancias y los bomberos usan barcas."],
+  ["Nel passato con la maschera nessuno sapeva chi eri: ricchi e poveri si mescolavano. Le maschere tradizionali si fanno di cartapesta.","Antiguamente, con la máscara nadie sabía quién eras: ricos y pobres se mezclaban. Las máscaras tradicionales se hacen de cartón piedra."]],
+ 3:[["Nel Medioevo le famiglie ricche le costruivano per mostrare il loro potere. Sulla più alta si sale con quasi cinquecento gradini.","En la Edad Media las familias ricas las construían para mostrar su poder. A la más alta se sube con casi quinientos escalones."],
+  ["Qui hanno studiato Dante, Petrarca e Copernico. Ancora oggi in città vivono tantissimi giovani.","Aquí estudiaron Dante, Petrarca y Copérnico. Todavía hoy en la ciudad viven muchísimos jóvenes."],
+  ["La città ha tre soprannomi: «la Dotta» per l'università, «la Grassa» per il cibo e «la Rossa» per il colore dei tetti.","La ciudad tiene tres apodos: «la Docta» por la universidad, «la Gorda» por la comida y «la Roja» por el color de los tejados."]],
+ 4:[["È una cupola senza impalcature sotto: Brunelleschi ha inventato nuove macchine per costruirla. Ancora oggi è la cupola in muratura più grande del mondo.","Es una cúpula sin andamios debajo: Brunelleschi inventó máquinas nuevas para construirla. Todavía hoy es la cúpula de ladrillo más grande del mundo."],
+  ["Sul ponte ci sono negozi di gioielli. Una volta c'erano i macellai, ma il duca li ha mandati via per il cattivo odore.","Sobre el puente hay joyerías. Antes había carnicerías, pero el duque las echó por el mal olor."],
+  ["La famiglia Medici pagava gli artisti per lavorare in città. Agli Uffizi si vedono opere di Botticelli, Leonardo e Raffaello.","La familia Médici pagaba a los artistas para trabajar en la ciudad. En los Uffizi se ven obras de Botticelli, Leonardo y Rafael."]],
+ 5:[["Poteva ospitare circa cinquantamila spettatori. Aveva anche un tetto di tela, il velario, per proteggere il pubblico dal sole.","Podía acoger a unos cincuenta mil espectadores. Tenía incluso un techo de tela, el velario, para proteger al público del sol."],
+  ["Si lancia la moneta con la mano destra, sopra la spalla sinistra. Ogni anno si raccolgono più di un milione di euro, che vanno in beneficenza.","La moneda se lanza con la mano derecha por encima del hombro izquierdo. Cada año se recoge más de un millón de euros, que va a beneficencia."],
+  ["Il Vaticano ha meno di mille abitanti, la sua posta e le sue guardie svizzere. Nella Cappella Sistina c'è il famoso soffitto di Michelangelo.","El Vaticano tiene menos de mil habitantes, su propio correo y su guardia suiza. En la Capilla Sixtina está el famoso techo de Miguel Ángel."]],
+ 6:[["Gli scavi di Pompei mostrano case, strade e negozi romani come erano duemila anni fa. Oggi intorno al vulcano c'è un parco nazionale.","Las excavaciones de Pompeya muestran casas, calles y tiendas romanas como eran hace dos mil años. Hoy alrededor del volcán hay un parque nacional."],
+  ["Ha i colori della bandiera italiana: rosso il pomodoro, bianca la mozzarella, verde il basilico. L'arte del pizzaiolo napoletano è patrimonio UNESCO.","Tiene los colores de la bandera italiana: rojo el tomate, blanca la mozzarella, verde la albahaca. El arte del pizzero napolitano es patrimonio de la UNESCO."],
+  ["Il caffè si beve in piedi, al banco, e spesso con un bicchiere d'acqua. Molti napoletani ne bevono tre o quattro al giorno.","El café se toma de pie, en la barra, y a menudo con un vaso de agua. Muchos napolitanos toman tres o cuatro al día."]],
+ 7:[["Dentro ci sono le tombe dei re normanni e dell'imperatore Federico II. Dal tetto si vede tutta la città fino al mare.","Dentro están las tumbas de los reyes normandos y del emperador Federico II. Desde el tejado se ve toda la ciudad hasta el mar."],
+  ["Gli arabi hanno portato gli agrumi, lo zucchero e il gelsomino. Molte parole siciliane vengono dall'arabo.","Los árabes trajeron los cítricos, el azúcar y el jazmín. Muchas palabras sicilianas vienen del árabe."],
+  ["Al mercato si trovano pesce, frutta e cibo di strada come le arancine e il pane con la milza. Ogni venditore canta i suoi prodotti in modo diverso.","En el mercado hay pescado, fruta y comida callejera como las arancine y el pan con bazo. Cada vendedor canta sus productos de forma distinta."]],
+ 8:[["In centro ci sono ancora l'Arco di Augusto, le mura e un teatro romano. Le strade seguono ancora lo schema a griglia dell'accampamento romano.","En el centro todavía están el Arco de Augusto, las murallas y un teatro romano. Las calles siguen el trazado en cuadrícula del campamento romano."],
+  ["È alto 4.808 metri. Un tunnel lungo più di undici chilometri passa sotto la montagna e arriva in Francia.","Mide 4.808 metros. Un túnel de más de once kilómetros pasa bajo la montaña y llega a Francia."],
+  ["Si fa con il latte delle mucche che d'estate mangiano l'erba di montagna. Matura in grotte fresche per almeno tre mesi.","Se hace con la leche de vacas que en verano comen hierba de montaña. Madura en cuevas frescas al menos tres meses."]],
+ 9:[["È uno dei fari più antichi del mondo ancora in funzione. La sua luce si vede fino a cinquanta chilometri dal mare.","Es uno de los faros más antiguos del mundo todavía en funcionamiento. Su luz se ve hasta a cincuenta kilómetros mar adentro."],
+  ["Tradizionalmente si prepara nel mortaio, con un pestello di legno: da qui viene il nome. Si mangia con le trofie o le trenette.","Tradicionalmente se prepara en el mortero, con un mazo de madera: de ahí viene el nombre. Se come con trofie o trenette."],
+  ["Ci sono pinguini, delfini, foche e tanti pesci tropicali. È stato costruito per l'Expo del 1992, cinquecento anni dopo il viaggio di Colombo.","Hay pingüinos, delfines, focas y muchos peces tropicales. Se construyó para la Expo de 1992, quinientos años después del viaje de Colón."]],
+ 10:[["Dentro c'è il ciclo dei mesi, un affresco del 1400 che mostra la vita di ogni giorno: il lavoro nei campi, la neve, le feste.","Dentro está el ciclo de los meses, un fresco de 1400 que muestra la vida diaria: el trabajo en el campo, la nieve, las fiestas."],
+  ["Al tramonto le rocce delle Dolomiti diventano rosa e arancioni: si chiama «enrosadira». D'inverno ci sono tante piste da sci.","Al atardecer las rocas de los Dolomitas se vuelven rosas y naranjas: se llama «enrosadira». En invierno hay muchas pistas de esquí."],
+  ["Si mangiano in brodo o con il burro fuso. Nascono come piatto povero, per non buttare il pane vecchio.","Se comen en caldo o con mantequilla fundida. Nacieron como plato humilde, para no tirar el pan duro."]],
+ 11:[["Di sera i palazzi illuminati si riflettono nell'acqua. Intorno ci sono il municipio e altri edifici dell'Ottocento.","Por la noche los palacios iluminados se reflejan en el agua. Alrededor están el ayuntamiento y otros edificios del siglo XIX."],
+  ["Per questo in città si sentono tante lingue e ci sono chiese di religioni diverse. La cucina mescola piatti italiani, austriaci e sloveni.","Por eso en la ciudad se oyen muchos idiomas y hay iglesias de religiones distintas. La cocina mezcla platos italianos, austriacos y eslovenos."],
+  ["Qui ha scritto una parte del suo romanzo più famoso, l'Ulisse. In centro c'è una sua statua di bronzo che cammina sul marciapiede.","Aquí escribió parte de su novela más famosa, el Ulises. En el centro hay una estatua suya de bronce que camina por la acera."]],
+ 12:[["È decorata con sculture che raccontano i mesi dell'anno, le arti e le storie della Bibbia. Davanti c'è il Duomo, con una grande scalinata.","Está decorada con esculturas que cuentan los meses del año, las artes y historias de la Biblia. Delante está el Duomo, con una gran escalinata."],
+  ["Si trova in un bel palazzo del Settecento. Molti studenti stranieri restano in città per mesi e la sera la piazza è piena di lingue diverse.","Está en un bonito palacio del siglo XVIII. Muchos estudiantes extranjeros se quedan meses y por la noche la plaza se llena de idiomas distintos."],
+  ["Si fa in ottobre e arrivano quasi un milione di visitatori. Qui c'è anche la fabbrica dei famosi cioccolatini con il bigliettino d'amore.","Se celebra en octubre y llegan casi un millón de visitantes. Aquí está también la fábrica de los famosos bombones con la notita de amor."]],
+ 13:[["È stato costruito in onore dell'imperatore Traiano, che aveva fatto migliorare la costa. È fatto di marmo bianco e guarda verso il mare.","Se construyó en honor del emperador Trajano, que mandó mejorar la costa. Es de mármol blanco y mira al mar."],
+  ["La città si allunga intorno a un promontorio, come un braccio piegato. Da qui il sole sorge e tramonta sul mare.","La ciudad se extiende alrededor de un promontorio, como un brazo doblado. Desde aquí el sol sale y se pone sobre el mar."],
+  ["Il pesce arrivava secco dalla Norvegia con le navi dei mercanti. Si cucina lentamente, per molte ore.","El pescado llegaba seco desde Noruega en los barcos de los mercaderes. Se cocina despacio, durante muchas horas."]],
+ 14:[["Sulla facciata ci sono le statue di Plinio il Vecchio e Plinio il Giovane, due scrittori romani nati a Como. Dentro ci sono arazzi antichi.","En la fachada están las estatuas de Plinio el Viejo y Plinio el Joven, dos escritores romanos nacidos en Como. Dentro hay tapices antiguos."],
+  ["L'unità di misura «volt» porta il suo nome. In un museo vicino al lago ci sono i suoi strumenti.","La unidad de medida «voltio» lleva su nombre. En un museo junto al lago están sus instrumentos."],
+  ["Il lago è lungo 46 chilometri e ha la forma di una Y rovesciata. Sulle sue rive ci sono ville eleganti con giardini.","El lago mide 46 kilómetros y tiene forma de Y al revés. En sus orillas hay villas elegantes con jardines."]],
+ 15:[["Le hanno costruite i Veneziani nel 1500 per difendere la città. Sono lunghe più di cinque chilometri e oggi sono una bella passeggiata.","Las construyeron los venecianos en el siglo XVI para defender la ciudad. Miden más de cinco kilómetros y hoy son un bonito paseo."],
+  ["Funziona dal 1887 e il viaggio dura pochi minuti. Dall'alto si vede tutta la pianura.","Funciona desde 1887 y el viaje dura pocos minutos. Desde arriba se ve toda la llanura."],
+  ["È fatta di farina di mais e una volta si mangiava tutti i giorni. C'è anche un dolce giallo che si chiama «polenta e osei».","Se hace con harina de maíz y antes se comía todos los días. Hay también un dulce amarillo que se llama «polenta e osei»."]],
+ 16:[["Ogni estate ospita un grande festival d'opera, con migliaia di persone sedute sulle gradinate. Di sera il pubblico accende piccole candele.","Cada verano acoge un gran festival de ópera, con miles de personas sentadas en las gradas. Por la noche el público enciende pequeñas velas."],
+  ["Ogni anno arrivano migliaia di lettere per Giulietta da tutto il mondo. Un gruppo di volontari risponde a tutte.","Cada año llegan miles de cartas para Julieta de todo el mundo. Un grupo de voluntarios las responde todas."],
+  ["Il fiume fa una grande curva intorno al centro storico. Il Ponte Pietra è il ponte più antico della città, del periodo romano.","El río hace una gran curva alrededor del centro histórico. El Ponte Pietra es el puente más antiguo de la ciudad, de época romana."]],
+ 17:[["Qui c'è il primo teatro anatomico del mondo, del 1595, dove i medici studiavano il corpo umano. Nel 1678 qui si è laureata la prima donna al mondo, Elena Cornaro Piscopia.","Aquí está el primer teatro anatómico del mundo, de 1595, donde los médicos estudiaban el cuerpo humano. En 1678 se licenció aquí la primera mujer del mundo, Elena Cornaro Piscopia."],
+  ["Al centro c'è un'isola verde circondata da un canale e da 78 statue. Il sabato c'è un grande mercato.","En el centro hay una isla verde rodeada por un canal y 78 estatuas. Los sábados hay un gran mercado."],
+  ["I padovani la chiamano semplicemente «il Santo». Ogni anno arrivano milioni di pellegrini.","Los paduanos la llaman simplemente «el Santo». Cada año llegan millones de peregrinos."]]};
+EXOV.stop=()=>{const c=save.city,L=LEVELS[c],f=L.tour.facts[S.i],x=(TOURX[c]||[])[S.i],more=[0,1,2].some(k=>k!==S.i&&!tourOf(c).seen.includes(k)),s=stage();
+  return `<div class="eyebrow">Free walking tour · tappa ${S.i+1}/3</div><canvas id="pic" class="pic" width="132" height="72"></canvas><div class="eyebrow">La guida racconta:</div>
+   <p class="it">${esc(f[0])}</p>${x?`<p class="it">${esc(x[0])}</p>`:""}${spk(f[0]+(x?" "+x[0]:""))}
+   ${S.tr||s===0?`<p class="tip">${esc(f[1])}${x?" "+esc(x[1]):""}</p>`:btn("VER TRADUCCIÓN","data-tr","")}${btn(S.guided&&more?"SIGUIENTE PARADA →":"CONTINUAR","data-stopok")}`};
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
