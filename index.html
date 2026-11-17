@@ -203,12 +203,12 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .mcol{flex:1;display:flex;flex-direction:column;gap:8px}
 .mbx{background:rgba(0,0,0,.18);border:2px solid rgba(244,244,228,.6);color:#f4f4e4;font-family:var(--tx);font-size:20px;padding:6px 6px;min-height:44px;line-height:1.05}
 .mbx.sel{border-color:#ffe58a;color:#ffe58a;box-shadow:0 0 0 2px #ffe58a}.mbx.no{border-color:#ff9aa8;color:#ff9aa8}.mbx.ok{background:rgba(0,0,0,.28)}
-.memo{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.mcard{aspect-ratio:4/3;background:#5d3a1a;border:3px solid #8b5a2b;color:#ffe58a;font-family:var(--px);font-size:14px;display:flex;align-items:center;justify-content:center;padding:3px}
-.mcard.up{background:#f4f4e4;color:#1a1c2c;font-family:var(--tx);font-size:18px;line-height:1;border-color:#f4f4e4;word-break:normal;overflow-wrap:anywhere}.mcard.up.it{color:#29366f}.mcard.ok{background:#8ff0a4;border-color:#38b764}
+.memo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.mcard{min-width:0;overflow:hidden;min-height:66px;background:#5d3a1a;border:3px solid #8b5a2b;color:#ffe58a;font-family:var(--px);font-size:14px;display:flex;align-items:center;justify-content:center;padding:3px}
+.mcard.up{background:#f4f4e4;color:#1a1c2c;font-family:var(--tx);font-size:17px;line-height:1.05;border-color:#f4f4e4;word-break:normal;overflow-wrap:break-word;hyphens:auto;padding:6px 3px}.mcard.up.it{color:#29366f}.mcard.ok{background:#8ff0a4;border-color:#38b764}
 .obuilt{min-height:46px;border-bottom:2px dashed rgba(244,244,228,.5);display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}.obank{display:flex;flex-wrap:wrap;gap:6px}
 .ochip{background:rgba(0,0,0,.2);border:2px solid #f4f4e4;color:#f4f4e4;font-family:var(--tx);font-size:21px;padding:4px 8px}.ochip.on{border-color:#ffe58a;color:#ffe58a}
-.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .fcell{min-width:0;overflow:hidden;background:#f4f4e4;border:3px solid var(--ink);box-shadow:2px 2px 0 var(--ink);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:2px}
 .fcell span{font-size:40px;line-height:1}.fcell small{font-family:var(--tx);font-size:14px;line-height:1;overflow-wrap:anywhere;text-align:center}.fcell.ok{background:#8ff0a4}.fcell.no{background:#ffb3c7}
 .hrow{display:flex;align-items:center;gap:10px}.hrow canvas{width:110px;height:110px;flex:none;background:transparent!important;border:none!important;box-shadow:none!important}
@@ -3866,7 +3866,7 @@ function drawLinks(){const w=ov.querySelector&&ov.querySelector("#mwrap"),svg=ov
 addEventListener("resize",()=>{if(S.ov==="pract")drawLinks()});
 function practMemo(q){const fin=q.found.length===q.cards.length/2;
   return `<div class="chalk">${chHead(q)}<p class="chq">🃏 ${trp("Da la vuelta a dos cartas: encuentra cada pareja (palabra y traducción, o persona y verbo).","Gira due carte: trova ogni coppia.")}</p>
-   <div class="memo">${q.cards.map((cd,k)=>{const up=q.open.includes(k)||q.found.includes(cd.i);return `<button class="mcard${up?" up":""}${q.found.includes(cd.i)?" ok":""}${cd.it?" it":""}" data-mm="${k}" ${up?"disabled":""}>${up?esc(cd.t):"?"}</button>`}).join("")}</div>
+   <div class="memo">${q.cards.map((cd,k)=>{const up=q.open.includes(k)||q.found.includes(cd.i);return `<button class="mcard${up?" up":""}${q.found.includes(cd.i)?" ok":""}${cd.it?" it":""}" data-mm="${k}" ${up?"disabled":""}${up&&cd.t.length>12?` style="font-size:${cd.t.length>20?13:15}px"`:""}>${up?esc(cd.t):"?"}</button>`}).join("")}</div>
    <p class="mute small">${trp("Intentos","Tentativi")}: ${q.moves}</p>${fin?`<p class="${q.moves<=q.cards.length/2+5?"chgood":"chbad"}">${q.moves<=q.cards.length/2+5?pick(["Che memoria!","Bravissimo!"]):trp("¡Terminado! Intenta usar menos intentos.","Finito! Prova con meno tentativi.")}</p>`:""}${chFoot(fin)}`}
 function practOrder(q){const done=q.res!==undefined;
   return `<div class="chalk">${chHead(q)}<p class="chq">🧱 ${trp("Ordena las palabras para formar la frase.","Metti in ordine le parole.")}</p>
