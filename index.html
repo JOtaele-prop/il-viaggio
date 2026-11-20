@@ -221,6 +221,10 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .newrow td{background:#8ff0a4!important;font-weight:bold}
 .lugrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.lucard{background:#c5d3dc;border:3px solid var(--ink);padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.lucard canvas{width:100%;height:auto;image-rendering:pixelated}.lucard span{font-family:var(--px);font-size:9px}.lucard.no{opacity:.35}.lucard.ok{background:#8ff0a4}
 .fcell.place span{position:relative}.parr{position:absolute;right:-12px;bottom:-6px;font-size:20px;background:#ffcd75;border:2px solid var(--ink);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;line-height:1}
+.mgrid{display:grid;gap:0;border:3px solid var(--ink);background:var(--ink);max-width:360px;align-self:center;width:100%}
+.mcell{aspect-ratio:1;min-width:0;background:#f4f4e4;border:1px solid #94b0c2;font-size:26px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}.mcell.given{background:#c5d3dc}.mcell.sel{background:#ffcd75}.mcell.no{background:#ffb3c7}.mcell.ok{background:#8ff0a4}
+.mpal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.mpb{background:#fff;border:3px solid var(--ink);box-shadow:2px 2px 0 var(--ink);display:flex;flex-direction:column;align-items:center;padding:4px;min-width:0}.mpb span{font-size:26px}.mpb small{font-family:var(--tx);font-size:15px;line-height:1;text-align:center;overflow-wrap:anywhere}.mpb:disabled{opacity:.5}
+.tile.sel{background:#ffcd75}
 </style>
 </head>
 <body>
@@ -1129,7 +1133,7 @@ ov.addEventListener("click",ev=>{
   const gl=ev.target.closest(".gl");if(gl){$("gloss").innerHTML="<b>"+gl.dataset.w+"</b> = "+gl.dataset.tr;return}
   const b=ev.target.closest("button");if(!b||b.disabled)return;
   const D=b.dataset,c=save.city,q=S.ov==="q"?LEVELS[c].q[S.i]:null;
-  if(exClick34(D)||exClick33(D)||exClick32(D)||exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
+  if(exClick35(D)||exClick34(D)||exClick33(D)||exClick32(D)||exClick31(D)||exClick30h(D)||exClick30(D)||exClick29(D)||exClick28(D)||exClick27(D)||("gopract" in D&&(show("pract",{step:"menu",sel:null}),true))||exClick26w(D)||exClick26(D)||exClick25(D)||exClick18(D)||exClick16(D)||exClick15(D)||exClick11(D)||exClick10(D)||exClick9(D)||exClick8(D)||exClick7(D)||exClick(D))return;
   if("close" in D)hide();
   else if("voice" in D)speak(D.voice);
   else if("wel" in D)welcome();
@@ -4281,6 +4285,50 @@ function exClick34(D){if(S.ov!=="fobj")return false;const r=S.rounds&&S.rounds[S
   if("ppl" in D&&r.step===1){r.ppick=+D.ppl;r.step=2;const ok=r.opick===r.t&&r.ppick===r.place;if(ok){S.ok++;const it=FOBJ.camera.items[r.t];save.vocab[it[0]]=it[2];save.vocab[PLACES[r.place][0]]=PLACES[r.place][3];persist()}speak(FOBJ.camera.items[r.t][0]+" "+PLACES[r.place][0]);render();return true}
   if("fo" in D)return true;
   return false}
+
+/* ================= v35: Miaodoku — sudoku con dibujos y palabras, en una casa, solo para practicar ================= */
+const MIAOSETS={
+ gatti:{n:"I gatti del nonno",e:"🐱",it:[["il gatto nero","🐈‍⬛"],["il gattino","🐱"],["il leone","🦁"],["la tigre","🐯"],["il gatto che ride","😸"],["il gatto innamorato","😻"]]},
+ animali:{n:"Gli animali",e:"🐾",it:[["il cane","🐶"],["la mucca","🐄"],["il maiale","🐷"],["la volpe","🦊"],["il coniglio","🐰"],["l'orso","🐻"]]},
+ frutta:{n:"La frutta",e:"🍎",it:[["la mela","🍎"],["la pera","🍐"],["la banana","🍌"],["l'arancia","🍊"],["la fragola","🍓"],["l'uva","🍇"]]},
+ cucina:{n:"In cucina",e:"🍳",it:[["la pentola","🍲"],["la padella","🍳"],["la tazza","☕"],["il cucchiaio","🥄"],["la forchetta","🍴"],["il coltello","🔪"]]},
+ camera:{n:"In camera",e:"🛏️",it:[["il letto","🛏️"],["la sedia","🪑"],["la lampada","💡"],["la sveglia","⏰"],["lo specchio","🪞"],["il libro","📕"]]}};
+function sudoGen(n){const bw=n===4?2:3,bh=2,g=Array(n*n).fill(-1);
+  const ok=(g,i,v)=>{const r=Math.floor(i/n),c=i%n;for(let k=0;k<n;k++){if(g[r*n+k]===v||g[k*n+c]===v)return false}const br=r-r%bh,bc=c-c%bw;for(let y=0;y<bh;y++)for(let x=0;x<bw;x++)if(g[(br+y)*n+bc+x]===v)return false;return true};
+  const fill=i=>{if(i===n*n)return true;for(const v of shuffle([...Array(n).keys()])){if(ok(g,i,v)){g[i]=v;if(fill(i+1))return true;g[i]=-1}}return false};fill(0);
+  const sol=g.slice(),count=(p,i,lim)=>{while(i<n*n&&p[i]>=0)i++;if(i===n*n)return 1;let s=0;for(let v=0;v<n;v++)if(ok(p,i,v)){p[i]=v;s+=count(p,i+1,lim);p[i]=-1;if(s>=lim)break}return s};
+  const puz=sol.slice(),target=n===4?7:14;
+  for(const i of shuffle([...Array(n*n).keys()])){if(puz.filter(x=>x<0).length>=n*n-target)break;const keep=puz[i];puz[i]=-1;if(count(puz.slice(),0,2)!==1)puz[i]=keep}
+  return {n,bw,bh,sol,puz}}
+function startMiao(){show("miao",{step:"menu"})}
+EXOV.miao=()=>{if(needHow("miao"))return howHtml("miao");
+  if(S.step==="menu")return `<div class="shopsign">🐱 MIAODOKU<small>${trp("en casa del nonno Beppe","a casa di nonno Beppe")}</small></div>
+   <div class="eyebrow">🗣️ Nonno Beppe:</div><p class="it tip">«${trp("¡Ciao! Aquí jugamos sin prisa: no hay pistas ni vidas en juego.","Ciao! Qui si gioca con calma: niente piste, niente vite.")} ${"Scegli i disegni e la grandezza."}»</p>
+   <div class="eyebrow">${trp("Dibujos","Disegni")}</div><div class="tiles">${Object.keys(MIAOSETS).map(k=>`<button class="tile${(S.set||"gatti")===k?" sel":""}" data-mset="${k}">${MIAOSETS[k].e} ${esc(MIAOSETS[k].n)}</button>`).join("")}</div>
+   <div class="eyebrow">${trp("Tamaño","Grandezza")}</div><div class="row">${btn("4 × 4 · "+trp("fácil","facile"),"data-msize=4")}${btn("6 × 6 · "+trp("difícil","difficile"),"data-msize=6","")}</div>${btn(trp("SALIR","ESCI"),"data-close","")}`;
+  const M=S.m,set=MIAOSETS[S.set],n=M.n,win=M.cur.every((v,i)=>v===M.sol[i]);
+  const cells=M.cur.map((v,i)=>{const r=Math.floor(i/n),c=i%n,given=M.puz[i]>=0,thick=`${c%M.bw===0&&c?"border-left:3px solid var(--ink);":""}${r%M.bh===0&&r?"border-top:3px solid var(--ink);":""}`;
+    return `<button class="mcell${given?" given":""}${S.sel===i?" sel":""}${S.bad===i?" no":""}${S.okc===i?" ok":""}" style="${thick}" data-mc="${i}" ${given||win?"disabled":""}>${v>=0?set.it[v][1]:""}</button>`}).join("");
+  return `<div class="row"><span class="eyebrow">🐱 Miaodoku · ${esc(set.n)} · ${n}×${n}</span><span class="eyebrow">${trp("Errores","Errori")}: ${S.err}</span></div>
+   <p class="mute small">${trp("Cada dibujo una sola vez en cada fila, en cada columna y en cada recuadro.","Ogni disegno una sola volta in ogni riga, colonna e riquadro.")}</p>
+   <div class="mgrid" style="grid-template-columns:repeat(${n},minmax(0,1fr))">${cells}</div>
+   ${win?`<div class="fb ok"><b>${pick(["BRAVISSIMO!","MIAO! CHE BRAVO!"])}</b><span>${trp("Completado con","Completato con")} ${S.err} ${trp("errores","errori")}.</span></div>${btn(trp("OTRO","UN ALTRO"),"data-msize="+n)}${btn(trp("CAMBIAR DIBUJOS","CAMBIA DISEGNI"),"data-mmenu","")}`
+   :`<div class="eyebrow">${S.sel==null?trp("1 · Toca una casilla vacía","1 · Tocca una casella vuota"):trp("2 · Elige qué va ahí","2 · Scegli che cosa ci va")}</div><div class="mpal">${set.it.slice(0,n).map((it,v)=>`<button class="mpb" data-mv="${v}" ${S.sel==null?"disabled":""}><span>${it[1]}</span><small>${esc(it[0])}</small></button>`).join("")}</div>`}
+   ${btn(trp("SALIR","ESCI"),"data-close","")}`};
+function exClick35(D){if(S.ov!=="miao")return false;
+  if("mset" in D){S.set=D.mset;render();return true}
+  if("mmenu" in D){S.step="menu";render();return true}
+  if("msize" in D){const m=sudoGen(+D.msize);m.cur=m.puz.slice();Object.assign(S,{step:"play",m,set:S.set||"gatti",sel:null,err:0,bad:null,okc:null});render();return true}
+  if("mc" in D){S.sel=+D.mc;S.bad=null;S.okc=null;render();return true}
+  if("mv" in D&&S.sel!=null){const i=S.sel,v=+D.mv,set=MIAOSETS[S.set];speak(set.it[v][0]);
+    if(S.m.sol[i]===v){S.m.cur[i]=v;S.okc=i;S.sel=null;if(S.m.cur.every((x,k)=>x===S.m.sol[k]))speak("Bravissimo!")}else{S.err++;S.bad=i}render();return true}
+  return false}
+HOW.miao=["🐱","Miaodoku","Miaodoku","Es un sudoku con dibujos. Toca una casilla vacía y elige el dibujo que va ahí: cada dibujo puede aparecer una sola vez en cada fila, en cada columna y en cada recuadro grueso. Al elegir, escuchas su nombre en italiano. Es solo para practicar: no da pistas ni quita vidas.","È un sudoku con disegni: ogni disegno una sola volta in ogni riga, colonna e riquadro. Ascolti il nome in italiano. Si gioca solo per allenarsi."];
+Object.assign(SHOPS,{giochi:{n:"Casa di nonno Beppe",e:"🐱"}});SIGN.giochi="MIAODOKU";
+{const old=makeDoors;makeDoors=function(c){const ds=old(c),A=LEVELS[c].at,seen=new Set([A.start+""]),q=[A.start];
+  while(q.length){const [x,y]=q.pop();for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,kk=nx+","+ny;if(nx>=0&&ny>=0&&nx<MW&&ny<MH&&!seen.has(kk)&&!SOLID.includes(MAP[ny][nx])){seen.add(kk);q.push([nx,ny])}}}
+  let d=ds.find(d=>d.type==="casa"&&seen.has(d.x+","+(d.y+1)));if(!d&&c%2===0)d=ds.find(d=>d.type==="zoo");if(d){d.type="giochi";d.game="miao"}return ds}}
+{const old=enterDoor;enterDoor=function(d){if(d.type==="giochi")return startMiao();return old(d)}}
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
