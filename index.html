@@ -225,6 +225,7 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .mcell{aspect-ratio:1;min-width:0;background:#f4f4e4;border:1px solid #94b0c2;font-size:26px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}.mcell.given{background:#c5d3dc}.mcell.sel{background:#ffcd75}.mcell.no{background:#ffb3c7}.mcell.ok{background:#8ff0a4}
 .mpal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.mpb{background:#fff;border:3px solid var(--ink);box-shadow:2px 2px 0 var(--ink);display:flex;flex-direction:column;align-items:center;padding:4px;min-width:0}.mpb span{font-size:26px}.mpb small{font-family:var(--tx);font-size:15px;line-height:1;text-align:center;overflow-wrap:anywhere}.mpb:disabled{opacity:.5}
 .tile.sel{background:#ffcd75}
+.bub.good{border-color:#38b764;background:#e5f4e4}.bub.wrong{border-color:#b13e53;background:#ffe1e6;text-decoration:line-through;text-decoration-color:rgba(177,62,83,.6)}.bub.react{background:#fff7e0;font-style:italic}
 </style>
 </head>
 <body>
@@ -4329,6 +4330,83 @@ Object.assign(SHOPS,{giochi:{n:"Casa di nonno Beppe",e:"🐱"}});SIGN.giochi="MI
   while(q.length){const [x,y]=q.pop();for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy,kk=nx+","+ny;if(nx>=0&&ny>=0&&nx<MW&&ny<MH&&!seen.has(kk)&&!SOLID.includes(MAP[ny][nx])){seen.add(kk);q.push([nx,ny])}}}
   let d=ds.find(d=>d.type==="casa"&&seen.has(d.x+","+(d.y+1)));if(!d&&c%2===0)d=ds.find(d=>d.type==="zoo");if(d){d.type="giochi";d.game="miao"}return ds}}
 {const old=enterDoor;enterDoor=function(d){if(d.type==="giochi")return startMiao();return old(d)}}
+
+/* ================= v36: conversaciones con sentido: ✓/✗, sonido y el personaje reacciona al error ================= */
+const DREACT={
+ 0:[[["«Ho andato»? Vuoi dire «sono andato», no?","Andare usa essere: sono andato. Bere usa avere: ho bevuto."],["Ah, vai adesso? Io ti ho chiesto di ieri sera!","Te preguntó por ayer: hace falta el passato prossimo."]],
+  [["«Mi ha piaciuto»? Si dice «mi è piaciuto»!","Piacere usa essere en el passato prossimo: mi è piaciuto."],["«Ti piaci tu»? Io parlavo del bicerin!","Lo que gusta es el bicerin: mi è piaciuto (a mí me gustó)."]],
+  [["Quasi giusto! Ma «la Mole» è femminile: «non l'ho vista».","Con lo/la el participio concuerda: l'ho vista (la Mole)."],["«Non sono vista»? Nessuno ti ha visto? 😄","Visitare usa avere: non l'ho ancora vista."]]],
+ 1:[[["«Sono venuto ogni estate»… una volta sola o sempre?","Para costumbres del pasado (cada verano) se usa el imperfetto: venivo."],["Verrai? Ma io ti ho chiesto del passato!","Da bambino = en el pasado: imperfetto, no futuro."]],
+  [["Mmm… l'azione lunga è «camminavo», quella breve «ho incontrato».","Mentre + imperfetto (acción de fondo) y passato prossimo (acción puntual)."],["Ma è successo ieri, non domani!","Ieri → pasado: mentre camminavo, ho incontrato."]],
+  [["«È piovuto e fa freddo»? Ma adesso c'è il sole!","Para describir el tiempo en el pasado: imperfetto (pioveva, faceva)."],["Pioverà? Io parlavo di ieri!","Descripción del pasado → imperfetto."]]],
+ 2:[[["«Le ho vista»? Hai visto tante mogli? 😄","Anna = la (una mujer, objeto directo): l'ho vista."],["«Gli»? Ma Anna è una donna!","Ver a alguien es objeto directo: la → l'ho vista."]],
+  [["«La ho detto»? Si dice «le ho detto».","Dire a qualcuno: objeto indirecto → le (a ella)."],["«Lo» e «gli» sono per un uomo… Anna è una donna!","A ella = le. Cercare lei = la cercavi."]],
+  [["«Quanto lo devo»? Si dice «quanto ti devo».","Dovere a te: ti devo (te debo)."],["No, no: sei tu che devi pagare me! 😄","Quanto ti devo = cuánto te debo (yo a ti)."]]],
+ 3:[[["«Ne sono stato»? Si dice «ci sono stato».","Ci = allí (en el mercado): ci sono stato."],["«Lo sono stato»? Non ho capito…","Para un lugar se usa ci: ci sono stato."]],
+  [["«Ci prendo»? Vuoi dire «ne prendo»!","Ne = de eso (una cantidad): ne prendo mezzo chilo."],["«Li prendo mezzo chilo»… o li prendi tutti o mezzo chilo!","Con cantidades se usa ne: ne prendo mezzo chilo."]],
+  [["Ci pensi? Io ti ho chiesto che cosa ne pensi!","Pensare di qualcosa = opinión → ne penso bene."],["«La penso bene»? Non si dice così.","Pensar de algo (opinión): ne penso bene."]]],
+ 4:[[["Visitavi? Ma io ho chiesto di domani!","Domani → futuro: visiterò."],["Li hai già visti? Allora domani che fai? 😄","Para el futuro: visiterò."]],
+  [["«Vorrò un biglietto ieri»? Futuro e ieri insieme? 😄","Para pedir con cortesía: vorrei (condicional)."],["«Volevo che un biglietto»? Non ho capito.","Pedir algo: vorrei + cosa, sin «che»."]],
+  [["«Andrò»? Ma il consiglio si dà con il condizionale!","Al posto tuo + condicional: andrei."],["Ci sei già andato? Allora sai dove cenare! 😄","Para un consejo: condicional (andrei)."]]],
+ 5:[[["«Penso che è»… meglio «penso che sia».","Pensare che + congiuntivo: sia."],["«Penso di sia»? Non si dice così.","Pensare che + congiuntivo: penso che sia."]],
+  [["«Spero che non piove»? Meglio «non piova».","Sperare che + congiuntivo: piova."],["Pioveva? Ma parliamo di domani!","Sperare che + congiuntivo presente: non piova."]],
+  [["«Che tu mi dici»? Si dice «che tu mi dica».","Volere che + congiuntivo: tu mi dica."],["«Mi dirai»? Con «voglio che» ci vuole il congiuntivo.","Volere che + congiuntivo: dica."]]],
+ 6:[[["«Lo fai»? Chi la fa, io o tu? 😄","Imperativo + pronombre pegado: fagli (hazle)."],["«Fare lui»? Non ho capito…","Imperativo de fare (tu): fa' + gli → fagli."]],
+  [["«Accomodati»? Alla signora si dà del Lei!","Con Lei, el imperativo es: si accomodi."],["«Accomodarsi»? Sembra un cartello! 😄","Imperativo formal: si accomodi."]],
+  [["«Mi lo porta»? Si dice «me lo porti» o «portamelo».","mi + lo = me lo; con tu: portamelo."],["«Portalomi»? I pronomi sono al contrario!","Primero el indirecto: me + lo → portamelo."]]],
+ 7:[[["«Andrò»? Ma tu non hai la barca… è un'ipotesi!","Se avessi… → condicional: andrei."],["«Andassi»? Il congiuntivo va dopo «se», non qui.","Se + congiuntivo, y luego condicional: andrei."]],
+  [["«Se farebbe»? Dopo «se» niente condizionale!","Hipótesis real: se fa bel tempo, vado al mare."],["«Se facesse… vado»? Metà ipotesi, metà realtà!","Se + presente → presente: se fa, vado."]],
+  [["«Più calda che Milano»? Davanti a un nome si dice «di».","Più … di + nombre: più calda di Milano."],["«Più calda come»? Così non si fa il confronto.","Comparativo: più … di."]]],
+ 8:[[["«Ho in vacanza»? Hai una vacanza in tasca? 😄","Estar de vacaciones: sono in vacanza (essere)."],["Io? No, io lavoro qui! Tu sei in vacanza?","Hablas de ti: sono (yo), no sei (tú)."]],
+  [["«Sei molto freddo»? Sei un gelato? 😄 Si dice «ho freddo».","El frío se tiene: ho freddo (avere), no sono freddo."],["«Fai freddo»? È il tempo che fa freddo, tu hai freddo!","Fa freddo = hace frío (tiempo). Ho freddo = tengo frío."]],
+  [["Prende chi? Lui? Io ti ho chiesto che cosa prendi tu!","Yo → prendo."],["«Prendere»? Sembra un dizionario! 😄","Hay que conjugar: io prendo."]]],
+ 9:[[["«Lo pasta»? Pasta è femminile: «la pasta».","Pasta es femenino: la pasta."],["«Il pasta con lo pesto»? Tutto al contrario!","La pasta (fem.), il pesto (masc.)."]],
+  [["«Uno acqua»? «Uno» è per s+consonante o z.","Acqua es femenino y empieza por vocal: un'acqua."],["Quasi! Ma acqua è femminile: «un'acqua», con l'apostrofo.","Femenino + vocal: un'."]],
+  [["«Le caruggi»? Caruggi è maschile: «i caruggi».","Caruggi = callejuelas (masculino plural): i caruggi."],["«Gli caruggi e la porto»? Che confusione! 😄","I caruggi, il porto."]]],
+ 10:[[["«In Bolzano»? Con le città si usa «a».","Ciudad → a: vado a Bolzano."],["Vieni da Bolzano o vai a Bolzano?","Da = desde. Destino → a."]],
+  [["«A treno»? Si dice «in treno».","Medios de transporte: in treno, in macchina."],["«Di treno»? Non si dice così.","Medios de transporte: in."]],
+  [["«A le nove»? Si unisce: «alle nove».","a + le = alle."],["«Nelle nove»? Non ho capito l'ora…","Hora: alle nove (a + le)."]]],
+ 11:[[["«Ci sono un tavolo»? Un tavolo solo: «c'è».","Singular → c'è; plural → ci sono."],["«È un tavolo libero»? Sì, è un tavolo… ma c'è un posto?","Para preguntar si hay: c'è…?"]],
+  [["«Molta buono»? Caffè è maschile!","Molto delante de adjetivo no cambia: molto buono."],["«Molti buono»? Ne hai bevuti tanti? 😄","Adverbio: molto buono (invariable)."]],
+  [["«C'è molte piazze»? Sono tante: «ci sono».","Plural → ci sono."],["«Molto piazze bellissimo»? Le piazze sono femminili e plurali!","Molte piazze bellissime: todo concuerda."]]],
+ 12:[[["Io? No, ti ho chiesto di te!","Hablas de ti: mi sveglio."],["«Si sveglio»? Il pronome di «io» è «mi».","io → mi sveglio."]],
+  [["«Si chiama»? Chi? Io ti ho chiesto il tuo nome!","De ti: mi chiamo."],["«Mi chiami»? Ti devo chiamare io? 😄","io → mi chiamo."]],
+  [["«Si divertiamo»? Per «noi» il pronome è «ci».","noi → ci divertiamo."],["«Vi divertiamo»? Ci divertite voi? 😄","noi → ci divertiamo."]]],
+ 13:[[["«Mi piacciono»? Ancona è una sola città!","Una cosa → mi piace."],["Io? Sì, a me piace… ma a te?","Hablas de ti: mi piace."]],
+  [["«Mi piace» i frutti di mare? Sono tanti: «mi piacciono».","Plural → mi piacciono."],["«Mi piaccio»? Ti piaci da solo? 😄","Lo que gusta son los frutti di mare: mi piacciono."]],
+  [["Quasi! Con i familiari al singolare non si usa l'articolo.","Tuo fratello (sin artículo)."],["«Tua fratello»? Marco è un uomo!","Fratello es masculino: tuo fratello."]]],
+ 14:[[["«Ti chiami Alex»? No, io sono il custode! 😄 Tu come ti chiami?","Para hablar de ti: mi chiamo."],["«Si chiamo»? Il pronome di «io» è «mi».","io → mi chiamo."]],
+  [["«Ho di Barcellona»? Hai Barcellona in tasca? 😄","Origen: sono di + ciudad (essere)."],["Mmm… l'ordine è strano: «sono di Barcellona».","Sono di + ciudad."]],
+  [["«Prego piacere»? Volevi dire «con piacere»?","Con piacere = con mucho gusto."],["«Sono piacere»? Non ho capito…","Con piacere = con gusto."]]],
+ 15:[[["«Ha un turista»? Ha un amico turista? 😄","Ser turista: sono un turista (essere)."],["Io? No, io sono il vigile! Tu sei un turista?","Hablas de ti: sono."]],
+  [["«Sei una mappa»? Allora ti apro e trovo la strada! 😄","Tener una mapa: ho una mappa (avere)."],["Io? No, la mappa ce l'hai tu?","Hablas de ti: ho."]],
+  [["«Sei fame»? Sei la fame in persona? 😄 «Ho fame»!","El hambre se tiene: ho fame (avere)."],["«È fame»? Chi ha fame, tu?","Yo tengo hambre: ho fame."]]],
+ 16:[[["«Prego»? Quello lo dico io quando ti do il gelato!","Para pedir: per favore. Prego es para ofrecer o responder a grazie."],["«Grazie a te»? Ma non ti ho ancora dato niente! 😄","Para pedir algo: per favore."]],
+  [["«Costano»? È un cono solo!","Singular → costa."],["«Quanti anni»? Il cono? È nuovo! 😄","Precio: quanto costa?"]],
+  [["«Prego»? Quello lo dico io quando mi dici grazie!","Al pagar se dice grazie; el que recibe responde prego."],["«Ecco a te, anni»? Non ho capito… 😄","Al pagar: ecco a te, grazie."]]],
+ 17:[[["«Prego»? È lei che deve dire grazie! 😄","Para responder con educación: grazie."],["«Scusi tavolo»? Banco o tavolo, deve scegliere!","Responde solo una opción: al banco, grazie."]],
+  [["«Voglio io»? Un po' brusco… e mancano gli articoli!","Para pedir con cortesía: vorrei un cappuccino e un cornetto."],["«Ha un cappuccino»? Allora non ne vuole un altro? 😄","Para pedir: vorrei (quisiera)."]],
+  [["«Pagare con il conto»? Il conto è quello che paga!","Pagar con tarjeta: con la carta."],["«Pagare la cassa»? Vuole comprare la cassa? 😄","Pagar con tarjeta: con la carta."]]]};
+function startDial(){const c=save.city,n=save.usedD[c]||0;save.usedD[c]=n+1;persist();const D=LEVELS[c].dial;
+  show("dial",{D,c,t:0,log:[{n:1,x:D.turns[0][0]}],opts:shuffle([0,1,2]),bad:[],why:null,end:false,replay:n>0});speak(D.turns[0][0])}
+function dialPick(k){
+  const c=S.c??save.city,D=S.D||LEVELS[c].dial,turn=D.turns[S.t];
+  if(k!==0){const R=DREACT[c]&&DREACT[c][S.t]&&DREACT[c][S.t][k-1];
+    const react=R?R[0]:"Come, scusa? Non ho capito…",why=R?R[1]:"";
+    S.log.push({x:turn[1][k],bad:true});S.log.push({n:1,x:react,react:true});S.bad.push(k);S.why=[why,turn[2]];speak(react);lose();if(!dead())render();hud();return}
+  S.log.push({x:turn[1][0],ok:true});S.t++;S.bad=[];S.why=null;S.opts=shuffle([0,1,2]);
+  if(S.t<D.turns.length){sfxOk();S.log.push({n:1,x:D.turns[S.t][0]});speak(D.turns[S.t][0])}
+  else{S.log.push({n:1,x:D.end});speak(D.end);S.end=true;if(!doneOf(c).includes("D"))doneOf(c).push("D");persist()}
+  render();hud();
+}
+EXOV.dial=()=>{if(needHow("dial"))return howHtml("dial");const D=S.D||LEVELS[save.city].dial,turn=D.turns[S.t];
+  return `<div class="row"><span class="eyebrow">Dialogo · ${esc(D.who)}</span>${hp()}</div>
+   <div class="chat">${S.log.map(m=>`<div class="bub${m.n?"":" me"}${m.ok?" good":""}${m.bad?" wrong":""}${m.react?" react":""}">${m.ok?"✓ ":m.bad?"✗ ":m.react?"🤨 ":""}${esc(m.x)}</div>`).join("")}</div>
+   ${S.end?`<div class="fb ok"><b>${S.replay?"BRAVO! CONVERSAZIONE PERFETTA":"GIUSTO! +1 PISTA"}</b></div>${btn("CONTINUAR","data-dend")}`
+    :`${S.why?`<div class="fb no"><b>✗ ${trp("NO ES CORRECTO","NON È GIUSTO")} · -1 ♥</b><span>${esc(S.why[0]||S.why[1])}</span></div>`:""}
+      <p class="mute">${S.why?trp("Prueba otra respuesta:","Prova un'altra risposta:"):trp("¿Qué respondes?","Che cosa rispondi?")}</p>
+      <div class="opts">${S.opts.map(i=>`<button class="opt${S.bad.includes(i)?" no":""}" data-say="${i}" ${S.bad.includes(i)?"disabled":""}>${esc(turn[1][i])}</button>`).join("")}</div>
+      <div class="row">${btn("QUADERNO","data-note","")}${btn("SALIR","data-close","")}</div>`}`};
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
