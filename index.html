@@ -200,6 +200,11 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 #wpop.show{display:flex}#wpop b{font-family:var(--px);font-size:11px;font-weight:normal;color:#ffcd75}#wpop .wtr{font-size:24px}#wpop .wsent{font-size:20px;color:#9fe0ff}
 #wpop .wbtns{display:flex;gap:6px;margin-top:2px}#wpop button{background:#333c57;border:2px solid #94b0c2;color:#f4f4e4;font-family:var(--px);font-size:8px;padding:6px 8px;display:flex;align-items:center;gap:4px}
 #ov{-webkit-touch-callout:none}
+.wgrid{display:flex;flex-direction:column;gap:4px}.wrow{display:flex;gap:8px;align-items:center}.wcells{display:grid;grid-template-columns:repeat(5,30px);gap:3px;flex:none}
+.wrow .wc{height:30px;font-size:13px}.wrow.now .wcells{outline:2px dashed var(--blue);outline-offset:2px}
+.whint{flex:1;font-size:17px;line-height:1.05;color:var(--ink)}.whint.off{color:#c5d3dc;letter-spacing:2px}.wrow.now .whint{color:var(--blue)}.wbulb{width:14px;height:14px;margin-right:3px}
+.key.enter{width:100%;max-width:none;margin-top:3px;background:var(--good);color:#fff;font-size:9px;padding:12px 0;box-shadow:0 3px 0 var(--ink)}
+.wtop{display:flex;gap:8px;align-items:center}.wexit{background:#fff;border:2px solid var(--bad);color:var(--bad);font-family:var(--px);font-size:8px;padding:6px 7px}
 .chex{color:#9fe0ff;font-size:21px;line-height:1.2;border-left:4px solid #9fe0ff;padding:4px 8px;background:rgba(159,224,255,.08)}
 .win:has(>.chalk){padding:12px 8px}.chalk{border-width:7px;padding:10px 10px 0}.chalk .chtray{margin:10px -10px 0}
 .chtray{height:10px;background:#8b5a2b;margin:8px -12px 0;position:relative;box-shadow:0 -2px 0 #5d3a1a}
@@ -4459,6 +4464,7 @@ const PXICONS={
  "🛏":["............","............","k...........","kww.........","kwwbbbbbbbb.","kbbbbbbbbbbk","kkkkkkkkkkkk","k..........k","k..........k","............","............","............"],
  "🍳":["............","...kkkkk....","..kwwwwwk...",".kwwwyywwk..",".kwwyyyywk..",".kwwwyywwk..","..kwwwwwkk..","...kkkkk.kk.","..........kk","...........k","............","............"],
  "🔊":["............",".....k......","....kk..k...","kkkkwk...k..","kwwwwk.k..k.","kwwwwk..k.k.","kwwwwk..k.k.","kwwwwk.k..k.","kkkkwk...k..","....kk..k...",".....k......","............"],
+ "💡":["....kkkk....","...kyyyyk...","..kyywyyyk..","..kywyyyyk..","..kyyyyyyk..","..kyyyyyyk..","...kyyyyk...","....kyyk....","....ksSk....","....kSsk....",".....kk.....","............"],
  "👩‍🏫":["...NNNNNN...","..NNNNNNNN..","..NffffffN..","..kkkffkkk..","..NkkffkkN..","..NffffffN..","..NffrrffN..","..N.ffff.N..",".pppppppppp.","pppppwwppppp","pppppwwppppp","pppppppppppp"]
 };
 PXICONS["👩"]=PXICONS["👩‍🏫"];
@@ -4579,6 +4585,31 @@ const lpCancel=ev=>{if(lp&&(ev.type!=="pointermove"||Math.abs(ev.clientX-lp.x)+M
 ov.addEventListener("click",ev=>{if(lpFired){lpFired=false;ev.preventDefault();ev.stopPropagation();return}
   if(hasHandler(ev.target))return;const hit=wordAt(ev.clientX,ev.clientY);if(hit){ev.stopPropagation();showWord(hit,ev.clientX,ev.clientY)}},true);
 ov.addEventListener("contextmenu",ev=>ev.preventDefault());
+/* ================= v40: Parola con una pista por línea y botón de salir separado del teclado ================= */
+const WCAT={LATTE:["una bebida blanca del desayuno","una bevanda bianca della colazione"],TAZZA:["un recipiente para el café","un contenitore per il caffè"],DOLCE:["algo de comer con azúcar","qualcosa da mangiare con lo zucchero"],CONTO:["lo que pides para pagar","quello che chiedi per pagare"],PANNA:["un lácteo que va encima del café o del helado","un latticino sopra il caffè o il gelato"],
+ GUSTO:["lo que eliges en la heladería: el sabor","quello che scegli in gelateria"],COPPA:["un recipiente para el helado","un contenitore per il gelato"],MENTA:["una planta verde y fresca","una pianta verde e fresca"],CREMA:["algo suave que se unta o se come","qualcosa di morbido"],PESCA:["una fruta de verano","un frutto estivo"],
+ COLLA:["sirve para pegar","serve per incollare"],SCALA:["sirve para subir","serve per salire"],PINZA:["una herramienta para agarrar","un attrezzo per afferrare"],LEGNO:["un material de los árboles","un materiale degli alberi"],FERRO:["un metal","un metallo"],
+ TORTA:["un postre de cumpleaños","un dolce di compleanno"],PIZZA:["una comida italiana muy famosa","un piatto italiano famosissimo"],MIELE:["lo hacen las abejas","lo fanno le api"],FORNO:["un lugar caliente para cocinar","un posto caldo per cuocere"],
+ MANGO:["una fruta tropical","un frutto tropicale"],OLIVA:["un fruto pequeño del que sale aceite","un piccolo frutto da cui si fa l'olio"],FICHI:["una fruta (en plural)","un frutto (al plurale)"],CACHI:["una fruta naranja de otoño (en plural)","un frutto arancione d'autunno (al plurale)"],
+ GARZA:["algo de la farmacia para una herida","qualcosa della farmacia per una ferita"],TOSSE:["un síntoma del resfriado","un sintomo del raffreddore"],DENTI:["una parte del cuerpo (en plural)","una parte del corpo (al plurale)"],
+ PENNA:["sirve para escribir","serve per scrivere"],LIBRO:["algo para leer","qualcosa da leggere"],CARTA:["material para escribir o envolver","materiale per scrivere"],BUSTA:["donde metes una carta","dove metti una lettera"],
+ GONNA:["una prenda de ropa","un capo d'abbigliamento"],BORSA:["un accesorio para llevar cosas","un accessorio per portare le cose"],FELPA:["una prenda de abrigo","un capo caldo"],CALZE:["ropa para los pies (en plural)","vestiti per i piedi (al plurale)"]};
+function wHints(){const w=S.w,n=w.length,vow=[...w].filter(c=>"AEIOU".includes(c)).length,cat=WCAT[w]||[`una palabra de la tienda ${SHOPS[S.type].n}`,`una parola del negozio ${SHOPS[S.type].n}`];
+  return [trp(`${n} letras: ${cat[0]}.`,`${n} lettere: ${cat[1]}.`),trp(`Empieza por «${w[0]}».`,`Comincia con «${w[0]}».`),trp(`Tiene ${vow} vocales.`,`Ha ${vow} vocali.`),
+   trp(`Termina en «${w[n-1]}».`,`Finisce con «${w[n-1]}».`),trp(`En español: «${S.es}».`,`In spagnolo: «${S.es}».`),trp(`Letra del medio: «${w[n>>1]}».`,`Lettera centrale: «${w[n>>1]}».`)]}
+EXOV.wordle=function(){
+  const sh=SHOPS[S.type],st={},rank={g:3,y:2,x:1},H=wHints();
+  S.rows.forEach(r=>{const sc=wScore(r,S.w);[...r].forEach((ch,i)=>{if(!st[ch]||rank[sc[i]]>rank[st[ch]])st[ch]=sc[i]})});
+  let rows="";for(let r=0;r<6;r++){const word=r<S.rows.length?S.rows[r]:r===S.rows.length&&!S.end?S.cur:"",sc=r<S.rows.length?wScore(word,S.w):null;
+    let cells="";for(let i=0;i<5;i++)cells+=`<span class="wc ${sc?sc[i]:""}">${word[i]||""}</span>`;
+    const open=r<=S.rows.length||S.end,now=r===S.rows.length&&!S.end;
+    rows+=`<div class="wrow${now?" now":""}"><div class="wcells">${cells}</div><div class="whint${open?"":" off"}">${open?`${pxi("💡").replace('class="pxi"','class="pxi wbulb"')}${esc(H[r])}`:"· · ·"}</div></div>`}
+  const kb=["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].map((row,ri)=>`<div class="kr">${ri===2?`<button class="key wide" data-wk="DEL" aria-label="Borrar">⌫</button>`:""}${[...row].map(k=>`<button class="key ${st[k]||""}" data-wk="${k}">${k}</button>`).join("")}</div>`).join("")
+    +`<button class="key enter" data-wk="ENTER">${trp("COMPROBAR PALABRA ✓","CONTROLLA LA PAROLA ✓")}</button>`;
+  const end=S.end?`<div class="fb ${S.end.win?"ok":"no"}"><b>${S.end.win?(S.end.life?"BRAVO! +1 ♥":"BRAVO!"):trp("¡CASI!","PECCATO!")}</b><span class="it">${S.w} = ${esc(S.es)}</span></div>${btn(trp("OTRA PALABRA","UN'ALTRA PAROLA"),"data-wnew")}`:"";
+  return `<div class="row"><span class="eyebrow">${sh.e} ${esc(sh.n)} · Parola</span><span class="wtop">${hp()}<button class="wexit" data-close aria-label="Salir">✕ ${trp("SALIR","ESCI")}</button></span></div>
+   <p class="mute small">${tr("Adivina la palabra de 5 letras en 6 intentos. Verde: en su sitio. Amarillo: está en otro sitio. Gris: no está. Cada línea trae una pista nueva.","Indovina la parola di 5 lettere in 6 tentativi. Ogni riga ha un nuovo indizio.")}</p>
+   <div class="wgrid">${rows}</div>${S.msg?`<p class="mute">${S.msg}</p>`:""}${end}${S.end?btn(trp("SALIR DE LA TIENDA","ESCI DAL NEGOZIO"),"data-close",""):`<div class="kb">${kb}</div>`}`};
 </script>
 </body>
 </html>
