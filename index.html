@@ -196,6 +196,10 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .profpic{width:64px;height:64px;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid #ffcd75;flex:none}
 .profinfo{display:flex;flex-direction:column;gap:3px;min-width:0}.profinfo .eyebrow{color:#ffcd75}.profinfo b{font-family:var(--px);font-size:11px;font-weight:normal;color:#fff}
 .profsay{font-size:19px;line-height:1.1;color:#c5d3dc}
+#wpop{position:fixed;z-index:50;display:none;flex-direction:column;gap:4px;background:#1a1c2c;color:#f4f4e4;border:3px solid #ffcd75;box-shadow:0 0 0 3px #1a1c2c,0 6px 0 rgba(0,0,0,.5);padding:8px 10px;font-family:var(--tx);font-size:22px;line-height:1.1}
+#wpop.show{display:flex}#wpop b{font-family:var(--px);font-size:11px;font-weight:normal;color:#ffcd75}#wpop .wtr{font-size:24px}#wpop .wsent{font-size:20px;color:#9fe0ff}
+#wpop .wbtns{display:flex;gap:6px;margin-top:2px}#wpop button{background:#333c57;border:2px solid #94b0c2;color:#f4f4e4;font-family:var(--px);font-size:8px;padding:6px 8px;display:flex;align-items:center;gap:4px}
+#ov{-webkit-touch-callout:none}
 .chex{color:#9fe0ff;font-size:21px;line-height:1.2;border-left:4px solid #9fe0ff;padding:4px 8px;background:rgba(159,224,255,.08)}
 .win:has(>.chalk){padding:12px 8px}.chalk{border-width:7px;padding:10px 10px 0}.chalk .chtray{margin:10px -10px 0}
 .chtray{height:10px;background:#8b5a2b;margin:8px -12px 0;position:relative;box-shadow:0 -2px 0 #5d3a1a}
@@ -4454,6 +4458,7 @@ const PXICONS={
  "🐾":["............","..nn....nn..","..nn....nn..","............","nn..nnnn..nn","nn.nnnnnn.nn","...nnnnnn...","..nnnnnnnn..","..nnnnnnnn..","...nn..nn...","............","............"],
  "🛏":["............","............","k...........","kww.........","kwwbbbbbbbb.","kbbbbbbbbbbk","kkkkkkkkkkkk","k..........k","k..........k","............","............","............"],
  "🍳":["............","...kkkkk....","..kwwwwwk...",".kwwwyywwk..",".kwwyyyywk..",".kwwwyywwk..","..kwwwwwkk..","...kkkkk.kk.","..........kk","...........k","............","............"],
+ "🔊":["............",".....k......","....kk..k...","kkkkwk...k..","kwwwwk.k..k.","kwwwwk..k.k.","kwwwwk..k.k.","kwwwwk.k..k.","kkkkwk...k..","....kk..k...",".....k......","............"],
  "👩‍🏫":["...NNNNNN...","..NNNNNNNN..","..NffffffN..","..kkkffkkk..","..NkkffkkN..","..NffffffN..","..NffrrffN..","..N.ffff.N..",".pppppppppp.","pppppwwppppp","pppppwwppppp","pppppppppppp"]
 };
 PXICONS["👩"]=PXICONS["👩‍🏫"];
@@ -4489,6 +4494,91 @@ function drawProfMarks(g,x,y,e,c){const o=e.o||{},H=o.hair,dir=e.dir||"down";
   if(dir==="down"){R(g,x+5,y+4,2,2,"#1a1c2c");R(g,x+9,y+4,2,2,"#1a1c2c");R(g,x+7,y+4,2,1,"#1a1c2c")}
   if(dir!=="up"){R(g,x+11,y+9,3,4,"#b13e53");R(g,x+12,y+10,1,2,"#ffcd75")}
   if(save.lesson[c]){const b=Math.round(Math.sin(performance.now()/300));R(g,x+3,y-6+b,10,2,"#1a1c2c");R(g,x+5,y-4+b,6,2,"#1a1c2c");R(g,x+12,y-5+b,1,3,"#ffcd75")}}
+/* ================= v39: voz que no se corta (cola por frases) + tocar cualquier palabra para traducirla ================= */
+const SPQ={tok:0,u:null,voice:null};
+function itVoice(){try{const vs=speechSynthesis.getVoices();SPQ.voice=vs.find(v=>/^it[-_]IT/i.test(v.lang)&&/google/i.test(v.name))||vs.find(v=>/^it/i.test(v.lang))||null}catch(e){}}
+try{itVoice();speechSynthesis.onvoiceschanged=itVoice}catch(e){}
+function ttsChunks(raw){const out=[];String(raw).split(/\n+/).forEach(par=>{
+  const t=ttsClean(par);if(!t)return;
+  const sents=t.match(/[^.!?…;:]+[.!?…;:]*\s*/g)||[t];let cur="";
+  sents.forEach(s=>{s=s.trim();if(!s)return;
+    if((cur+" "+s).length>170&&cur){out.push(cur);cur=s}else cur=cur?cur+" "+s:s;
+    while(cur.length>220){const k=cur.lastIndexOf(",",200);const at=k>40?k+1:200;out.push(cur.slice(0,at).trim());cur=cur.slice(at).trim()}});
+  if(cur)out.push(cur)});return out}
+function speakQ(raw,cb){const tok=++SPQ.tok,parts=ttsChunks(raw);let i=0,finished=false;
+  const fin=()=>{if(finished)return;finished=true;if(cb&&tok===SPQ.tok)cb()};
+  try{speechSynthesis.cancel()}catch(e){}
+  if(!parts.length||!("speechSynthesis" in window)){setTimeout(fin,600);return}
+  const next=()=>{if(tok!==SPQ.tok)return;if(i>=parts.length)return fin();
+    const txt=parts[i++];let gone=false;const go=()=>{if(gone)return;gone=true;clearTimeout(wd);setTimeout(next,140)};
+    const u=new SpeechSynthesisUtterance(txt);u.lang="it-IT";u.rate=.9;if(SPQ.voice)u.voice=SPQ.voice;
+    u.onend=go;u.onerror=e=>{if(e&&(e.error==="interrupted"||e.error==="canceled"))return;go()};
+    SPQ.u=u;   // referencia viva: Chrome corta la voz si el objeto se pierde
+    const wd=setTimeout(()=>{if(tok===SPQ.tok&&!speechSynthesis.speaking)go()},txt.length*120+4000);
+    try{speechSynthesis.resume();speechSynthesis.speak(u)}catch(e){go()}};
+  setTimeout(next,90)}   // pequeña pausa tras cancel(): sin ella Android se traga la frase
+function speak(t){speakQ(t)}
+function speakDone(t,cb){let called=false;const once=()=>{if(!called){called=true;cb()}};speakQ(t,once);setTimeout(once,String(t).length*130+9000)}
+
+/* --- diccionario: primero lo que ya trae el juego, luego traductor online con caché --- */
+const WDICT={};
+(function(){const add=(it,es)=>{if(!it||!es)return;it=String(it).toLowerCase().trim();if(it&&!WDICT[it])WDICT[it]=String(es).trim()};
+  try{JSON.stringify(LEVELS).replace(/\{([^|{}]+)\|([^{}]+)\}/g,(m,w,t)=>{add(w,t);return m})}catch(e){}
+  try{for(const k in PACK)PACK[k].lesson.tabs.forEach(t=>t.r.forEach(r=>{add(r[0].replace(/^(il|lo|la|i|gli|le|l')\s*/i,""),String(r[1]).replace(/^(el|la|los|las)\s+/i,""));add(r[0],r[1])}))}catch(e){}
+})();
+let WCACHE={};try{WCACHE=JSON.parse(localStorage.getItem("iv-wcache")||"{}")}catch(e){}
+const wkey=w=>w.toLowerCase().normalize("NFC");
+async function translateWord(w){const k=wkey(w);
+  if(WDICT[k])return {t:WDICT[k],from:"it"};
+  try{if(save.vocab&&save.vocab[k])return {t:save.vocab[k],from:"it"}}catch(e){}
+  if(WCACHE[k])return WCACHE[k];
+  if(!navigator.onLine)return null;
+  try{const r=await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q="+encodeURIComponent(w));const j=await r.json();
+    let from=j[2]||"it",t=(j[0]||[]).map(x=>x[0]).join("");
+    if(from==="es"){const r2=await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=es&tl=it&dt=t&q="+encodeURIComponent(w));const j2=await r2.json();t=(j2[0]||[]).map(x=>x[0]).join("")}
+    const res={t,from};WCACHE[k]=res;try{localStorage.setItem("iv-wcache",JSON.stringify(WCACHE))}catch(e){}return res}
+  catch(e){try{const r=await fetch("https://api.mymemory.translated.net/get?langpair=it|es&q="+encodeURIComponent(w));const j=await r.json();const t=j.responseData&&j.responseData.translatedText;if(t){const res={t,from:"it"};WCACHE[k]=res;return res}}catch(e2){}}
+  return null}
+
+/* --- detectar la palabra tocada --- */
+const WCH=/[A-Za-zÀ-ÖØ-öø-ÿ]/;
+function wordAt(x,y){let node,off;
+  if(document.caretRangeFromPoint){const r=document.caretRangeFromPoint(x,y);if(r){node=r.startContainer;off=r.startOffset}}
+  else if(document.caretPositionFromPoint){const p=document.caretPositionFromPoint(x,y);if(p){node=p.offsetNode;off=p.offset}}
+  if(!node||node.nodeType!==3)return null;const s=node.nodeValue;let a=off,b=off;
+  if(!WCH.test(s[a]||"")&&WCH.test(s[a-1]||""))a=b=off-1;
+  if(!WCH.test(s[a]||""))return null;
+  while(a>0&&WCH.test(s[a-1]))a--;while(b<s.length&&WCH.test(s[b]))b++;
+  // comprobar que el dedo está realmente sobre la palabra
+  try{const rg=document.createRange();rg.setStart(node,a);rg.setEnd(node,b);const bx=rg.getBoundingClientRect();if(x<bx.left-6||x>bx.right+6||y<bx.top-6||y>bx.bottom+6)return null}catch(e){}
+  const sent=(s.slice(0,a).split(/[.!?…\n]/).pop()+s.slice(a).split(/[.!?…\n]/)[0]).trim();
+  return {w:s.slice(a,b),sent}}
+function hasHandler(el){for(let e=el;e&&e!==ov;e=e.parentElement){if(e.matches("button,a,input,textarea,select,canvas,summary,label,.gl,#wpop"))return true;if(e.getAttributeNames().some(n=>n.startsWith("data-")))return true}return false}
+const wpop=document.createElement("div");wpop.id="wpop";document.body.appendChild(wpop);let wpT=0;
+function hidePop(){wpop.classList.remove("show")}
+async function showWord(hit,x,y){if(!hit)return;const w=hit.w;clearTimeout(wpT);
+  wpop.innerHTML=`<b>${esc(w)}</b><span class="wtr">…</span>`;wpop.classList.add("show");
+  const W=Math.min(260,innerWidth-16);wpop.style.width=W+"px";wpop.style.left=Math.max(8,Math.min(innerWidth-W-8,x-W/2))+"px";
+  const below=y<innerHeight*0.55;wpop.style.top=below?(y+22)+"px":"auto";wpop.style.bottom=below?"auto":(innerHeight-y+22)+"px";
+  const r=await translateWord(w);if(wpop.querySelector("b")?.textContent!==w)return;
+  const it=r&&r.from==="es"?r.t:w,tr=r?r.t:trp("(sin conexión)","(senza connessione)");
+  wpop.innerHTML=`<b>${esc(w)}</b><span class="wtr">→ ${esc(tr)}</span><span class="wbtns"><button data-wsay="${esc(it)}">${pxi("🔊")} ${trp("OÍR","ASCOLTA")}</button>${hit.sent&&hit.sent!==w?`<button data-wsent="${esc(hit.sent)}">${trp("FRASE","FRASE")}</button>`:""}</span>`;
+  wpT=setTimeout(hidePop,8000)}
+wpop.addEventListener("click",async ev=>{ev.stopPropagation();const b=ev.target.closest("button");if(!b)return;clearTimeout(wpT);
+  if(b.dataset.wsay)speak(b.dataset.wsay);
+  if(b.dataset.wsent){const s=b.dataset.wsent;b.remove();const sp=document.createElement("span");sp.className="wsent";sp.textContent="…";wpop.appendChild(sp);const r=await translateWord(s);sp.textContent=r?"«"+r.t+"»":trp("Sin conexión.","Senza connessione.")}
+  wpT=setTimeout(hidePop,10000)});
+document.addEventListener("pointerdown",ev=>{if(!wpop.contains(ev.target))hidePop()},true);
+/* toque simple sobre texto → traduce; mantener pulsado (también sobre botones) → traduce sin activar el botón */
+let lp=null,lpFired=false;
+ov.addEventListener("pointerdown",ev=>{lpFired=false;clearTimeout(lp&&lp.t);const x=ev.clientX,y=ev.clientY,tg=ev.target;
+  lp={x,y,t:setTimeout(()=>{let hit=wordAt(x,y);if(!hit){const b=tg.closest&&tg.closest("button");const tx=b&&b.textContent.trim();if(tx&&tx.split(/\s+/).length<=3&&WCH.test(tx))hit={w:tx.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ' ]/g,"").trim(),sent:""}}
+    if(hit&&hit.w){lpFired=true;showWord(hit,x,y);try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}}},480)}},true);
+const lpCancel=ev=>{if(lp&&(ev.type!=="pointermove"||Math.abs(ev.clientX-lp.x)+Math.abs(ev.clientY-lp.y)>10)){clearTimeout(lp.t)}};
+["pointerup","pointercancel","pointermove"].forEach(t=>ov.addEventListener(t,lpCancel,true));
+ov.addEventListener("click",ev=>{if(lpFired){lpFired=false;ev.preventDefault();ev.stopPropagation();return}
+  if(hasHandler(ev.target))return;const hit=wordAt(ev.clientX,ev.clientY);if(hit){ev.stopPropagation();showWord(hit,ev.clientX,ev.clientY)}},true);
+ov.addEventListener("contextmenu",ev=>ev.preventDefault());
 </script>
 </body>
 </html>
