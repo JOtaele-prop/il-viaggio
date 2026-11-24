@@ -214,6 +214,18 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .lt .cht td.cl,.lt .cht tr:nth-child(even) td.cl{background:var(--accent);color:var(--ink)}.lt .cht td.cl b{display:block;font-weight:normal}.lt .cht td.cl small{display:block;font-size:16px;color:#5d3a1a;line-height:1}
 .lt .cht .art{color:var(--bad)}
 table{table-layout:fixed;max-width:100%}td{overflow-wrap:break-word;word-break:normal}td:first-child{white-space:normal}
+.doshead{display:flex;gap:10px;align-items:center;background:#1a1c2c;color:#f4f4e4;border:3px solid var(--ink);box-shadow:0 0 0 2px #ffcd75 inset;padding:8px}
+.dface{width:64px;height:70px;image-rendering:pixelated;border:3px solid #ffcd75;background:#f4f4e4;flex:none}
+.dinfo{display:flex;flex-direction:column;gap:3px;min-width:0}.dinfo .eyebrow{color:#ffcd75}.dinfo b{font-family:var(--px);font-size:11px;font-weight:normal;line-height:1.4}
+.dobj{font-size:17px;line-height:1.05;color:#c5d3dc;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.dstat{font-family:var(--px);font-size:7px;color:#8ff0a4;margin-top:2px}
+.dkey{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;position:sticky;top:-16px;z-index:2;background:var(--panel);padding:4px 0}
+.dtab{font-family:var(--px);font-size:7px;padding:9px 2px;background:#fff;border:2px solid var(--ink);color:var(--ink);box-shadow:0 3px 0 var(--ink)}
+.dtab.on{background:var(--accent);transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.dbody{display:flex;flex-direction:column;gap:6px;min-height:120px}
+.kv col.cl{width:38%}.lt .kv td.cl b{overflow-wrap:normal;word-break:keep-all}.lt .kv td{font-size:19px}.fb .pxi{width:16px;height:16px}.fb.ok span{font-size:19px}.fb.ok span b{font-family:var(--tx);font-size:19px}
+.kv .unk{color:#94b0c2;letter-spacing:2px}.lt .kv td.cl b{font-size:19px}.lt .vol td{vertical-align:top}
+.clues{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}.clues li{font-size:19px;line-height:1.12}.clues li::marker{font-family:var(--px);font-size:9px;color:var(--blue)}
 .chex{color:#9fe0ff;font-size:21px;line-height:1.2;border-left:4px solid #9fe0ff;padding:4px 8px;background:rgba(159,224,255,.08)}
 .win:has(>.chalk){padding:12px 8px}.chalk{border-width:7px;padding:10px 10px 0}.chalk .chtray{margin:10px -10px 0}
 .chtray{height:10px;background:#8b5a2b;margin:8px -12px 0;position:relative;box-shadow:0 -2px 0 #5d3a1a}
@@ -4628,6 +4640,37 @@ ITEMPX["🥖"]=ITEMPX.filone;
   for(const k in PXICONS)if(!PXURL[k])PXURL[k]=pxUrl(PXICONS[k]);
   PXRE=new RegExp("("+Object.keys(PXICONS).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\\uFE0F?","gu")})();
 {const _tc=ttsClean;ttsClean=t=>_tc(String(t).replace(/⟪[^⟫]*⟫/g,""))}
+/* ================= v42: dossier en pestañas (sin scroll infinito) y con el mismo estilo de tablas ================= */
+PXICONS["🦊"]=["k..........k","kok......kok","koook..kooko".slice(0,12),"kooookkooook","kooooooooook",".koowoowook.",".kowkoowkok.","..koooooKk..".replace("K","o"),"..kwwkkwwk..","...kwwwwk...","....kkkk....","............"];
+PXICONS["📜"]=["............",".kkkkkkkkk..","kwyyyyyyywk.",".kwwwwwwwk..",".kwSSSSSwk..",".kwwwwwwwk..",".kwSSSSwwk..",".kwwwwwwwk..",".kwSSSSSwk..","kwyyyyyyywk.",".kkkkkkkkk..","............"];
+PXICONS["🆕"]=["............","kkkkkkkkkkkk","kbbbbbbbbbbk","kbwbbwbwwbbk","kbwwbwbwbbbk","kbwbwwbwwbbk","kbwbbwbwbbbk","kbwbbwbwwbbk","kbbbbbbbbbbk","kkkkkkkkkkkk","............","............"];
+for(const k of ["🦊","📜","🆕"])PXURL[k]=pxUrl(PXICONS[k]);
+PXRE=new RegExp("("+Object.keys(PXICONS).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\\uFE0F?","gu");
+function kvTable(h,rows,hlKeys){return `<div class="chh">${esc(h)}</div><table class="cht kv"><colgroup><col class="cl"><col></colgroup><tbody>${rows.map(([k,v,nw])=>`<tr${nw?' class="newrow"':""}><td class="cl"><b>${k}</b></td><td>${v}</td></tr>`).join("")}</tbody></table>`}
+EXOV.dos=()=>{
+  const c=save.city,cs=caseOf(c),r=ROUTES[cs.route],id=cs.id,hl=S.hl||{},tab=S.dtab||(hl.k||hl.prof?"id":"id");
+  const nTr=discOf(c).filter(k=>SEQ[id].includes(k)).length,nCl=r.ids.reduce((a,i)=>a+Math.min(7,save.clue[i]||0),0);
+  const marks=SEQ[id].map(k=>[TR[k][0],discOf(c).includes(k)?esc(TR[k][1][THV[id][k]]):`<span class="unk">???</span>`,(hl.k||[]).includes(k)]);
+  const prof=r.ids.map(i=>{const p=cs.cities[i].prof,kn=(save.clue[i]||0)>=2;return [esc(p[0]),kn?esc(p[1]):`<span class="unk">???</span>`,hl.prof===i]});
+  const cities=r.ids.filter(i=>(save.clue[i]||0)>0).reverse();
+  const diary=cities.map(i=>{const cl=gotList(i).filter(k=>k!==1).map(k=>cs.cities[i].clues[k]);
+    return `<details class="pg"${i===c?" open":""}><summary><b>${esc(LEVELS[i].city)}${save.found[i]&&nextOf(i)!==undefined?" → "+esc(LEVELS[nextOf(i)].city):""}</b><span class="pgt">${cl.length} ${trp("pistas","piste")}</span></summary><div class="pgb"><ol class="clues">${cl.map(t=>`<li class="it">${esc(t)}</li>`).join("")}</ol></div></details>`}).join("");
+  const story=storyDos();
+  const tabs=[["id",trp("Identikit","Identikit")],["pis",trp("Pistas","Piste")],["his",trp("Historia","Storia")],["vol","Volpe"]];
+  let body="";
+  if(tab==="id")body=`<div class="lt">${kvTable(trp("Rasgos","Segni particolari")+` · ${nTr}/${SEQ[id].length}`,marks)}${kvTable(trp("Perfil","Profilo"),prof)}</div>`;
+  else if(tab==="pis")body=diary||`<p class="mute">${trp("Todavía no tienes pistas. Habla con la gente de la ciudad.","Non hai ancora piste.")}</p>`;
+  else if(tab==="his")body=story||`<p class="mute">${trp("Resuelve el enigma de cada ciudad para descubrir la historia.","Risolvi l'enigma di ogni città.")}</p>`;
+  else body=`<div class="lt">${volpeHtml().replace(/<div class="eyebrow">[^<]*<\/div>/,"").replace("<table>",'<table class="cht kv vol"><colgroup><col style="width:34px"><col></colgroup>')}</div>`;
+  const ban=(hl.k&&hl.k.length)||hl.prof?`<div class="fb ok"><b>🆕 ${trp("IDENTIKIT ACTUALIZADO","IDENTIKIT AGGIORNATO")}</b><span>${[...(hl.k||[]).map(k=>`${TR[k][0]}: <b>${esc(TR[k][1][THV[id][k]])}</b>`),...(hl.prof?[`${esc(cs.cities[hl.prof].prof[0])}: <b>${esc(cs.cities[hl.prof].prof[1])}</b>`]:[])].join(" · ")}</span></div>`:"";
+  const sp=(save.clue[c]||0)>=7&&!save.found[c]?btn(trp("RESOLVER EL ENIGMA","RISOLVI L'ENIGMA"),"data-puz"):"";
+  return `${ban}<div class="doshead"><canvas id="face" class="dface" width="40" height="44"></canvas><div class="dinfo"><span class="eyebrow">Dossier del detective</span><b>${esc(cs.title)}</b><span class="dobj">${esc(cs.obj)}</span>
+     <span class="dstat">${trp("Pistas","Piste")} ${nCl}/${r.ids.length*7} · ${trp("Rasgos","Segni")} ${nTr}/${SEQ[id].length}</span></div></div>
+   <div class="dkey"><span class="eyebrow">${trp("Palabra clave","Parola chiave")}</span>${keyBoxes(c)}</div>
+   <div class="dtabs">${tabs.map(([k,l])=>`<button class="dtab${k===tab?" on":""}" data-dtab="${k}">${l}</button>`).join("")}</div>
+   <div class="dbody">${body}</div>${sp}${routeDone(routeIdx(c))?btn(trp("VER EL FINAL DEL CASO","RIVEDI IL FINALE"),"data-fin",""):""}${btn(trp("CERRAR","CHIUDI"),"data-close")}`};
+ov.addEventListener("click",ev=>{const b=ev.target.closest("[data-dtab]");if(!b)return;ev.stopPropagation();S.dtab=b.dataset.dtab;render();const t=ov.querySelector(".dtabs");if(t)t.scrollIntoView({block:"nearest"})},true);
+{const _show=show;show=function(v,o){if(v==="dos"&&!(o&&o.dtab))o=Object.assign({dtab:"id"},o||{});return _show(v,o)}}
 </script>
 </body>
 </html>
