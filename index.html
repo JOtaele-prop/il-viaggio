@@ -190,6 +190,12 @@ summary{cursor:pointer;font-family:var(--px);font-size:9px;padding:6px 0}
 .cht .art{color:#ffb3c7}
 .cht .sep{opacity:.5}
 .chtip{border:2px dashed #ffb3c7;background:rgba(255,179,199,.08);color:#ffd6e0;padding:8px 10px;margin-top:10px;font-size:20px;line-height:1.2}
+.pxi{width:1.05em;height:1.05em;image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:-.15em;display:inline-block}
+.chtype span .pxi{width:28px;height:28px}
+.profcard{display:flex;gap:10px;align-items:center;background:#1a1c2c;color:#f4f4e4;border:3px solid var(--ink);box-shadow:0 0 0 2px #ffcd75 inset;padding:8px}
+.profpic{width:64px;height:64px;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid #ffcd75;flex:none}
+.profinfo{display:flex;flex-direction:column;gap:3px;min-width:0}.profinfo .eyebrow{color:#ffcd75}.profinfo b{font-family:var(--px);font-size:11px;font-weight:normal;color:#fff}
+.profsay{font-size:19px;line-height:1.1;color:#c5d3dc}
 .chex{color:#9fe0ff;font-size:21px;line-height:1.2;border-left:4px solid #9fe0ff;padding:4px 8px;background:rgba(159,224,255,.08)}
 .win:has(>.chalk){padding:12px 8px}.chalk{border-width:7px;padding:10px 10px 0}.chalk .chtray{margin:10px -10px 0}
 .chtray{height:10px;background:#8b5a2b;margin:8px -12px 0;position:relative;box-shadow:0 -2px 0 #5d3a1a}
@@ -954,7 +960,7 @@ function frame(t){
       else if(e.k==="quest")mark(g,x,y,d.includes("F"));
       else if(e.k==="wit")mark(g,x,y,d.includes("I"));
       else if(e.k==="chainC"&&(save.chain||{})[c]===2)mark(g,x,y,false);
-      else if(e.k==="prof"&&!save.lesson[c])mark(g,x,y,false);
+      else if(e.k==="prof"){drawProfMarks(g,x,y,e,c);if(!save.lesson[c])mark(g,x,y,false)}
       else if(e.k==="capo"&&save.found[c]&&tourOf(c).done)mark(g,x,y,false);
       else if(e.k==="guide"){R(g,x+13,y-3,1,13,"#1a1c2c");R(g,x+9,y-6,9,3,"#ffcd75");R(g,x+11,y-8,5,2,"#ffcd75")}}}
   drawPtr(cx,cy,dt);
@@ -4425,6 +4431,64 @@ EXOV.dial=()=>{if(needHow("dial"))return howHtml("dial");const D=S.D||LEVELS[sav
 
 buildCity();welcome();requestAnimationFrame(frame);
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
+/* ================= v38: iconos pixel art propios (sin emojis de librería) + Professoressa reconocible ================= */
+const PXPAL={k:"#1a1c2c",w:"#f4f4e4",y:"#ffcd75",o:"#ef7d57",r:"#b13e53",p:"#5d275d",g:"#38b764",G:"#257179",b:"#3b5dc9",c:"#73eff7",s:"#94b0c2",S:"#566c86",n:"#a7663a",N:"#5d3a1a",f:"#f2c9a0"};
+const PXICONS={
+ "🏫":["......rr....","......k.....",".....kk.....","....krrk....","...krrrrk...","..krrrrrrk..",".kkkkkkkkkk.",".kyyyyyyyyk.",".kyGyyyyGyk.",".kyyykkyyyk.",".kyyykkyyyk.","kkkkkkkkkkkk"],
+ "📖":["............",".kkkk..kkkk.","kwwwwkkwwwwk","kwSSwkkwSSwk","kwwwwkkwwwwk","kwSSwkkwSSwk","kwwwwkkwwwwk","kwSSwkkwwwwk","kwwwwkkwwwwk","kkkkkkkkkkkk",".nnnnnnnnnn.","............"],
+ "✏":["............","............","............","kkkkkkkkkk..","krryyyyyyfk.","krroooooofkk","krryyyyyyfk.","kkkkkkkkkk..","............","............","............","............"],
+ "✍":["............","kkkkkkkkkk..","krryyyyyyfk.","krroooooofkk","krryyyyyyfk.","kkkkkkkkkk..","............","...ww.......","..w..w..w...",".w....ww.w..","..........w.","............"],
+ "⚠":[".....kk.....","....kyyk....","...kyyyyk...","...kykkyk...","..kyykkyyk..","..kyykkyyk..",".kyyyyyyyyk.",".kyyykkyyyk.","kyyyykkyyyyk","kkkkkkkkkkkk","............","............"],
+ "🧩":["....kk......","...kggk.....",".kkkggkkkk..",".kggggggggk.",".kgggggggggk",".kggggggggggk".slice(0,12),".kgggggggggk",".kggggggggk.",".kkkkggkkkk.","....kggk....","....kkkk....","............"],
+ "📋":["....kkkk....","..kkkSSkkk..","..knnnnnnk..","..kwwwwwwk..","..kwkkkkwk..","..kwwwwwwk..","..kwkkkkwk..","..kwwwwwwk..","..kwkkkwwk..","..kwwwwwwk..","..kkkkkkkk..","............"],
+ "🔤":["............","kkkkkkkkkkkk","kbbbbbbbbbbk","kbbwbbbwwbbk","kbwbwbbwbwbk","kbwwwbbwwbbk","kbwbwbbwbwbk","kbwbwbbwwbbk","kbbbbbbbbbbk","kkkkkkkkkkkk","............","............"],
+ "💬":["............",".kkkkkkkkkk.","kwwwwwwwwwwk","kwwwwwwwwwwk","kwSSSSSSSwwk","kwwwwwwwwwwk","kwSSSSSwwwwk","kwwwwwwwwwwk",".kkwkkkkkkk.","..kk........","............","............"],
+ "🎲":["............",".kkkkkkkkkk.",".kwwwwwwwwk.",".kwrrwwwwwk.",".kwrrwwwwwk.",".kwwwwwwwwk.",".kwwwrrwwwk.",".kwwwrrwwwk.",".kwwwwwwwwk.",".kwwwwwrrwk.",".kwwwwwrrwk.",".kkkkkkkkkk."],
+ "🪢":["..nnnnnnnn..","..n.....k...","..n.....k...","..n....kkk..","..n....kfk..","..n....kkk..","..n.....r...","..n....rrr..","..n.....r...","..n....k.k..","nnnnnn......","............"],
+ "🔗":["............","............",".SSSSS......","S.....S.....","S.....S.....","S.....SSSSS.",".SSSSSS....S",".....S.....S",".....S.....S","......SSSSS.","............","............"],
+ "🃏":["..kkkkkkk...","..kwwwwwk...","..kwrwwwk...","..kwwwwwk...","..kwwrwwk...","..kwrrrwk...","..kwwrwwk...","..kwwwwwk...","..kwwwwrk...","..kwwwwwk...","..kkkkkkk...","............"],
+ "🧱":["............","kkkkkkkkkkkk","krrrrkrrrrrk","kkkkkkkkkkkk","krrkrrrrkrrk","kkkkkkkkkkkk","krrrrkrrrrrk","kkkkkkkkkkkk","krrkrrrrkrrk","kkkkkkkkkkkk","............","............"],
+ "🧽":["............","............","............",".nnnnnnnnnn.","nnnnnnnnnnnn","NNNNNNNNNNNN","ssssssssssss","ssssssssssss",".SSSSSSSSSS.","............","............","............"],
+ "📚":["............","...bbbbbbbb.","...bwwwwwwb.","...bbbbbbbb.","..gggggggg..","..gyyyyyyg..","..gggggggg..",".rrrrrrrrrr.",".rwwwwwwwwr.",".rrrrrrrrrr.","............","............"],
+ "📦":["............","..nnnnnnnn..",".nyyyyyyyyn.","nnnnnnnnnnnn","nyyyyNNyyyyn","nyyyyNNyyyyn","nyyyyyyyyyyn","nyyyyyyyyyyn","nyyyyyyyyyyn","nnnnnnnnnnnn","............","............"],
+ "🐾":["............","..nn....nn..","..nn....nn..","............","nn..nnnn..nn","nn.nnnnnn.nn","...nnnnnn...","..nnnnnnnn..","..nnnnnnnn..","...nn..nn...","............","............"],
+ "🛏":["............","............","k...........","kww.........","kwwbbbbbbbb.","kbbbbbbbbbbk","kkkkkkkkkkkk","k..........k","k..........k","............","............","............"],
+ "🍳":["............","...kkkkk....","..kwwwwwk...",".kwwwyywwk..",".kwwyyyywk..",".kwwwyywwk..","..kwwwwwkk..","...kkkkk.kk.","..........kk","...........k","............","............"],
+ "👩‍🏫":["...NNNNNN...","..NNNNNNNN..","..NffffffN..","..kkkffkkk..","..NkkffkkN..","..NffffffN..","..NffrrffN..","..N.ffff.N..",".pppppppppp.","pppppwwppppp","pppppwwppppp","pppppppppppp"]
+};
+PXICONS["👩"]=PXICONS["👩‍🏫"];
+const PXURL={};
+function pxUrl(rows){const h=rows.length,w=Math.max(...rows.map(r=>r.length)),cv=document.createElement("canvas");cv.width=w;cv.height=h;const x=cv.getContext("2d");
+  rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(PXPAL[ch]){x.fillStyle=PXPAL[ch];x.fillRect(i,j,1,1)}}));return cv.toDataURL()}
+for(const k in PXICONS)PXURL[k]=pxUrl(PXICONS[k]);
+const PXRE=new RegExp("("+Object.keys(PXICONS).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\\uFE0F?","gu");
+const pxi=e=>`<img class="pxi" alt="" src="${PXURL[e]}">`;
+function pxSwap(root){if(!root)return;const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),hits=[];let n;
+  while(n=tw.nextNode()){PXRE.lastIndex=0;if(PXRE.test(n.nodeValue)&&!n.parentNode.closest("textarea,script,style,canvas"))hits.push(n)}
+  hits.forEach(t=>{const sp=document.createElement("span");sp.innerHTML=esc(t.nodeValue).replace(PXRE,(m,k)=>pxi(k));t.replaceWith(...sp.childNodes)})}
+new MutationObserver(()=>pxSwap(document.getElementById("ov"))).observe(document.getElementById("ov"),{childList:true,subtree:true,characterData:true});
+
+/* la Professoressa: retrato grande y señas en el mapa */
+PROFS[0][0]="Prof.ssa Bianchi";
+const profFem=c=>/^(Prof\.ssa|Maestra)/.test(profOf(c)[0]);
+function profPortrait(c){const o=profOf(c)[1],fem=profFem(c),H=o.hair,K="#1a1c2c",F="#f2c9a0",cv=document.createElement("canvas");cv.width=16;cv.height=16;const x=cv.getContext("2d"),r=(a,b,w,h,col)=>{x.fillStyle=col;x.fillRect(a,b,w,h)};
+  r(0,0,16,16,"#2a4434");r(0,13,16,3,"#8b5a2b");
+  if(fem){r(3,2,10,11,H)}                       // melena larga
+  r(4,3,8,8,F);r(4,2,8,2,H);r(3,3,2,3,H);r(11,3,2,3,H);
+  if(o.hat){r(3,1,10,2,o.hat);r(3,3,10,1,K)}else r(5,1,6,1,H);
+  r(4,6,3,2,K);r(9,6,3,2,K);r(7,6,2,1,K);r(5,6,1,1,"#c5d3dc");r(10,6,1,1,"#c5d3dc"); // gafas
+  r(7,9,2,1,"#b13e53");
+  r(3,11,10,5,o.shirt);r(7,11,2,2,"#f4f4e4");
+  r(11,10,4,5,"#b13e53");r(12,11,2,3,"#ffcd75");   // libro en la mano
+  return cv.toDataURL()}
+function profCard(c){const p=profOf(c),fem=profFem(c);
+  return `<div class="profcard"><img class="profpic" alt="" src="${profPortrait(c)}"><div class="profinfo"><span class="eyebrow">${fem?"La professoressa":"Il professore"} · ${esc(LEVELS[c].city)}</span><b>${esc(p[0])}</b><span class="profsay">«Benvenuto in classe! Oggi: ${esc(LEVELS[c].tema)}.»</span></div></div>`}
+{const old=EXOV.lesson;EXOV.lesson=()=>{const h=old();return h.replace(/<div class="row"><span class="eyebrow">👩‍🏫[^<]*<\/span><\/div>/,profCard(save.city))}}
+function drawProfMarks(g,x,y,e,c){const o=e.o||{},H=o.hair,dir=e.dir||"down";
+  if(profFem(c)&&dir!=="up"){R(g,x+3,y+2,1,6,H);R(g,x+12,y+2,1,6,H)}
+  if(dir==="down"){R(g,x+5,y+4,2,2,"#1a1c2c");R(g,x+9,y+4,2,2,"#1a1c2c");R(g,x+7,y+4,2,1,"#1a1c2c")}
+  if(dir!=="up"){R(g,x+11,y+9,3,4,"#b13e53");R(g,x+12,y+10,1,2,"#ffcd75")}
+  if(save.lesson[c]){const b=Math.round(Math.sin(performance.now()/300));R(g,x+3,y-6+b,10,2,"#1a1c2c");R(g,x+5,y-4+b,6,2,"#1a1c2c");R(g,x+12,y-5+b,1,3,"#ffcd75")}}
 </script>
 </body>
 </html>
